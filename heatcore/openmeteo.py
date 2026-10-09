@@ -35,3 +35,28 @@ def fetch_forecast(lat: float, lon: float, days: int = 4, session=None) -> dict:
         "latitude": lat, "longitude": lon, "hourly": ",".join(HOURLY_VARS),
         "wind_speed_unit": "ms", "timezone": "UTC", "forecast_days": days,
     }, session)
+
+
+def fetch_archive(lat: float, lon: float, start: str, end: str, session=None) -> dict:
+    """ERA5 reanalysis via Open-Meteo archive (CC BY 4.0). Dates are YYYY-MM-DD."""
+    return _get(ARCHIVE_URL, {
+        "latitude": lat, "longitude": lon, "start_date": start, "end_date": end,
+        "hourly": ",".join(HOURLY_VARS), "wind_speed_unit": "ms", "timezone": "UTC",
+    }, session)
+
+
+def parse_hourly(payload: dict) -> list[HourWeather]:
+    """Turn an Open-Meteo hourly payload (UTC) into HourWeather rows; skip gaps."""
+    h = payload["hourly"]
+    rows = []
+    for i, t in enumerate(h["time"]):
+        vals = [h[v][i] for v in HOURLY_VARS[:5]]
+        if any(v is None for v in vals):
+            continue
+        direct = h.get("direct_radiation", [None] * len(h["time"]))[i]
+        rows.append(HourWeather(
+            time_utc=datetime.fromisoformat(t).replace(tzinfo=UTC),
+            temp_c=vals[0], rh_pct=vals[1], pressure_hpa=vals[2],
+            wind_10m_ms=vals[3], ghi_wm2=vals[4], direct_wm2=direct,
+        ))
+    return rows
