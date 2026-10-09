@@ -334,3 +334,57 @@ Resources:
         Afternoon:
           Type: ScheduleV2
           Properties: { ScheduleExpression: "cron(0 8 * * ? *)" }
+
+  # ---------------------------------------------------------------- workers and records
+  PublicWebFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Worker QR page, picture poster, check-in API, audit and model-card pages
+      CodeUri: functions/public_web/
+      Timeout: 15
+      Policies:
+        - DynamoDBCrudPolicy: { TableName: !Ref Table }
+        - S3ReadPolicy: { BucketName: !Ref HeatBucket }
+        - SQSSendMessagePolicy: { QueueName: !GetAtt OutQueue.QueueName }
+        - Statement:
+            - Effect: Allow
+              Action: ssm:GetParameter
+              Resource: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ParamPrefix}/*"
+            - Effect: Allow
+              Action: kms:Decrypt
+              Resource: "*"
+              Condition: { StringEquals: { "kms:ViaService": !Sub "ssm.${AWS::Region}.amazonaws.com" } }
+      Events:
+        WorkerPage: { Type: HttpApi, Properties: { ApiId: !Ref HttpApi, Method: GET, Path: "/s/{token}" } }
+        Poster: { Type: HttpApi, Properties: { ApiId: !Ref HttpApi, Method: GET, Path: "/p/{token}" } }
+        Checkin: { Type: HttpApi, Properties: { ApiId: !Ref HttpApi, Method: POST, Path: /api/checkin } }
+        Audit: { Type: HttpApi, Properties: { ApiId: !Ref HttpApi, Method: GET, Path: /audit } }
+        ModelCard: { Type: HttpApi, Properties: { ApiId: !Ref HttpApi, Method: GET, Path: /model-card } }
+
+  NightlyRecordFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: 23:30 IST - hash-chained daily record per site into the Object Lock bucket
+      CodeUri: functions/nightly_record/
+      Timeout: 120
+      Policies:
+        - DynamoDBCrudPolicy: { TableName: !Ref Table }
+        - Statement:
+            - Effect: Allow
+              Action: s3:PutObject
+              Resource: !Sub "${RecordsBucket.Arn}/records/*"
+      Events:
+        Night:
+          Type: ScheduleV2
+          Properties: { ScheduleExpression: "cron(0 18 * * ? *)" }
+
+  ReportPdfFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Monthly compliance PDF from locked records (Cedar-checked)
+      CodeUri: functions/report_pdf/
+      Timeout: 60
+      Policies:
+        - DynamoDBReadPolicy: { TableName: !Ref Table }
+        - S3ReadPolicy: { BucketName: !Ref RecordsBucket }
+        - S3CrudPolicy: { BucketName: !Ref MediaBucket }
