@@ -134,3 +134,72 @@ def claim_idempotency(t, key: str, ttl_days: int = 3) -> bool:
         if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
             return False
         raise
+
+
+# ---- overrides, alerts, check-ins -------------------------------------------
+
+def _now_iso() -> str:
+    return datetime.now().astimezone().isoformat(timespec="seconds")
+
+
+def put_override(t, site_id: str, date: str, direction: str, reason: str, actor_role: str,
+                 decision: str) -> None:
+    t.put_item(Item={"PK": f"SITE#{site_id}", "SK": f"OVR#{date}#{_now_iso()}",
+                     "direction": direction, "reason": reason, "actor_role": actor_role,
+                     "decision": decision})
+
+
+def put_alert(t, site_id: str, date: str, kind: str, **extra) -> str:
+    sk = f"ALERT#{date}#{_now_iso()}"
+    t.put_item(Item=_num({"PK": f"SITE#{site_id}", "SK": sk, "kind": kind, "acked_at": None,
+                          "ttl": ttl_in(CHECKIN_TTL_DAYS), **extra}))
+    return sk
+
+
+def ack_alert(t, site_id: str, sk: str) -> None:
+    t.update_item(Key={"PK": f"SITE#{site_id}", "SK": sk},
+                  UpdateExpression="SET acked_at = :a", ExpressionAttributeValues={":a": _now_iso()})
+
+
+def put_checkin(t, site_id: str, date: str, kind: str, device_hash: str) -> None:
+    t.put_item(Item={"PK": f"SITE#{site_id}", "SK": f"CHK#{date}#{_now_iso()}#{device_hash[:6]}",
+                     "type": kind, "device_token_hash": device_hash,
+                     "ttl": ttl_in(CHECKIN_TTL_DAYS)})
+
+
+def day_items(t, site_id: str, prefix: str, date: str) -> list[dict]:
+    r = t.query(KeyConditionExpression=Key("PK").eq(f"SITE#{site_id}")
+                & Key("SK").begins_with(f"{prefix}#{date}"))
+    return [_clean(i) for i in r["Items"]]
+
+
+def rate_limited(t, key_hash: str, limit: int, window_s: int = 60) -> bool:
+    """Fixed-window counter. True if this call exceeds `limit` in the window."""
+    bucket = int(time.time()) // window_s
+    r = t.update_item(Key={"PK": f"RATE#{key_hash}", "SK": str(bucket)},
+                      UpdateExpression="ADD n :one SET #ttl = :ttl",
+                      ExpressionAttributeNames={"#ttl": "ttl"},
+                      ExpressionAttributeValues={":one": 1, ":ttl": int(time.time()) + 2 * window_s},
+                      ReturnValues="UPDATED_NEW")
+    return int(r["Attributes"]["n"]) > limit
+
+
+# ---- deletion (/delete_my_data) ---------------------------------------------
+
+def delete_site_data(t, site: dict) -> int:
+    """Delete every non-record item for a site. Locked S3 records expire by retention."""
+    sid = site["site_id"]
+    keys = [{"PK": f"CHAT#{site['owner_hash']}", "SK": "META"},
+            {"PK": f"TOKEN#{site['site_token']}", "SK": "META"}]
+    kw = {"KeyConditionExpression": Key("PK").eq(f"SITE#{sid}"),
+          "ProjectionExpression": "PK, SK"}
+    while True:
+        r = t.query(**kw)
+        keys += [{"PK": i["PK"], "SK": i["SK"]} for i in r["Items"]]
+        if "LastEvaluatedKey" not in r:
+            break
+        kw["ExclusiveStartKey"] = r["LastEvaluatedKey"]
+    with t.batch_writer() as b:
+        for k in keys:
+            b.delete_item(Key=k)
+    return len(keys)
