@@ -9,6 +9,12 @@ dependencies = [
     "thermofeel>=2.3.0",
     "numpy>=1.26",
     "requests>=2.32",
+    "cedarpy>=4.12.1",
+    "strands-agents>=1.59.0",
+    "boto3>=1.43.110",
+    "segno>=1.6.6",
+    "fpdf2>=2.8.9",
+    "cryptography>=50.0.2",
 ]
 
 [dependency-groups]
