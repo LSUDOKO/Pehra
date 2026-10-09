@@ -1,0 +1,63 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Invisible Heat model card</title><style>:root{--sun:#FFC20E;--shade:#0F5C4D;--red:#C8102E;--ink:#1E2A2F;--ground:#E4E6E3;--muted:#4a5559}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font:17px/1.55 system-ui,"Noto Sans Devanagari",sans-serif}
+main{max-width:860px;margin:0 auto;padding:28px 16px 64px}
+h1{font-size:clamp(28px,5vw,44px);line-height:1.1;margin:0 0 12px}
+h2{font-size:22px;margin:36px 0 10px}
+p,li{max-width:70ch}
+.lede{font-size:20px}
+.big{font-size:clamp(56px,12vw,104px);font-weight:900;line-height:1;color:var(--shade);margin:24px 0 4px}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--ground);vertical-align:middle}
+th{font-size:15px;color:var(--muted);font-weight:600}
+td.n{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.bar{height:14px;border-radius:7px;background:var(--shade);min-width:2px}
+.bar.hw{background:var(--red)}
+.caveat{background:#fff;border-left:8px solid var(--sun);padding:12px 16px;border-radius:8px}
+a{color:var(--shade)}
+td.vis{width:32%}
+@media (max-width:600px){th.vis,td.vis{display:none}}
+</style></head><body><main><h1>Invisible Heat model card</h1>
+<h2>What it does</h2>
+<ul>
+<li>Turns a free weather forecast into an hour-by-hour work-rest plan for an outdoor work site in India.</li>
+<li>Every number in a plan comes from deterministic code. The AI only explains and answers questions, and a number check blocks any number that no tool produced.</li>
+</ul>
+<h2>Method</h2>
+<ul>
+<li>Heat stress: WBGT (Wet Bulb Globe Temperature) by the Liljegren 2008 method, using thermofeel 2.3.0 (ECMWF, Apache-2.0). Same physics as OSHA&#x27;s online WBGT calculator.</li>
+<li>Shade WBGT is the same calculation with solar radiation set to zero.</li>
+<li>Direct-beam share of sunlight: Open-Meteo direct radiation when available, otherwise the Erbs 1982 split.</li>
+<li>Limits: NIOSH 2016 REL = 56.7 − 11.5·log10(M) for acclimatised workers, RAL = 59.9 − 14.1·log10(M) for new workers. Light, moderate and heavy work use 180, 300 and 415 W.</li>
+<li>Rest minutes per hour: 15, 30, 45 or stop work, by how far planning WBGT is above the limit (bands of 1 °C). This band table is the project&#x27;s own planning rule inspired by NIOSH guidance, not an official standard.</li>
+<li>Planning margin: +1.0 °C on every forecast hour; +0.5 °C more if the forecast is over 18 hours old.</li>
+<li>New workers: NIOSH acclimatisation, 20% of normal exposure on day 1, rising 20% a day.</li>
+<li>Water: one 240 ml cup per 17.5 minutes of work, at most 6 cups an hour, plus 10% buffer, in 20 litre cans.</li>
+</ul>
+<h2>Inputs</h2>
+<ul>
+<li>Live plans: Open-Meteo forecast (best_match), fetched twice a day, about 11 km grid, free for non-commercial use.</li>
+<li>Kharghar replay and audit: ERA5 reanalysis via the Open-Meteo archive (CC BY 4.0), about 25 km grid.</li>
+</ul>
+<h2>Validation</h2>
+<ul>
+<li>WBGT vs OSHA&#x27;s online calculator, 15 hours in Chennai with the same inputs and solar irradiance: mean absolute difference 0.21 °C, largest 0.49 °C, our values 0.18 °C lower on average (OSHA output read to 1 °F). Test: tests/test_heatcore_wbgt.py.</li>
+<li>NIOSH limits match the worked example (REL 28.2 °C, RAL 25.0 °C at 300 W).</li>
+<li>Kharghar, 16 April 2023 (ERA5): WBGT in sun about 31 °C at noon against a 28.2 °C limit for moderate work; the recreated IMD rule declares no heatwave (38.8 °C, +3.5 °C above normal).</li>
+</ul>
+<h2>Known errors and limits</h2>
+<ul>
+<li>A 11–25 km weather grid stands in for a work site. Tin roofs, concrete and lack of shade make real sites hotter.</li>
+<li>ERA5 smooths humid extremes, so audit counts are a minimum.</li>
+<li>The IMD heatwave rule is recreated on one grid cell per city; it is not IMD&#x27;s official declaration record.</li>
+<li>One deterministic forecast, no ensemble: plans never state probabilities.</li>
+<li>No Indian heat-illness outcome data exists to test against, so we make no claim about lives saved. The design aim is to reduce exposure.</li>
+<li>The first-aid page is fixed text, not medical advice or diagnosis.</li>
+</ul>
+<h2>Privacy</h2>
+<ul>
+<li>Headcounts only. No worker names, phone numbers or IDs.</li>
+<li>Supervisor chat IDs are stored encrypted, looked up by keyed hash, and never logged.</li>
+<li>Worker devices are anonymous random tokens, stored as keyed hashes.</li>
+<li>All data stays in the AWS Mumbai region (ap-south-1). Supervisors can delete their data with /delete_my_data.</li>
+</ul></main></body></html>
