@@ -107,6 +107,7 @@ def static(name: str) -> dict:
 
 
 def handler(event, _ctx):
+    config.learn_base_url(event)
     t = repo.table()
     method = event.get("requestContext", {}).get("http", {}).get("method", "GET")
     path = event.get("rawPath", "/")

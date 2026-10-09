@@ -240,6 +240,7 @@ def async_assist(d: Deps, payload: dict) -> None:
 
 
 def handler(event, _ctx):
+    config.learn_base_url(event)
     headers = {k.lower(): v for k, v in (event.get("headers") or {}).items()}
     if not hmac.compare_digest(headers.get("x-telegram-bot-api-secret-token", ""),
                                config.param("webhook-secret")):

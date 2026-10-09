@@ -25,3 +25,11 @@ def param(name: str) -> str:
     """Read a SecureString from SSM once per container (e.g. 'telegram-token')."""
     ssm = boto3.client("ssm", region_name=REGION)
     return ssm.get_parameter(Name=f"{PARAM_PREFIX}/{name}", WithDecryption=True)["Parameter"]["Value"]
+
+
+def learn_base_url(event: dict) -> None:
+    """Use the API's own domain for public links unless PUBLIC_BASE_URL is set (avoids a stack cycle)."""
+    global PUBLIC_BASE_URL
+    domain = (event.get("requestContext") or {}).get("domainName")
+    if not PUBLIC_BASE_URL and domain:
+        PUBLIC_BASE_URL = f"https://{domain}"
