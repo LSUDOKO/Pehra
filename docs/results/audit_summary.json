@@ -1,0 +1,157 @@
+{
+  "generated_at": "2026-10-09T17:44:00+00:00",
+  "period": [
+    "2021-01-01",
+    "2025-12-31"
+  ],
+  "source": "ERA5 reanalysis via Open-Meteo archive (CC BY 4.0)",
+  "limit_c": 28.2,
+  "definition": "Invisible heat day: WBGT in shade, 06-19 IST, above the NIOSH REL for moderate work on at least one hour, with no heatwave under the recreated IMD rule.",
+  "caveats": [
+    "A minimum: ERA5 (~25 km) smooths humid extremes.",
+    "IMD rule recreated on one grid cell per city; not IMD's official record.",
+    "Shade WBGT; sun counts are higher and listed separately."
+  ],
+  "total": {
+    "days": 18260,
+    "heatwave_days": 268,
+    "danger_days_shade": 3585,
+    "danger_days_sun": 12125,
+    "invisible_days_shade": 3459,
+    "invisible_days_sun": 11858,
+    "invisible_shade_outside_mar_jun": 1679,
+    "limit_c": 28.2
+  },
+  "districts": [
+    {
+      "city": "Chennai",
+      "key": "chennai",
+      "region": "coastal",
+      "days": 1826,
+      "heatwave_days": 0,
+      "danger_days_shade": 512,
+      "danger_days_sun": 1499,
+      "invisible_days_shade": 512,
+      "invisible_days_sun": 1499,
+      "invisible_shade_outside_mar_jun": 184,
+      "limit_c": 28.2
+    },
+    {
+      "city": "Delhi",
+      "key": "delhi",
+      "region": "plains",
+      "days": 1826,
+      "heatwave_days": 30,
+      "danger_days_shade": 356,
+      "danger_days_sun": 944,
+      "invisible_days_shade": 341,
+      "invisible_days_sun": 914,
+      "invisible_shade_outside_mar_jun": 237,
+      "limit_c": 28.2
+    },
+    {
+      "city": "Nagpur",
+      "key": "nagpur",
+      "region": "plains",
+      "days": 1826,
+      "heatwave_days": 10,
+      "danger_days_shade": 118,
+      "danger_days_sun": 1262,
+      "invisible_days_shade": 112,
+      "invisible_days_sun": 1252,
+      "invisible_shade_outside_mar_jun": 15,
+      "limit_c": 28.2
+    },
+    {
+      "city": "Ahmedabad",
+      "key": "ahmedabad",
+      "region": "plains",
+      "days": 1826,
+      "heatwave_days": 27,
+      "danger_days_shade": 348,
+      "danger_days_sun": 1246,
+      "invisible_days_shade": 338,
+      "invisible_days_sun": 1219,
+      "invisible_shade_outside_mar_jun": 140,
+      "limit_c": 28.2
+    },
+    {
+      "city": "Kharghar, Navi Mumbai",
+      "key": "kharghar",
+      "region": "coastal",
+      "days": 1826,
+      "heatwave_days": 99,
+      "danger_days_shade": 239,
+      "danger_days_sun": 1526,
+      "invisible_days_shade": 223,
+      "invisible_days_sun": 1427,
+      "invisible_shade_outside_mar_jun": 30,
+      "limit_c": 28.2
+    },
+    {
+      "city": "Bhubaneswar",
+      "key": "bhubaneswar",
+      "region": "coastal",
+      "days": 1826,
+      "heatwave_days": 7,
+      "danger_days_shade": 662,
+      "danger_days_sun": 1399,
+      "invisible_days_shade": 656,
+      "invisible_days_sun": 1392,
+      "invisible_shade_outside_mar_jun": 293,
+      "limit_c": 28.2
+    },
+    {
+      "city": "Hyderabad",
+      "key": "hyderabad",
+      "region": "plains",
+      "days": 1826,
+      "heatwave_days": 0,
+      "danger_days_shade": 5,
+      "danger_days_sun": 968,
+      "invisible_days_shade": 5,
+      "invisible_days_sun": 968,
+      "invisible_shade_outside_mar_jun": 0,
+      "limit_c": 28.2
+    },
+    {
+      "city": "Lucknow",
+      "key": "lucknow",
+      "region": "plains",
+      "days": 1826,
+      "heatwave_days": 36,
+      "danger_days_shade": 491,
+      "danger_days_sun": 1070,
+      "invisible_days_shade": 460,
+      "invisible_days_sun": 1034,
+      "invisible_shade_outside_mar_jun": 326,
+      "limit_c": 28.2
+    },
+    {
+      "city": "Jaipur",
+      "key": "jaipur",
+      "region": "plains",
+      "days": 1826,
+      "heatwave_days": 15,
+      "danger_days_shade": 139,
+      "danger_days_sun": 912,
+      "invisible_days_shade": 136,
+      "invisible_days_sun": 898,
+      "invisible_shade_outside_mar_jun": 89,
+      "limit_c": 28.2
+    },
+    {
+      "city": "Kolkata",
+      "key": "kolkata",
+      "region": "coastal",
+      "days": 1826,
+      "heatwave_days": 44,
+      "danger_days_shade": 715,
+      "danger_days_sun": 1299,
+      "invisible_days_shade": 676,
+      "invisible_days_sun": 1255,
+      "invisible_shade_outside_mar_jun": 365,
+      "limit_c": 28.2
+    }
+  ]
+}
