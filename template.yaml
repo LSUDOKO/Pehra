@@ -255,3 +255,82 @@ Resources:
             BatchSize: 10
             ScalingConfig: { MaximumConcurrency: 2 }
             FunctionResponseTypes: [ReportBatchItemFailures]
+
+  # ---------------------------------------------------------------- supervisor bot
+  TelegramWebhookFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Telegram webhook - commands, Approve/Override (Cedar), crew roster
+      CodeUri: functions/telegram_webhook/
+      Timeout: 25
+      MemorySize: 1024
+      Environment:
+        Variables:
+          PLAN_SFN_ARN: !Ref DailyPlanStateMachine
+          ASSISTANT_FN: !Ref AssistantFunction
+      Policies:
+        - DynamoDBCrudPolicy: { TableName: !Ref Table }
+        - StepFunctionsExecutionPolicy: { StateMachineName: !GetAtt DailyPlanStateMachine.Name }
+        - LambdaInvokePolicy: { FunctionName: !Ref AssistantFunction }
+        - Statement:
+            - Effect: Allow
+              Action: [states:SendTaskSuccess, states:SendTaskFailure]
+              Resource: !Ref DailyPlanStateMachine
+            - Effect: Allow
+              Action: ssm:GetParameter
+              Resource: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ParamPrefix}/*"
+            - Effect: Allow
+              Action: kms:Decrypt
+              Resource: "*"
+              Condition: { StringEquals: { "kms:ViaService": !Sub "ssm.${AWS::Region}.amazonaws.com" } }
+      Events:
+        Telegram:
+          Type: HttpApi
+          Properties: { ApiId: !Ref HttpApi, Method: POST, Path: /telegram }
+
+  AssistantFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Async Strands agent answers and Transcribe voice rosters
+      CodeUri: functions/assistant/
+      Timeout: 120
+      MemorySize: 1024
+      Policies:
+        - DynamoDBCrudPolicy: { TableName: !Ref Table }
+        - S3ReadPolicy: { BucketName: !Ref HeatBucket }
+        - S3CrudPolicy: { BucketName: !Ref MediaBucket }
+        - SQSSendMessagePolicy: { QueueName: !GetAtt OutQueue.QueueName }
+        - Statement:
+            - Effect: Allow
+              Action: [bedrock:InvokeModel, bedrock:InvokeModelWithResponseStream]
+              Resource:
+                - !Sub "arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/in.anthropic.*"
+                - "arn:aws:bedrock:*::foundation-model/anthropic.*"
+            - Effect: Allow
+              Action: [transcribe:StartTranscriptionJob, transcribe:GetTranscriptionJob]
+              Resource: "*"
+            - Effect: Allow
+              Action: ssm:GetParameter
+              Resource: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ParamPrefix}/*"
+            - Effect: Allow
+              Action: kms:Decrypt
+              Resource: "*"
+              Condition: { StringEquals: { "kms:ViaService": !Sub "ssm.${AWS::Region}.amazonaws.com" } }
+
+  RecheckFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: 10:30 and 13:30 IST - re-plan from the newest forecast; alert only if stricter
+      CodeUri: functions/recheck/
+      Timeout: 120
+      Policies:
+        - DynamoDBCrudPolicy: { TableName: !Ref Table }
+        - S3ReadPolicy: { BucketName: !Ref HeatBucket }
+        - SQSSendMessagePolicy: { QueueName: !GetAtt OutQueue.QueueName }
+      Events:
+        Morning:
+          Type: ScheduleV2
+          Properties: { ScheduleExpression: "cron(0 5 * * ? *)" }
+        Afternoon:
+          Type: ScheduleV2
+          Properties: { ScheduleExpression: "cron(0 8 * * ? *)" }
