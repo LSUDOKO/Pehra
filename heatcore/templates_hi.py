@@ -31,3 +31,16 @@ def forecast_line(plan: dict) -> str:
     if plan.get("stale"):
         line += " Purana forecast hai, isliye plan zyada sakht rakha hai."
     return line
+
+
+def rest_summary_hi(plan: dict) -> list[str]:
+    lines = []
+    for p in plan["rest_summary"]:
+        span = f"{clock(p['from'])} se {clock(p['to'])} baje"
+        if p["rest_minutes"] == 0:
+            continue
+        if p["rest_minutes"] == 60:
+            lines.append(f"{span}: kaam band.")
+        else:
+            lines.append(f"{span}: har ghante {p['rest_minutes']} minute aaram.")
+    return lines or ["Aaj koi zaroori aaram nahi. Phir bhi paani peete raho."]
