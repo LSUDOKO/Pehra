@@ -75,4 +75,24 @@ def build_plan(
         rest, status = band_for(e)
         plan.hours.append(PlanHour(h.time_local.hour, round(w, 1), w_plan, round(limit, 1),
                                    e, rest, 60 - rest, status))
+    window = stop_window(plan.hours)
+    if window:
+        plan.stop_from, plan.stop_to = window
     return plan
+
+
+def stop_window(hours: list[PlanHour]) -> tuple[int, int] | None:
+    """Longest run of consecutive 'stop' hours as (from_hour, to_hour), to exclusive."""
+    best: tuple[int, int] | None = None
+    start = end = None
+    for h in hours:
+        if h.status == "stop" and start is not None and h.hour == end:
+            end = h.hour + 1
+        elif h.status == "stop":
+            start, end = h.hour, h.hour + 1
+        else:
+            start = end = None
+            continue
+        if best is None or end - start > best[1] - best[0]:
+            best = (start, end)
+    return best
