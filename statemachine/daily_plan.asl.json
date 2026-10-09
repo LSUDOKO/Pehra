@@ -1,0 +1,71 @@
+{
+  "Comment": "Invisible Heat daily plan: build, send, wait for Approve/Override, record.",
+  "StartAt": "BuildPlan",
+  "States": {
+    "BuildPlan": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${PlanStepArn}",
+        "Payload": {"action": "build", "site_id.$": "$.site_id", "date.$": "$.date", "mode.$": "$.mode"}
+      },
+      "ResultSelector": {"build.$": "$.Payload"},
+      "ResultPath": "$.result",
+      "Retry": [{"ErrorEquals": ["Lambda.ServiceException", "Lambda.TooManyRequestsException", "States.Timeout"],
+                 "IntervalSeconds": 5, "MaxAttempts": 3, "BackoffRate": 2}],
+      "Next": "SkipIfDuplicate"
+    },
+    "SkipIfDuplicate": {
+      "Type": "Choice",
+      "Choices": [{"Variable": "$.result.build.skip", "BooleanEquals": true, "Next": "Skipped"}],
+      "Default": "SendPlan"
+    },
+    "Skipped": {"Type": "Succeed"},
+    "SendPlan": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${PlanStepArn}",
+        "Payload": {"action": "send", "site_id.$": "$.result.build.site_id", "date.$": "$.result.build.date",
+                    "text.$": "$.result.build.text", "voice_key.$": "$.result.build.voice_key",
+                    "chat_enc.$": "$.result.build.chat_enc", "plan_hash.$": "$.result.build.plan_hash"}
+      },
+      "ResultPath": null,
+      "Retry": [{"ErrorEquals": ["States.ALL"], "IntervalSeconds": 5, "MaxAttempts": 3, "BackoffRate": 2}],
+      "Next": "WaitForApproval"
+    },
+    "WaitForApproval": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
+      "Parameters": {
+        "FunctionName": "${PlanStepArn}",
+        "Payload": {"action": "wait_token", "site_id.$": "$.result.build.site_id",
+                    "date.$": "$.result.build.date", "task_token.$": "$$.Task.Token"}
+      },
+      "TimeoutSeconds": 43200,
+      "ResultPath": "$.decision",
+      "Catch": [{"ErrorEquals": ["States.Timeout"], "ResultPath": "$.error", "Next": "NoResponse"}],
+      "Next": "RecordDecision"
+    },
+    "RecordDecision": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${PlanStepArn}",
+        "Payload": {"action": "decision", "site_id.$": "$.result.build.site_id",
+                    "date.$": "$.result.build.date", "decision.$": "$.decision"}
+      },
+      "End": true
+    },
+    "NoResponse": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${PlanStepArn}",
+        "Payload": {"action": "no_response", "site_id.$": "$.result.build.site_id",
+                    "date.$": "$.result.build.date"}
+      },
+      "End": true
+    }
+  }
+}
