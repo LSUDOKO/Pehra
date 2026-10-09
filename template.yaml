@@ -166,3 +166,92 @@ Resources:
         Ingest:
           Type: ScheduleV2
           Properties: { ScheduleExpression: "cron(0 0,4,12 * * ? *)" }
+
+  # ---------------------------------------------------------------- daily plan flow
+  PlanStepFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Steps of the daily plan state machine (build, send, wait token, record)
+      CodeUri: functions/plan_step/
+      Timeout: 60
+      MemorySize: 1024
+      Policies:
+        - DynamoDBCrudPolicy: { TableName: !Ref Table }
+        - S3ReadPolicy: { BucketName: !Ref HeatBucket }
+        - S3CrudPolicy: { BucketName: !Ref MediaBucket }
+        - SQSSendMessagePolicy: { QueueName: !GetAtt OutQueue.QueueName }
+        - Statement:
+            - Effect: Allow
+              Action: polly:SynthesizeSpeech
+              Resource: "*"
+            - Effect: Allow
+              Action: [bedrock:InvokeModel, bedrock:InvokeModelWithResponseStream]
+              Resource:
+                - !Sub "arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/in.anthropic.*"
+                - "arn:aws:bedrock:*::foundation-model/anthropic.*"
+
+  DailyPlanStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Type: STANDARD
+      DefinitionUri: statemachine/daily_plan.asl.json
+      DefinitionSubstitutions:
+        PlanStepArn: !GetAtt PlanStepFunction.Arn
+      Policies:
+        - LambdaInvokePolicy: { FunctionName: !Ref PlanStepFunction }
+
+  DailyFanoutFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: 19:00 IST - one plan message per registered site onto the plan queue
+      CodeUri: functions/daily_fanout/
+      Timeout: 60
+      Policies:
+        - DynamoDBReadPolicy: { TableName: !Ref Table }
+        - SQSSendMessagePolicy: { QueueName: !GetAtt PlanQueue.QueueName }
+      Events:
+        Evening:
+          Type: ScheduleV2
+          Properties: { ScheduleExpression: "cron(30 13 * * ? *)" }
+
+  PlanWorkerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: SQS consumer that starts one idempotent plan execution per site and date
+      CodeUri: functions/plan_worker/
+      Environment:
+        Variables: { PLAN_SFN_ARN: !Ref DailyPlanStateMachine }
+      Policies:
+        - StepFunctionsExecutionPolicy: { StateMachineName: !GetAtt DailyPlanStateMachine.Name }
+      Events:
+        Plans:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt PlanQueue.Arn
+            BatchSize: 10
+            FunctionResponseTypes: [ReportBatchItemFailures]
+
+  SenderFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Drains outgoing messages into Telegram under rate limits
+      CodeUri: functions/sender/
+      Timeout: 60
+      Policies:
+        - S3ReadPolicy: { BucketName: !Ref MediaBucket }
+        - Statement:
+            - Effect: Allow
+              Action: ssm:GetParameter
+              Resource: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ParamPrefix}/*"
+            - Effect: Allow
+              Action: kms:Decrypt
+              Resource: "*"
+              Condition: { StringEquals: { "kms:ViaService": !Sub "ssm.${AWS::Region}.amazonaws.com" } }
+      Events:
+        Outgoing:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt OutQueue.Arn
+            BatchSize: 10
+            ScalingConfig: { MaximumConcurrency: 2 }
+            FunctionResponseTypes: [ReportBatchItemFailures]
