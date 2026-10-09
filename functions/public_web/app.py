@@ -8,6 +8,7 @@ Security: unguessable site token, per-device and per-IP rate limits, Cedar check
 import json
 from datetime import datetime, timedelta
 
+from heatcore.heat import IST
 from heatcore.templates_hi import FIRST_AID_HI, render_symptom_alert_hi
 from ihcommon import authz, config, crypto, outbox, planning, repo
 from ihcommon.log import log, metric, short_hash
@@ -97,7 +98,7 @@ def checkin(t, body: dict, ip: str) -> dict:
 
 def _ts(item: dict) -> datetime:
     # SK = CHK#{date}#{iso-with-offset}#{dev6}
-    return datetime.fromisoformat(item["SK"].split("#")[2]).replace(tzinfo=None)
+    return datetime.fromisoformat(item["SK"].split("#")[2]).astimezone(IST).replace(tzinfo=None)
 
 
 def static(name: str) -> dict:
