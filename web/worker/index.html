@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{SITE_NAME}} · Aaram</title>
+<style>
+:root{--sun:#FFC20E;--shade:#0F5C4D;--red:#C8102E;--ink:#1E2A2F;--ground:#E4E6E3}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font:18px/1.4 system-ui,"Noto Sans Devanagari",sans-serif}
+main{max-width:480px;margin:0 auto;padding:16px;display:grid;gap:14px}
+h1{font-size:20px;margin:4px 0 0;font-weight:700}
+p.plan{margin:0;font-size:17px}
+button{width:100%;border:0;border-radius:18px;font:inherit;font-weight:800;cursor:pointer;
+  display:flex;align-items:center;gap:16px;padding:22px 20px;text-align:left}
+button:focus-visible{outline:4px solid var(--ink);outline-offset:3px}
+button svg{flex:none;width:64px;height:64px}
+#rest{min-height:38vh;font-size:30px}
+#rest[data-on="0"]{background:var(--shade);color:#fff}
+#rest[data-on="1"]{background:var(--sun);color:var(--ink)}
+#sick{background:var(--red);color:#fff;font-size:26px;min-height:20vh}
+#status{min-height:1.4em;font-weight:700}
+#aid{display:none;background:#fff;border-left:10px solid var(--red);border-radius:12px;padding:16px;white-space:pre-line;font-size:20px}
+#aid.show{display:block}
+small{color:#4a5559}
+</style>
+</head>
+<body>
+<main>
+  <h1>{{SITE_NAME}}</h1>
+  <p class="plan">{{PLAN_LINE}}</p>
+  <button id="rest" data-on="0" aria-live="polite">
+    <svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="22" r="16" fill="currentColor" opacity=".9"/><rect x="29" y="34" width="6" height="22" rx="2" fill="currentColor"/><path d="M14 58h36" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg>
+    <span id="restLabel">Aaram shuru</span>
+  </button>
+  <div id="status" role="status"></div>
+  <button id="sick">
+    <svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="26" fill="none" stroke="currentColor" stroke-width="5"/><path d="M20 30c4-6 8-6 12 0s8 6 12 0" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/></svg>
+    <span>Chakkar aa raha hai</span>
+  </button>
+  <div id="aid" role="alert">{{FIRST_AID}}</div>
+  <small>Koi naam nahi liya jaata. Yeh first aid hai, bimari ki jaanch nahi. Emergency: 108</small>
+</main>
+<script>
+(function(){
+  var T="{{SITE_TOKEN}}",K="ih-dev",dev;
+  try{dev=localStorage.getItem(K);if(!dev){dev=Math.random().toString(36).slice(2)+Date.now().toString(36);localStorage.setItem(K,dev)}}catch(e){dev="anon-"+Math.random().toString(36).slice(2)}
+  var rest=document.getElementById("rest"),lab=document.getElementById("restLabel"),st=document.getElementById("status");
+  function send(type,done){
+    var x=new XMLHttpRequest();x.open("POST","{{API_URL}}");x.setRequestHeader("Content-Type","application/json");
+    x.onload=function(){done(x.status===200?null:(x.status===429?"Thoda ruk kar dabaiye.":"Phir se dabaiye."))};
+    x.onerror=function(){done("Network nahi hai. Phir se dabaiye.")};
+    x.send(JSON.stringify({site_token:T,device_token:dev,type:type}));
+  }
+  rest.onclick=function(){
+    var on=rest.dataset.on==="1",type=on?"break_end":"break_start";
+    send(type,function(err){
+      if(err){st.textContent=err;return}
+      rest.dataset.on=on?"0":"1";lab.textContent=on?"Aaram shuru":"Aaram khatam";
+      st.textContent=on?"Aaram khatam. Paani piyo.":"Aaram shuru. Chhaon mein baitho.";
+    });
+  };
+  document.getElementById("sick").onclick=function(){
+    document.getElementById("aid").className="show";
+    send("symptom",function(err){st.textContent=err||"Supervisor ko khabar di gayi."});
+  };
+})();
+</script>
+</body>
+</html>
