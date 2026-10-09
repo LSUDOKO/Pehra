@@ -68,3 +68,69 @@ def list_sites(t) -> list[dict]:
         if "LastEvaluatedKey" not in r:
             return out
         kw["ExclusiveStartKey"] = r["LastEvaluatedKey"]
+
+
+# ---- chat state (multi-step conversations, e.g. waiting for an override reason) ----
+
+def set_chat_state(t, owner_hash: str, state: dict | None) -> None:
+    t.update_item(Key={"PK": f"CHAT#{owner_hash}", "SK": "META"},
+                  UpdateExpression="SET #s = :s", ExpressionAttributeNames={"#s": "state"},
+                  ExpressionAttributeValues={":s": _num(state or {})})
+
+
+def get_chat_state(t, owner_hash: str) -> dict:
+    it = t.get_item(Key={"PK": f"CHAT#{owner_hash}", "SK": "META"}).get("Item") or {}
+    return _clean(it.get("state") or {})
+
+
+# ---- crew --------------------------------------------------------------------
+
+def put_crew(t, site_id: str, date: str, crew: dict) -> None:
+    for sk in (f"CREW#{date}", "CREW#latest"):
+        t.put_item(Item=_num({"PK": f"SITE#{site_id}", "SK": sk, **crew}))
+
+
+def get_crew(t, site_id: str) -> dict | None:
+    it = t.get_item(Key={"PK": f"SITE#{site_id}", "SK": "CREW#latest"}).get("Item")
+    if not it:
+        return None
+    return {k: v for k, v in _clean(it).items() if k not in ("PK", "SK")}
+
+
+# ---- plans -------------------------------------------------------------------
+
+def put_plan(t, site_id: str, plan: dict, status: str = "sent") -> None:
+    t.put_item(Item={"PK": f"SITE#{site_id}", "SK": f"PLAN#{plan['date']}",
+                     "plan_json": json.dumps(plan, default=str), "status": status,
+                     "plan_hash": plan["plan_hash"], "forecast_run": plan["forecast_issued"],
+                     "generated_at": plan["generated_at"]})
+
+
+def get_plan(t, site_id: str, date: str) -> dict | None:
+    it = t.get_item(Key={"PK": f"SITE#{site_id}", "SK": f"PLAN#{date}"}).get("Item")
+    if not it:
+        return None
+    out = _clean(it)
+    out["plan"] = json.loads(out.pop("plan_json"))
+    return out
+
+
+def update_plan(t, site_id: str, date: str, **fields) -> None:
+    names = {f"#{k}": k for k in fields}
+    values = {f":{k}": v for k, v in fields.items()}
+    t.update_item(Key={"PK": f"SITE#{site_id}", "SK": f"PLAN#{date}"},
+                  UpdateExpression="SET " + ", ".join(f"#{k} = :{k}" for k in fields),
+                  ExpressionAttributeNames=names, ExpressionAttributeValues=_num(values))
+
+
+def claim_idempotency(t, key: str, ttl_days: int = 3) -> bool:
+    """True the first time a key is claimed; False on every later attempt."""
+    try:
+        t.put_item(Item={"PK": f"IDEM#{key}", "SK": "PLAN", "done_at": int(time.time()),
+                         "ttl": ttl_in(ttl_days)},
+                   ConditionExpression="attribute_not_exists(PK)")
+        return True
+    except ClientError as e:
+        if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
+            return False
+        raise
