@@ -1,0 +1,96 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Invisible Heat - WBGT work-rest plans for India's outdoor workers.
+  Serverless, ap-south-1, AWS Free Tier friendly. Deploy: make layer && sam build && sam deploy
+
+Parameters:
+  ParamPrefix:
+    Type: String
+    Default: /invisible-heat
+    Description: SSM prefix holding telegram-token, webhook-secret and data-key (SecureString)
+  BedrockModelFast:
+    Type: String
+    Default: in.anthropic.claude-haiku-4-5-20251001-v1:0
+  BedrockModelQa:
+    Type: String
+    Default: in.anthropic.claude-sonnet-5
+  AgentEnabled:
+    Type: String
+    Default: "true"
+    AllowedValues: ["true", "false"]
+  RecordRetentionDays:
+    Type: Number
+    Default: 90
+  AlertEmail:
+    Type: String
+    Default: ""
+    Description: Optional email for the budget and forecast-late alarms
+
+Conditions:
+  HasAlertEmail: !Not [!Equals [!Ref AlertEmail, ""]]
+
+Resources:
+  # ---------------------------------------------------------------- storage
+  Table:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${AWS::StackName}-table"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - { AttributeName: PK, AttributeType: S }
+        - { AttributeName: SK, AttributeType: S }
+        - { AttributeName: GSI1PK, AttributeType: S }
+        - { AttributeName: GSI1SK, AttributeType: S }
+      KeySchema:
+        - { AttributeName: PK, KeyType: HASH }
+        - { AttributeName: SK, KeyType: RANGE }
+      GlobalSecondaryIndexes:
+        - IndexName: GSI1
+          KeySchema:
+            - { AttributeName: GSI1PK, KeyType: HASH }
+            - { AttributeName: GSI1SK, KeyType: RANGE }
+          Projection: { ProjectionType: ALL }
+      TimeToLiveSpecification: { AttributeName: ttl, Enabled: true }
+      SSESpecification: { SSEEnabled: true }
+
+  HeatBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration: [{ ServerSideEncryptionByDefault: { SSEAlgorithm: AES256 } }]
+      PublicAccessBlockConfiguration:
+        { BlockPublicAcls: true, BlockPublicPolicy: true, IgnorePublicAcls: true, RestrictPublicBuckets: true }
+      LifecycleConfiguration:
+        Rules: [{ Id: expire-old-runs, Status: Enabled, Prefix: heat/, ExpirationInDays: 30 }]
+
+  MediaBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration: [{ ServerSideEncryptionByDefault: { SSEAlgorithm: AES256 } }]
+      PublicAccessBlockConfiguration:
+        { BlockPublicAcls: true, BlockPublicPolicy: true, IgnorePublicAcls: true, RestrictPublicBuckets: true }
+      LifecycleConfiguration:
+        Rules:
+          - { Id: voice, Status: Enabled, Prefix: voice/, ExpirationInDays: 30 }
+          - { Id: incoming-audio, Status: Enabled, Prefix: incoming/, ExpirationInDays: 1 }
+          - { Id: transcripts, Status: Enabled, Prefix: transcripts/, ExpirationInDays: 1 }
+          - { Id: reports, Status: Enabled, Prefix: reports/, ExpirationInDays: 30 }
+
+  # Object Lock can only be enabled when a bucket is created.
+  RecordsBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      ObjectLockEnabled: true
+      ObjectLockConfiguration:
+        ObjectLockEnabled: Enabled
+        Rule:
+          DefaultRetention: { Mode: GOVERNANCE, Days: !Ref RecordRetentionDays }
+      VersioningConfiguration: { Status: Enabled }
+      BucketEncryption:
+        ServerSideEncryptionConfiguration: [{ ServerSideEncryptionByDefault: { SSEAlgorithm: AES256 } }]
+      PublicAccessBlockConfiguration:
+        { BlockPublicAcls: true, BlockPublicPolicy: true, IgnorePublicAcls: true, RestrictPublicBuckets: true }
