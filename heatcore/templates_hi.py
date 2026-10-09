@@ -44,3 +44,25 @@ def rest_summary_hi(plan: dict) -> list[str]:
         else:
             lines.append(f"{span}: har ghante {p['rest_minutes']} minute aaram.")
     return lines or ["Aaj koi zaroori aaram nahi. Phir bhi paani peete raho."]
+
+
+def render_plan_hi(plan: dict) -> str:
+    """The fallback plan message. Always works, no AI involved."""
+    d = datetime.fromisoformat(plan["date"])
+    out = [f"Kal ka plan ({plan['site_name']}, {d:%d %b}):"]
+    if plan["stop_from"] is not None:
+        out.append(f"- Kaam band: {when(plan['stop_from'])} se {when(plan['stop_to'])} tak.")
+    else:
+        out.append("- Pura din kaam band karne ki zaroorat nahi.")
+    out += [f"- {line}" for line in rest_summary_hi(plan)]
+    hs = plan.get("heavy_stop")
+    if hs and hs["from"] is not None:
+        out.append(f"- Bhaari kaam band: {clock(hs['from'])} se {clock(hs['to'])} baje tak.")
+    nw = plan.get("new_workers")
+    if nw:
+        pct = round(nw["fraction"] * 100)
+        out.append(f"- Naye mazdoor ({nw['count']}): aaj normal ka sirf {pct} pratishat kaam. "
+                   f"Yeh unka din {nw['day']} hai.")
+    out.append(f"- Paani: {plan['water']['cans_20l']} bade can (20 litre).")
+    out.append(forecast_line(plan))
+    return "\n".join(out)
