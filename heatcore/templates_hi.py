@@ -104,3 +104,37 @@ def render_plan_en(plan: dict) -> str:
     stale = " Older forecast: plan made stricter." if plan.get("stale") else ""
     out.append(f"Forecast: {plan['forecast_model']}, issued {issued:%d %b %H:%M} IST.{stale}")
     return "\n".join(out)
+
+
+def render_recheck_alert_hi(new_plan: dict, changed_hours: list[int]) -> str:
+    first = min(changed_hours)
+    out = ["Naya forecast zyada garam hai. Plan badla hai."]
+    if new_plan["stop_from"] is not None:
+        out.append(f"Ab kaam band: {when(new_plan['stop_from'])} se {when(new_plan['stop_to'])}.")
+    out.append(f"{when(first)} se naya plan lagu.")
+    out.append("Kripya 'Samajh gaya' dabaiye.")
+    return "\n".join(out)
+
+
+def render_symptom_alert_hi(time_hhmm: str, reports_last_hour: int) -> str:
+    return (f"Dhyan dein: {time_hhmm} par ek mazdoor ne 'chakkar aa raha hai' dabaya. "
+            f"Pichhle ek ghante mein {reports_last_hour} report. "
+            "Turant unke paas jaiye. First aid: chhaon, paani, aaram. "
+            "Uljhan ya behoshi ho to 108.")
+
+
+def render_voice_hi(plan: dict) -> str:
+    """Short spoken version for Polly (one action per sentence)."""
+    parts = []
+    if plan["stop_from"] is not None:
+        parts.append(f"Kal {clock(plan['stop_from'])} se {clock(plan['stop_to'])} baje tak "
+                     "kaam rokna hai.")
+    for p in plan["rest_summary"]:
+        if 0 < p["rest_minutes"] < 60:
+            parts.append(f"{clock(p['from'])} se {clock(p['to'])} baje tak har ghante "
+                         f"{p['rest_minutes']} minute aaram.")
+    nw = plan.get("new_workers")
+    if nw:
+        parts.append(f"Jo {nw['count']} naye mazdoor hain, woh kam kaam karenge.")
+    parts.append(f"{plan['water']['cans_20l']} bade paani ke can mangwa lo.")
+    return " ".join(parts)
