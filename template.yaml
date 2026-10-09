@@ -424,3 +424,53 @@ Resources:
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
       AlarmActions: !If [HasAlertEmail, [!Ref AlarmTopic], !Ref AWS::NoValue]
+
+  Dashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Properties:
+      DashboardName: !Sub "${AWS::StackName}"
+      DashboardBody: !Sub |
+        {"widgets":[
+          {"type":"metric","x":0,"y":0,"width":12,"height":6,"properties":{"title":"Plans","region":"${AWS::Region}","stat":"Sum","period":3600,
+            "metrics":[["InvisibleHeat","PlanSent"],["InvisibleHeat","PlanApproved"],["InvisibleHeat","PlanNoResponse"]]}},
+          {"type":"metric","x":12,"y":0,"width":12,"height":6,"properties":{"title":"Trust: overrides, fallbacks, number check","region":"${AWS::Region}","stat":"Sum","period":3600,
+            "metrics":[["InvisibleHeat","PlanOverridden","direction","looser"],["InvisibleHeat","PlanOverridden","direction","stricter"],["InvisibleHeat","TemplateFallback","kind","plan"],
+                       ["InvisibleHeat","NumberCheckFailed","kind","answer"],["InvisibleHeat","NumberCheckFallback","kind","answer"],["InvisibleHeat","AuthzDeny","action","LoosenPlan"]]}},
+          {"type":"metric","x":0,"y":6,"width":12,"height":6,"properties":{"title":"Forecast runs ingested","region":"${AWS::Region}","stat":"Sum","period":3600,
+            "metrics":[["InvisibleHeat","ForecastIngested"],["InvisibleHeat","ForecastIngestFailed"]]}},
+          {"type":"metric","x":12,"y":6,"width":12,"height":6,"properties":{"title":"Workers","region":"${AWS::Region}","stat":"Sum","period":3600,
+            "metrics":[["InvisibleHeat","BreakLogged","type","break_start"],["InvisibleHeat","SymptomReported"],["InvisibleHeat","RecheckAlert","simulated","False"]]}}
+        ]}
+
+  Budget:
+    Type: AWS::Budgets::Budget
+    Condition: HasAlertEmail
+    Properties:
+      Budget:
+        BudgetName: !Sub "${AWS::StackName}-monthly"
+        BudgetType: COST
+        TimeUnit: MONTHLY
+        BudgetLimit: { Amount: 5, Unit: USD }
+      NotificationsWithSubscribers:
+        - Notification: { NotificationType: ACTUAL, ComparisonOperator: GREATER_THAN, Threshold: 50 }
+          Subscribers: [{ SubscriptionType: EMAIL, Address: !Ref AlertEmail }]
+
+Outputs:
+  ApiUrl:
+    Description: Base URL (worker pages /s/{token}, posters /p/{token}, /audit, /model-card)
+    Value: !Sub "https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+  TelegramWebhookUrl:
+    Description: Pass to scripts/set_webhook.py
+    Value: !Sub "https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com/telegram"
+  StateMachineArn:
+    Value: !Ref DailyPlanStateMachine
+  RecordsBucketName:
+    Value: !Ref RecordsBucket
+  HeatBucketName:
+    Value: !Ref HeatBucket
+  IngestFunctionName:
+    Value: !Ref IngestForecastFunction
+  RecheckFunctionName:
+    Value: !Ref RecheckFunction
+  NightlyRecordFunctionName:
+    Value: !Ref NightlyRecordFunction
