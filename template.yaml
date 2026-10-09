@@ -114,3 +114,18 @@ Resources:
       VisibilityTimeout: 180
       SqsManagedSseEnabled: true
       RedrivePolicy: { deadLetterTargetArn: !GetAtt OutDLQ.Arn, maxReceiveCount: 5 }
+
+  # ---------------------------------------------------------------- shared code
+  CoreLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      Description: heatcore, ihcommon, agent, Cedar policies, web templates and Python deps (arm64)
+      ContentUri: layers/core/
+      CompatibleRuntimes: [python3.12]
+      CompatibleArchitectures: [arm64]
+      RetentionPolicy: Delete
+
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      DefaultRouteSettings: { ThrottlingBurstLimit: 50, ThrottlingRateLimit: 20 }
