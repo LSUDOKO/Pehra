@@ -51,3 +51,22 @@ def wbgt_hour(h: HourWeather, lat: float, lon: float) -> dict[str, float]:
 
 def wbgt_series(hours: list[HourWeather], lat: float, lon: float) -> list[dict]:
     return [{"time_utc": h.time_utc.isoformat(), **wbgt_hour(h, lat, lon)} for h in hours]
+
+
+def wbgt_arrays(lat: float, lon: float, times_utc, temp_c, rh, pressure_hpa, wind_10m, ghi, direct):
+    """Vectorised sun/shade WBGT (deg C) for long series such as the ERA5 audit.
+
+    Uses the source's direct radiation for the beam fraction. Times are UTC hour centres.
+    """
+    from heatcore.solar import cos_zenith_array
+
+    cz = cos_zenith_array(lat, lon, times_utc)
+    ghi = np.clip(np.asarray(ghi, float), 0, None)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        fdir = np.where((ghi > 0) & (cz > 0), np.clip(np.asarray(direct, float) / ghi, 0, 0.9), 0.0)
+    t_k = np.asarray(temp_c, float) + 273.15
+    args = (np.asarray(rh, float), np.asarray(pressure_hpa, float), np.asarray(wind_10m, float))
+    sun = thermofeel.calculate_wbgt_liljegren(t_k, *args, ghi, fdir, cz) - 273.15
+    zero = np.zeros_like(ghi)
+    shade = thermofeel.calculate_wbgt_liljegren(t_k, *args, zero, zero, cz) - 273.15
+    return np.round(sun, 1), np.round(shade, 1)

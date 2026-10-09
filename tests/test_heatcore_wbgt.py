@@ -42,3 +42,18 @@ def test_erbs_fraction_bounds():
     f = erbs_direct_fraction(900, 0.97, NOON_IST)
     assert 0.5 < f <= 0.9
     assert erbs_direct_fraction(0, 0.97, NOON_IST) == 0
+
+
+def test_vectorised_matches_scalar():
+    import numpy as np
+
+    from heatcore.solar import cos_zenith_array
+    from heatcore.wbgt import wbgt_arrays
+
+    h = HourWeather(NOON_IST, 35, 60, 1005, 3, 900, 600)
+    scalar = wbgt_hour(h, *CHENNAI)
+    t = np.array([np.datetime64(NOON_IST.replace(tzinfo=None))])
+    sun, shade = wbgt_arrays(*CHENNAI, t, [35], [60], [1005], [3], [900], [600])
+    assert abs(cos_zenith_array(*CHENNAI, t)[0] - cos_zenith(*CHENNAI, NOON_IST)) < 1e-6
+    assert sun[0] == pytest.approx(scalar["wbgt_sun"], abs=0.1)
+    assert shade[0] == pytest.approx(scalar["wbgt_shade"], abs=0.1)

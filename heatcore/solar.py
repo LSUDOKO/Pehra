@@ -50,3 +50,21 @@ def erbs_direct_fraction(ghi: float, cossza: float, when_utc: datetime) -> float
     else:
         diffuse = 0.165
     return min(max(1.0 - diffuse, 0.0), 0.9)
+
+
+def cos_zenith_array(lat: float, lon: float, times_utc):
+    """Vectorised cos_zenith for a numpy array of datetime64 (UTC). Same NOAA equations."""
+    import numpy as np
+
+    t = np.asarray(times_utc, dtype="datetime64[s]")
+    doy = (t.astype("datetime64[D]") - t.astype("datetime64[Y]")).astype(int) + 1
+    hour = (t - t.astype("datetime64[D]")).astype(int) / 3600.0
+    g = 2 * np.pi / 365 * (doy - 1 + (hour - 12) / 24)
+    decl = (0.006918 - 0.399912 * np.cos(g) + 0.070257 * np.sin(g) - 0.006758 * np.cos(2 * g)
+            + 0.000907 * np.sin(2 * g) - 0.002697 * np.cos(3 * g) + 0.00148 * np.sin(3 * g))
+    eqtime = 229.18 * (0.000075 + 0.001868 * np.cos(g) - 0.032077 * np.sin(g)
+                       - 0.014615 * np.cos(2 * g) - 0.040849 * np.sin(2 * g))
+    ha = np.radians((hour * 60 + eqtime + 4 * lon) / 4 - 180)
+    phi = np.radians(lat)
+    cz = np.sin(phi) * np.sin(decl) + np.cos(phi) * np.cos(decl) * np.cos(ha)
+    return np.clip(cz, 0.0, None)
