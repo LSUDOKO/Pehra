@@ -1,0 +1,8 @@
+thermofeel==2.3.0
+numpy>=1.26
+requests>=2.32
+cedarpy>=4.12
+strands-agents>=1.59
+segno>=1.6
+fpdf2>=2.8
+cryptography>=43

@@ -13,3 +13,4 @@ samconfig.local.toml
 *.pem
 out/
 .playwright-mcp/
+layers/core/python/
