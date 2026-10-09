@@ -35,3 +35,18 @@ def extraterrestrial_horizontal(cossza: float, when_utc: datetime) -> float:
     doy = when_utc.timetuple().tm_yday
     e0 = 1 + 0.033 * math.cos(2 * math.pi * doy / 365)
     return SOLAR_CONSTANT * e0 * max(cossza, 0.0)
+
+
+def erbs_direct_fraction(ghi: float, cossza: float, when_utc: datetime) -> float:
+    """Direct-beam fraction of global horizontal radiation (Erbs 1982)."""
+    if ghi <= 0 or cossza <= 0.01:
+        return 0.0
+    i0h = extraterrestrial_horizontal(cossza, when_utc)
+    kt = min(max(ghi / i0h, 0.0), 1.0) if i0h > 0 else 0.0
+    if kt <= 0.22:
+        diffuse = 1.0 - 0.09 * kt
+    elif kt <= 0.80:
+        diffuse = 0.9511 - 0.1604 * kt + 4.388 * kt**2 - 16.638 * kt**3 + 12.336 * kt**4
+    else:
+        diffuse = 0.165
+    return min(max(1.0 - diffuse, 0.0), 0.9)
