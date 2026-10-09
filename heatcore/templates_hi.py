@@ -85,3 +85,22 @@ FIRST_AID_EN = (
     "If there is confusion, fainting, or no sweating: call 108 immediately.\n"
     "This is first aid, not a diagnosis."
 )
+
+
+def render_plan_en(plan: dict) -> str:
+    d = datetime.fromisoformat(plan["date"])
+    out = [f"Plan for {plan['site_name']}, {d:%d %b}:"]
+    if plan["stop_from"] is not None:
+        out.append(f"- Stop work {plan['stop_from']}:00 to {plan['stop_to']}:00.")
+    for p in plan["rest_summary"]:
+        if 0 < p["rest_minutes"] < 60:
+            out.append(f"- {p['from']}:00-{p['to']}:00: {p['rest_minutes']} min rest every hour.")
+    nw = plan.get("new_workers")
+    if nw:
+        out.append(f"- New workers ({nw['count']}): {round(nw['fraction'] * 100)}% of normal "
+                   f"work today (day {nw['day']}).")
+    out.append(f"- Water: {plan['water']['cans_20l']} cans of 20 litres.")
+    issued = datetime.fromisoformat(plan["forecast_issued"])
+    stale = " Older forecast: plan made stricter." if plan.get("stale") else ""
+    out.append(f"Forecast: {plan['forecast_model']}, issued {issued:%d %b %H:%M} IST.{stale}")
+    return "\n".join(out)
