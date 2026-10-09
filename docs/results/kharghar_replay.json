@@ -1,0 +1,350 @@
+{
+  "date": "2023-04-16",
+  "place": "Kharghar, Navi Mumbai",
+  "imd": {
+    "tmax_c": 38.8,
+    "normal_c": 35.3,
+    "departure_c": 3.5,
+    "region": "coastal",
+    "day_level": "none",
+    "heatwave_declared": false
+  },
+  "limits": {
+    "light": {
+      "workload": "light",
+      "metabolic_rate_w": 180,
+      "rel_c": 30.8,
+      "ral_c": 28.1
+    },
+    "moderate": {
+      "workload": "moderate",
+      "metabolic_rate_w": 300,
+      "rel_c": 28.2,
+      "ral_c": 25.0
+    },
+    "heavy": {
+      "workload": "heavy",
+      "metabolic_rate_w": 415,
+      "rel_c": 26.6,
+      "ral_c": 23.0
+    }
+  },
+  "hours": [
+    {
+      "hour": 5,
+      "wbgt_sun": 22.3,
+      "wbgt_shade": 22.3
+    },
+    {
+      "hour": 6,
+      "wbgt_sun": 21.8,
+      "wbgt_shade": 21.8
+    },
+    {
+      "hour": 7,
+      "wbgt_sun": 23.7,
+      "wbgt_shade": 22.5
+    },
+    {
+      "hour": 8,
+      "wbgt_sun": 25.9,
+      "wbgt_shade": 23.2
+    },
+    {
+      "hour": 9,
+      "wbgt_sun": 28.1,
+      "wbgt_shade": 24.2
+    },
+    {
+      "hour": 10,
+      "wbgt_sun": 29.2,
+      "wbgt_shade": 25.0
+    },
+    {
+      "hour": 11,
+      "wbgt_sun": 30.6,
+      "wbgt_shade": 26.0
+    },
+    {
+      "hour": 12,
+      "wbgt_sun": 30.8,
+      "wbgt_shade": 26.8
+    },
+    {
+      "hour": 13,
+      "wbgt_sun": 30.5,
+      "wbgt_shade": 27.1
+    },
+    {
+      "hour": 14,
+      "wbgt_sun": 29.3,
+      "wbgt_shade": 26.0
+    },
+    {
+      "hour": 15,
+      "wbgt_sun": 28.7,
+      "wbgt_shade": 25.6
+    },
+    {
+      "hour": 16,
+      "wbgt_sun": 28.3,
+      "wbgt_shade": 25.6
+    },
+    {
+      "hour": 17,
+      "wbgt_sun": 27.4,
+      "wbgt_shade": 25.3
+    },
+    {
+      "hour": 18,
+      "wbgt_sun": 26.4,
+      "wbgt_shade": 25.1
+    },
+    {
+      "hour": 19,
+      "wbgt_sun": 25.2,
+      "wbgt_shade": 25.1
+    },
+    {
+      "hour": 20,
+      "wbgt_sun": 25.3,
+      "wbgt_shade": 25.3
+    },
+    {
+      "hour": 21,
+      "wbgt_sun": 25.1,
+      "wbgt_shade": 25.1
+    },
+    {
+      "hour": 22,
+      "wbgt_sun": 24.9,
+      "wbgt_shade": 24.9
+    },
+    {
+      "hour": 23,
+      "wbgt_sun": 24.7,
+      "wbgt_shade": 24.7
+    }
+  ],
+  "plan": {
+    "site_id": "kharghar-replay",
+    "site_name": "Kharghar, Navi Mumbai",
+    "date": "2023-04-16",
+    "forecast_model": "ERA5 reanalysis",
+    "forecast_issued": "2023-04-15T12:00:00",
+    "generated_at": "2023-04-15T19:00:00",
+    "stale": false,
+    "margin_c": 1.0,
+    "crew": {
+      "headcount": 100,
+      "heavy_count": 0,
+      "new_count": 0,
+      "new_day": 1
+    },
+    "stop_from": 11,
+    "stop_to": 14,
+    "heavy_stop": null,
+    "plans": {
+      "moderate": {
+        "date": "2023-04-16",
+        "workload": "moderate",
+        "acclimatised": true,
+        "exposure": "sun",
+        "margin_c": 1.0,
+        "limit_c": 28.2,
+        "hours": [
+          {
+            "hour": 6,
+            "wbgt": 21.8,
+            "wbgt_planning": 22.8,
+            "limit_c": 28.2,
+            "exceedance_c": -5.4,
+            "rest_minutes": 0,
+            "work_minutes": 60,
+            "status": "normal"
+          },
+          {
+            "hour": 7,
+            "wbgt": 23.7,
+            "wbgt_planning": 24.7,
+            "limit_c": 28.2,
+            "exceedance_c": -3.5,
+            "rest_minutes": 0,
+            "work_minutes": 60,
+            "status": "normal"
+          },
+          {
+            "hour": 8,
+            "wbgt": 25.9,
+            "wbgt_planning": 26.9,
+            "limit_c": 28.2,
+            "exceedance_c": -1.3,
+            "rest_minutes": 0,
+            "work_minutes": 60,
+            "status": "normal"
+          },
+          {
+            "hour": 9,
+            "wbgt": 28.1,
+            "wbgt_planning": 29.1,
+            "limit_c": 28.2,
+            "exceedance_c": 0.9,
+            "rest_minutes": 15,
+            "work_minutes": 45,
+            "status": "caution"
+          },
+          {
+            "hour": 10,
+            "wbgt": 29.2,
+            "wbgt_planning": 30.2,
+            "limit_c": 28.2,
+            "exceedance_c": 2.0,
+            "rest_minutes": 30,
+            "work_minutes": 30,
+            "status": "high"
+          },
+          {
+            "hour": 11,
+            "wbgt": 30.6,
+            "wbgt_planning": 31.6,
+            "limit_c": 28.2,
+            "exceedance_c": 3.4,
+            "rest_minutes": 60,
+            "work_minutes": 0,
+            "status": "stop"
+          },
+          {
+            "hour": 12,
+            "wbgt": 30.8,
+            "wbgt_planning": 31.8,
+            "limit_c": 28.2,
+            "exceedance_c": 3.6,
+            "rest_minutes": 60,
+            "work_minutes": 0,
+            "status": "stop"
+          },
+          {
+            "hour": 13,
+            "wbgt": 30.5,
+            "wbgt_planning": 31.5,
+            "limit_c": 28.2,
+            "exceedance_c": 3.3,
+            "rest_minutes": 60,
+            "work_minutes": 0,
+            "status": "stop"
+          },
+          {
+            "hour": 14,
+            "wbgt": 29.3,
+            "wbgt_planning": 30.3,
+            "limit_c": 28.2,
+            "exceedance_c": 2.1,
+            "rest_minutes": 45,
+            "work_minutes": 15,
+            "status": "very_high"
+          },
+          {
+            "hour": 15,
+            "wbgt": 28.7,
+            "wbgt_planning": 29.7,
+            "limit_c": 28.2,
+            "exceedance_c": 1.5,
+            "rest_minutes": 30,
+            "work_minutes": 30,
+            "status": "high"
+          },
+          {
+            "hour": 16,
+            "wbgt": 28.3,
+            "wbgt_planning": 29.3,
+            "limit_c": 28.2,
+            "exceedance_c": 1.1,
+            "rest_minutes": 30,
+            "work_minutes": 30,
+            "status": "high"
+          },
+          {
+            "hour": 17,
+            "wbgt": 27.4,
+            "wbgt_planning": 28.4,
+            "limit_c": 28.2,
+            "exceedance_c": 0.2,
+            "rest_minutes": 15,
+            "work_minutes": 45,
+            "status": "caution"
+          },
+          {
+            "hour": 18,
+            "wbgt": 26.4,
+            "wbgt_planning": 27.4,
+            "limit_c": 28.2,
+            "exceedance_c": -0.8,
+            "rest_minutes": 0,
+            "work_minutes": 60,
+            "status": "normal"
+          }
+        ],
+        "stop_from": 11,
+        "stop_to": 14
+      }
+    },
+    "rest_summary": [
+      {
+        "from": 6,
+        "to": 9,
+        "rest_minutes": 0,
+        "status": "normal"
+      },
+      {
+        "from": 9,
+        "to": 10,
+        "rest_minutes": 15,
+        "status": "caution"
+      },
+      {
+        "from": 10,
+        "to": 11,
+        "rest_minutes": 30,
+        "status": "high"
+      },
+      {
+        "from": 11,
+        "to": 14,
+        "rest_minutes": 60,
+        "status": "stop"
+      },
+      {
+        "from": 14,
+        "to": 15,
+        "rest_minutes": 45,
+        "status": "very_high"
+      },
+      {
+        "from": 15,
+        "to": 17,
+        "rest_minutes": 30,
+        "status": "high"
+      },
+      {
+        "from": 17,
+        "to": 18,
+        "rest_minutes": 15,
+        "status": "caution"
+      },
+      {
+        "from": 18,
+        "to": 19,
+        "rest_minutes": 0,
+        "status": "normal"
+      }
+    ],
+    "new_workers": null,
+    "water": {
+      "headcount": 100,
+      "litres": 600.0,
+      "cans_20l": 33
+    },
+    "peak_wbgt": 30.8,
+    "plan_hash": "f6376af299746ef80d56e174460a9fe5937ff881e0108871b208e29e88537db4"
+  }
+}
