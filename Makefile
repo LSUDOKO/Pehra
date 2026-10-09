@@ -9,7 +9,6 @@ layer:
 	rm -rf $(LAYER) && mkdir -p $(LAYER)
 	uv pip install --quiet --target $(LAYER) --python-platform aarch64-manylinux2014 \
 		--python-version $(PY) --only-binary=:all: -r layers/core/requirements.txt
-	rm -rf $(LAYER)/boto3 $(LAYER)/botocore $(LAYER)/s3transfer   # provided by the Lambda runtime
 	cp -r heatcore ihcommon agent $(LAYER)/
 	cp -r cedar $(LAYER)/ihcommon/cedar
 	cp -r web $(LAYER)/ihcommon/web
