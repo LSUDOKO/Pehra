@@ -1,0 +1,36 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Invisible heat days</title><style>:root{--sun:#FFC20E;--shade:#0F5C4D;--red:#C8102E;--ink:#1E2A2F;--ground:#E4E6E3;--muted:#4a5559}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font:17px/1.55 system-ui,"Noto Sans Devanagari",sans-serif}
+main{max-width:860px;margin:0 auto;padding:28px 16px 64px}
+h1{font-size:clamp(28px,5vw,44px);line-height:1.1;margin:0 0 12px}
+h2{font-size:22px;margin:36px 0 10px}
+p,li{max-width:70ch}
+.lede{font-size:20px}
+.big{font-size:clamp(56px,12vw,104px);font-weight:900;line-height:1;color:var(--shade);margin:24px 0 4px}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--ground);vertical-align:middle}
+th{font-size:15px;color:var(--muted);font-weight:600}
+td.n{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.bar{height:14px;border-radius:7px;background:var(--shade);min-width:2px}
+.bar.hw{background:var(--red)}
+.caveat{background:#fff;border-left:8px solid var(--sun);padding:12px 16px;border-radius:8px}
+a{color:var(--shade)}
+td.vis{width:32%}
+@media (max-width:600px){th.vis,td.vis{display:none}}
+</style></head><body><main>
+<h1>Invisible heat days</h1>
+<p class="lede">Days when heat and humidity together crossed the NIOSH work limit, but India's
+temperature-based heatwave rule would not have raised an alarm. 2021–2025, ten cities.</p>
+<p class="big">3,459</p>
+<p>city-days with WBGT in the shade above the NIOSH limit for moderate work (28.2 °C)
+and no heatwave declared — 96% of all such days. 1,679 of them fell
+outside March–June, when heatwave bulletins do not run.</p>
+<div class="caveat"><b>These numbers are a minimum.</b><ul><li>A minimum: ERA5 (~25 km) smooths humid extremes.</li><li>IMD rule recreated on one grid cell per city; not IMD&#x27;s official record.</li><li>Shade WBGT; sun counts are higher and listed separately.</li></ul></div>
+<h2>By city</h2>
+<table><thead><tr><th>City</th><th style="text-align:right">Invisible heat days</th><th class="vis"></th>
+<th style="text-align:right">Outside Mar–Jun</th><th style="text-align:right">Heatwave days (recreated rule)</th></tr></thead>
+<tbody><tr><td>Kolkata</td><td class='n'>676</td><td class='vis'><div class='bar' style='width:100%'></div></td><td class='n'>365</td><td class='n'>44</td></tr><tr><td>Bhubaneswar</td><td class='n'>656</td><td class='vis'><div class='bar' style='width:97%'></div></td><td class='n'>293</td><td class='n'>7</td></tr><tr><td>Chennai</td><td class='n'>512</td><td class='vis'><div class='bar' style='width:76%'></div></td><td class='n'>184</td><td class='n'>0</td></tr><tr><td>Lucknow</td><td class='n'>460</td><td class='vis'><div class='bar' style='width:68%'></div></td><td class='n'>326</td><td class='n'>36</td></tr><tr><td>Delhi</td><td class='n'>341</td><td class='vis'><div class='bar' style='width:50%'></div></td><td class='n'>237</td><td class='n'>30</td></tr><tr><td>Ahmedabad</td><td class='n'>338</td><td class='vis'><div class='bar' style='width:50%'></div></td><td class='n'>140</td><td class='n'>27</td></tr><tr><td>Kharghar, Navi Mumbai</td><td class='n'>223</td><td class='vis'><div class='bar' style='width:33%'></div></td><td class='n'>30</td><td class='n'>99</td></tr><tr><td>Jaipur</td><td class='n'>136</td><td class='vis'><div class='bar' style='width:20%'></div></td><td class='n'>89</td><td class='n'>15</td></tr><tr><td>Nagpur</td><td class='n'>112</td><td class='vis'><div class='bar' style='width:17%'></div></td><td class='n'>15</td><td class='n'>10</td></tr><tr><td>Hyderabad</td><td class='n'>5</td><td class='vis'><div class='bar' style='width:1%'></div></td><td class='n'>0</td><td class='n'>0</td></tr></tbody></table>
+<h2>How it was counted</h2>
+<p>Invisible heat day: WBGT in shade, 06-19 IST, above the NIOSH REL for moderate work on at least one hour, with no heatwave under the recreated IMD rule. In the sun, 11,858 city-days crossed the same limit.</p>
+<p>Source: ERA5 reanalysis via Open-Meteo archive (CC BY 4.0). WBGT by the Liljegren method (thermofeel, Apache-2.0). Code:
+<code>scripts/run_audit.py</code>. <a href="/model-card">Model card</a>.</p></main></body></html>
