@@ -43,6 +43,17 @@ def _as_number(tok: str) -> int | None:
     return _ROMAN.get(tok) or _DEVANAGARI.get(tok)
 
 
+def _nearest_field(window: list[str]) -> str | None:
+    """First keyword after a number, stopping at the next number."""
+    for w in window:
+        if _as_number(w) is not None:
+            return None
+        for field, kws in KEYWORDS.items():
+            if w in kws:
+                return field
+    return None
+
+
 def parse_crew_roster(transcript: str) -> dict:
     """Return {headcount, heavy_count, new_count, confidence, unmatched}."""
     toks = _tokens(transcript)
@@ -52,8 +63,7 @@ def parse_crew_roster(transcript: str) -> dict:
         n = _as_number(tok)
         if n is None:
             continue
-        window = toks[i + 1:i + 4]
-        field = next((f for f, kws in KEYWORDS.items() if any(w in kws for w in window)), None)
+        field = _nearest_field(toks[i + 1:i + 4])
         if field:
             out[field] = n
         else:
