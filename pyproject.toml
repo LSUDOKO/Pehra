@@ -20,6 +20,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "moto[dynamodb,s3,sqs,ssm,stepfunctions]>=5.2.3",
+    "pyarrow>=26.0.0",
     "pytest>=8",
     "ruff>=0.6",
 ]
