@@ -55,3 +55,13 @@ def test_contractor_raw_checkins_denied():
 @pytest.mark.parametrize("site, ok", [("s1", True), ("s2", False)])
 def test_contractor_aggregates_own_tenant_only(site, ok):
     assert authorize(uid("Contractor", "c1"), "ViewCheckInsAggregate", uid("Site", site), ENTS) is ok
+
+
+def test_policies_validate():
+    from pathlib import Path
+
+    import cedarpy
+
+    root = Path(__file__).parents[1] / "cedar"
+    text = "\n".join(p.read_text() for p in sorted((root / "policies").glob("*.cedar")))
+    assert cedarpy.validate_policies(text, (root / "schema.cedarschema").read_text()).validation_passed
