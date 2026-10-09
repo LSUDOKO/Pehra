@@ -29,7 +29,8 @@ def test_humidity_raises_wbgt():
 def test_regression_values():
     # Locks current thermofeel 2.3.0 output; OSHA comparison is in docs/MODEL_CARD.md
     out = wbgt_hour(HourWeather(NOON_IST, 35, 60, 1005, 3, 900), *CHENNAI)
-    assert out == {"wbgt_sun": pytest.approx(34.2, abs=0.2), "wbgt_shade": pytest.approx(30.1, abs=0.2)}
+    assert out["wbgt_sun"] == pytest.approx(34.2, abs=0.2)
+    assert out["wbgt_shade"] == pytest.approx(30.1, abs=0.2)
 
 
 def test_cos_zenith_noon_high_and_night_zero():

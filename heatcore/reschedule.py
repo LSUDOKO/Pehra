@@ -30,7 +30,7 @@ def find_window(
         day = list(day_iter)
         for i in range(len(day) - duration_hours + 1):
             win = day[i:i + duration_hours]
-            if any(b.time_local.hour != a.time_local.hour + 1 for a, b in zip(win, win[1:])):
+            if any(b.time_local.hour != a.time_local.hour + 1 for a, b in zip(win, win[1:], strict=False)):
                 continue
             worst = round(max(h.wbgt_sun for h in win) + margin_c - limit, 1)
             if best is None or worst < best[0]:
