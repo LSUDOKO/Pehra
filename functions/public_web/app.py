@@ -57,3 +57,71 @@ def page_poster(t, token: str) -> dict:
         except Exception:
             return resp(404, "Aaj ka plan abhi nahi bana.", "text/plain; charset=utf-8")
     return html_resp(poster_page(site, plan, f"{base_url()}/s/{token}"))
+
+
+def checkin(t, body: dict, ip: str) -> dict:
+    kind, token, device = body.get("type"), body.get("site_token", ""), body.get("device_token", "")
+    if kind not in EVENT_TYPES or not token or not (8 <= len(device) <= 64):
+        return resp(400, {"error": "bad request"})
+    key = config.param("data-key")
+    dev_hash = crypto.keyed_hash(device, key)
+    if repo.rate_limited(t, dev_hash, DEVICE_LIMIT_PER_MIN) or \
+            repo.rate_limited(t, crypto.keyed_hash(ip, key), IP_LIMIT_PER_MIN):
+        metric("CheckinRateLimited")
+        return resp(429, {"error": "slow down"})
+    site = repo.site_for_token(t, token)
+    if not site:
+        return resp(404, {"error": "unknown site"})
+    worker = authz.entity("Worker", dev_hash, site=authz.uid("Site", site["site_id"]))
+    if not authz.authorize(authz.uid("Worker", dev_hash), "LogCheckIn", authz.uid("Site", site["site_id"]),
+                           authz.site_entities(site) + [worker]):
+        return resp(403, {"error": "forbidden"})
+
+    day, now = planning.today_ist(), planning.now_ist()
+    if kind == "symptom":
+        recent = [c for c in repo.day_items(t, site["site_id"], "CHK", day) if c["type"] == "symptom"]
+        mine = [c for c in recent if c["device_token_hash"] == dev_hash
+                and _ts(c) > now - SYMPTOM_DEDUPE]
+        if not mine:
+            repo.put_checkin(t, site["site_id"], day, kind, dev_hash)
+            last_hour = 1 + sum(1 for c in recent if _ts(c) > now - timedelta(hours=1))
+            outbox.enqueue(site["chat_enc"], "text",
+                           text=render_symptom_alert_hi(now.strftime("%H:%M"), last_hour))
+            metric("SymptomReported")
+        return resp(200, {"ok": True, "first_aid": FIRST_AID_HI})
+    repo.put_checkin(t, site["site_id"], day, kind, dev_hash)
+    metric("BreakLogged", type=kind)
+    log("checkin", site=short_hash(site["site_id"]), type=kind)
+    return resp(200, {"ok": True})
+
+
+def _ts(item: dict) -> datetime:
+    # SK = CHK#{date}#{iso-with-offset}#{dev6}
+    return datetime.fromisoformat(item["SK"].split("#")[2]).replace(tzinfo=None)
+
+
+def static(name: str) -> dict:
+    path = WEB / name
+    return html_resp(path.read_text()) if path.exists() else resp(404, "not found", "text/plain")
+
+
+def handler(event, _ctx):
+    t = repo.table()
+    method = event.get("requestContext", {}).get("http", {}).get("method", "GET")
+    path = event.get("rawPath", "/")
+    ip = event.get("requestContext", {}).get("http", {}).get("sourceIp", "")
+    parts = [p for p in path.split("/") if p]
+    try:
+        if method == "POST" and path == "/api/checkin":
+            return checkin(t, json.loads(event.get("body") or "{}"), ip)
+        if method == "GET" and len(parts) == 2 and parts[0] == "s":
+            return page_worker(t, parts[1])
+        if method == "GET" and len(parts) == 2 and parts[0] == "p":
+            return page_poster(t, parts[1])
+        if method == "GET" and path in ("/audit", "/audit/"):
+            return static("audit/index.html")
+        if method == "GET" and path in ("/model-card", "/model-card/"):
+            return static("model_card/index.html")
+    except json.JSONDecodeError:
+        return resp(400, {"error": "bad json"})
+    return resp(404, {"error": "not found"})
