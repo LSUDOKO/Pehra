@@ -12,3 +12,4 @@ samconfig.local.toml
 .env.*
 *.pem
 out/
+.playwright-mcp/
