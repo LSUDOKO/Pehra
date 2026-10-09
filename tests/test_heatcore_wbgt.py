@@ -1,0 +1,43 @@
+from datetime import UTC, datetime
+
+import pytest
+
+from heatcore.solar import cos_zenith, erbs_direct_fraction
+from heatcore.wbgt import HourWeather, wbgt_hour
+
+CHENNAI = (13.08, 80.27)
+NOON_IST = datetime(2026, 5, 15, 6, 30, tzinfo=UTC)
+NIGHT_IST = datetime(2026, 5, 15, 18, 30, tzinfo=UTC)
+
+
+def test_sun_hotter_than_shade_at_noon():
+    out = wbgt_hour(HourWeather(NOON_IST, 35, 60, 1005, 3, 900), *CHENNAI)
+    assert out["wbgt_sun"] > out["wbgt_shade"]
+
+
+def test_sun_equals_shade_at_night():
+    out = wbgt_hour(HourWeather(NIGHT_IST, 30, 75, 1005, 2, 0), *CHENNAI)
+    assert out["wbgt_sun"] == out["wbgt_shade"]
+
+
+def test_humidity_raises_wbgt():
+    dry = wbgt_hour(HourWeather(NOON_IST, 36, 30, 1005, 3, 900), *CHENNAI)
+    humid = wbgt_hour(HourWeather(NOON_IST, 36, 70, 1005, 3, 900), *CHENNAI)
+    assert humid["wbgt_sun"] > dry["wbgt_sun"] + 2
+
+
+def test_regression_values():
+    # Locks current thermofeel 2.3.0 output; OSHA comparison is in docs/MODEL_CARD.md
+    out = wbgt_hour(HourWeather(NOON_IST, 35, 60, 1005, 3, 900), *CHENNAI)
+    assert out == {"wbgt_sun": pytest.approx(34.2, abs=0.2), "wbgt_shade": pytest.approx(30.1, abs=0.2)}
+
+
+def test_cos_zenith_noon_high_and_night_zero():
+    assert cos_zenith(*CHENNAI, NOON_IST) > 0.95
+    assert cos_zenith(*CHENNAI, NIGHT_IST) == 0
+
+
+def test_erbs_fraction_bounds():
+    f = erbs_direct_fraction(900, 0.97, NOON_IST)
+    assert 0.5 < f <= 0.9
+    assert erbs_direct_fraction(0, 0.97, NOON_IST) == 0
