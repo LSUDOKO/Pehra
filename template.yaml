@@ -388,3 +388,39 @@ Resources:
         - DynamoDBReadPolicy: { TableName: !Ref Table }
         - S3ReadPolicy: { BucketName: !Ref RecordsBucket }
         - S3CrudPolicy: { BucketName: !Ref MediaBucket }
+
+  # ---------------------------------------------------------------- observability
+  AlarmTopic:
+    Type: AWS::SNS::Topic
+    Condition: HasAlertEmail
+    Properties:
+      Subscription: [{ Protocol: email, Endpoint: !Ref AlertEmail }]
+
+  ForecastLateAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: No forecast ingested for 12 hours - plans will use an older (stale) forecast
+      Namespace: InvisibleHeat
+      MetricName: ForecastIngested
+      Statistic: Sum
+      Period: 43200
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: LessThanThreshold
+      TreatMissingData: breaching
+      AlarmActions: !If [HasAlertEmail, [!Ref AlarmTopic], !Ref AWS::NoValue]
+
+  OutDLQAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Telegram messages are failing repeatedly (outgoing DLQ not empty)
+      Namespace: AWS/SQS
+      MetricName: ApproximateNumberOfMessagesVisible
+      Dimensions: [{ Name: QueueName, Value: !GetAtt OutDLQ.QueueName }]
+      Statistic: Maximum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: !If [HasAlertEmail, [!Ref AlarmTopic], !Ref AWS::NoValue]
