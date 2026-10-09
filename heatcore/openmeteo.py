@@ -60,3 +60,12 @@ def parse_hourly(payload: dict) -> list[HourWeather]:
             wind_10m_ms=vals[3], ghi_wm2=vals[4], direct_wm2=direct,
         ))
     return rows
+
+
+def fetch_daily_tmax(lat: float, lon: float, start: str, end: str, session=None) -> dict:
+    """Daily max 2 m temperature (ERA5, local IST days) as {date: tmax_c}."""
+    d = _get(ARCHIVE_URL, {
+        "latitude": lat, "longitude": lon, "start_date": start, "end_date": end,
+        "daily": "temperature_2m_max", "timezone": "Asia/Kolkata",
+    }, session)["daily"]
+    return {t: v for t, v in zip(d["time"], d["temperature_2m_max"], strict=True) if v is not None}
