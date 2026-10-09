@@ -1,0 +1,36 @@
+"""Fixed bot texts (Hindi, Roman script). No numbers here except from code."""
+
+PRIVACY = (
+    "Namaste! Main Invisible Heat hoon. Main kal ka garmi-plan bhejta hoon: kab kaam rokna hai, "
+    "har ghante kitna aaram, aur kitna paani.\n\n"
+    "Hum kya rakhte hain: site ka naam, shahar, mazdooron ki ginti (naam nahi), aur aapka chat ID "
+    "(encrypted). Mazdooron ke naam, phone ya ID kabhi nahi.\n"
+    "Sab data India (Mumbai region) mein rehta hai. Mitane ke liye: /delete_my_data\n\n"
+    "Shuru karne ke liye: /register Site ka naam, shahar\n"
+    "Udaharan: /register Ramesh Tower, Chennai"
+)
+HELP = (
+    "Commands:\n"
+    "/register Naam, shahar - site jodiye\n"
+    "/crew 40 10 3 - kul log, bhaari kaam, naye log\n"
+    "Ya likhiye/boliye: '40 log, 10 bhaari kaam, 3 naye aaye'\n"
+    "/plan_now - abhi kal ka plan\n"
+    "/plan_now aaj - aaj ka plan\n"
+    "/links - mazdoor QR page aur poster\n"
+    "/delete_my_data - sab data mitaiye\n"
+    "Koi bhi sawaal likhiye, jaise: 'Kya hum 2 baje concrete daal sakte hain?'"
+)
+NOT_REGISTERED = "Pehle site jodiye: /register Site ka naam, shahar"
+ASK_REASON_LOOSER = ("Plan ko dheela karne ke liye kaaran likhiye (kam se kam 10 akshar). "
+                     "Yeh kaaran record mein save hoga.")
+ASK_REASON_STRICTER = "Plan ko zyada sakht karne ka kaaran likhiye. Yeh record mein save hoga."
+REASON_TOO_SHORT = "Kaaran bahut chhota hai. Kam se kam 10 akshar mein likhiye."
+OVERRIDE_DENIED = "Yeh badlav allowed nahi hai. Sirf site supervisor, kaaran ke saath, plan dheela kar sakta hai."
+APPROVED = "Plan approve ho gaya. Record mein save hai."
+OVERRIDDEN = "Badlav aur kaaran record mein save ho gaya."
+NO_PLAN = "Is din ka koi plan nahi mila."
+WORKING = "Soch raha hoon..."
+CREW_SAVED = "Crew save ho gaya. Agla plan isi se banega."
+CREW_UNSURE = "Mujhe ginti saaf samajh nahi aayi. Kripya likh kar bhejiye: /crew 40 10 3"
+DELETED = "Aapki site ka sab data mita diya gaya. Lock kiye gaye daily record apni avadhi ke baad khud mit jaate hain."
+ACKED = "Dhanyavaad. Note kar liya."
