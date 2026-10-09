@@ -37,3 +37,10 @@ def test_checked_gives_up_after_one_retry():
 
 def test_fallback_answer_uses_template():
     assert "Kaam band" in fallback_answer(toolbox()) or "plan" in fallback_answer(toolbox())
+
+
+def test_symptoms_always_get_fixed_first_aid():
+    from agent.agent import answer
+    from heatcore.templates_hi import FIRST_AID_HI
+    r = answer("Ek mazdoor ko chakkar aa raha hai", toolbox(), "unused-model", "ap-south-1")
+    assert r["text"] == FIRST_AID_HI and r["source"] == "fixed"

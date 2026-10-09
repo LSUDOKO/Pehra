@@ -7,6 +7,7 @@ import json
 
 from agent.number_check import verify_numbers
 from agent.prompts import INTRO_PROMPT, SYSTEM_PROMPT
+from agent.routing import is_symptom
 from agent.tools import ToolBox
 from heatcore.templates_hi import render_plan_hi
 from ihcommon.log import log, metric
@@ -100,6 +101,8 @@ def _checked(run, outputs_fn, kind: str) -> tuple[str | None, list[str]]:
 
 def answer(question: str, box: ToolBox, model_id: str, region: str) -> dict:
     """Answer a supervisor's question. Falls back to the fixed plan text on any failure."""
+    if is_symptom(question):
+        return {"text": box.first_aid()["text"], "source": "fixed", "tools": ["first_aid"]}
     from strands import Agent
 
     header = (f"Today (IST): {box.now.date().isoformat()}. Site: {box.site['name']} "
