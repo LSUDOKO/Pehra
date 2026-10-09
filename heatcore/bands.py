@@ -16,3 +16,12 @@ BANDS: tuple[tuple[float, int, str], ...] = (
 )
 
 STATUS_ORDER = {status: i for i, (_, _, status) in enumerate(BANDS)}
+
+
+def band_for(exceedance_c: float) -> tuple[int, str]:
+    """Return (rest_minutes, status) for an exceedance in deg C."""
+    e = round(exceedance_c, 2)  # avoid float noise right at a boundary
+    for upper, rest, status in BANDS:
+        if e <= upper:
+            return rest, status
+    raise AssertionError("unreachable: last band is open-ended")
