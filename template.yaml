@@ -27,6 +27,27 @@ Parameters:
     Default: ""
     Description: Optional email for the budget and forecast-late alarms
 
+Globals:
+  Function:
+    Runtime: python3.12
+    Architectures: [arm64]
+    Handler: app.handler
+    Timeout: 30
+    MemorySize: 512
+    Layers: [!Ref CoreLayer]
+    Environment:
+      Variables:
+        TABLE_NAME: !Ref Table
+        HEAT_BUCKET: !Ref HeatBucket
+        MEDIA_BUCKET: !Ref MediaBucket
+        RECORDS_BUCKET: !Ref RecordsBucket
+        OUT_QUEUE_URL: !Ref OutQueue
+        PLAN_QUEUE_URL: !Ref PlanQueue
+        PARAM_PREFIX: !Ref ParamPrefix
+        BEDROCK_MODEL_FAST: !Ref BedrockModelFast
+        BEDROCK_MODEL_QA: !Ref BedrockModelQa
+        AGENT_ENABLED: !Ref AgentEnabled
+
 Conditions:
   HasAlertEmail: !Not [!Equals [!Ref AlertEmail, ""]]
 
@@ -129,3 +150,19 @@ Resources:
     Type: AWS::Serverless::HttpApi
     Properties:
       DefaultRouteSettings: { ThrottlingBurstLimit: 50, ThrottlingRateLimit: 20 }
+
+  # ---------------------------------------------------------------- forecast
+  IngestForecastFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Fetch forecast, compute WBGT once per city, store on S3 (compute once, look up many)
+      CodeUri: functions/ingest_forecast/
+      Timeout: 120
+      Policies:
+        - S3CrudPolicy: { BucketName: !Ref HeatBucket }
+        - DynamoDBCrudPolicy: { TableName: !Ref Table }
+      Events:
+        # 05:30, 09:30 and 17:30 IST: before the 10:30 re-check and the 19:00 plan
+        Ingest:
+          Type: ScheduleV2
+          Properties: { ScheduleExpression: "cron(0 0,4,12 * * ? *)" }
