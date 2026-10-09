@@ -57,3 +57,21 @@ def test_vectorised_matches_scalar():
     assert abs(cos_zenith_array(*CHENNAI, t)[0] - cos_zenith(*CHENNAI, NOON_IST)) < 1e-6
     assert sun[0] == pytest.approx(scalar["wbgt_sun"], abs=0.1)
     assert shade[0] == pytest.approx(scalar["wbgt_shade"], abs=0.1)
+
+
+def test_wbgt_known_case_vs_osha_calculator():
+    """15 Chennai hours vs OSHA's online calculator (fixture recorded 2026-10-09).
+
+    OSHA prints whole degrees F (about 0.28 C resolution); tolerance 0.6 C per hour, 0.3 C mean.
+    """
+    import json
+    from pathlib import Path
+
+    data = json.loads((Path(__file__).parent / "fixtures/osha_wbgt_cases.json").read_text())
+    diffs = []
+    for c in data["cases"]:
+        h = HourWeather(datetime(2026, 5, 15, c["utc_h"], 0, tzinfo=UTC), c["temp_c"], c["rh"],
+                        c["p"], c["wind"], c["si"])
+        diffs.append(wbgt_hour(h, 13.08, 80.27)["wbgt_sun"] - c["osha_wbgt_c"])
+    assert max(abs(d) for d in diffs) <= 0.6
+    assert sum(abs(d) for d in diffs) / len(diffs) <= 0.3
