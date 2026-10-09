@@ -66,3 +66,22 @@ def render_plan_hi(plan: dict) -> str:
     out.append(f"- Paani: {plan['water']['cans_20l']} bade can (20 litre).")
     out.append(forecast_line(plan))
     return "\n".join(out)
+
+
+# Fixed first-aid text. Never generated, never edited by the AI.
+FIRST_AID_HI = (
+    "Turant kaam rokiye.\n"
+    "Chhaon mein jaiye.\n"
+    "Paani piyiye, dheere dheere.\n"
+    "Kapde dheele kariye.\n"
+    "Agar uljhan ho, behoshi ho, ya pasina band ho jaye: turant 108 par call kariye.\n"
+    "Yeh first aid hai, bimari ki jaanch nahi."
+)
+FIRST_AID_EN = (
+    "Stop work now.\n"
+    "Move to shade.\n"
+    "Drink water slowly.\n"
+    "Loosen clothing.\n"
+    "If there is confusion, fainting, or no sweating: call 108 immediately.\n"
+    "This is first aid, not a diagnosis."
+)
