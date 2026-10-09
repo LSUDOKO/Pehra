@@ -25,3 +25,10 @@ def direction(base: Plan, candidate: Plan) -> str:
         return "looser"
     b = {h.hour: h.rest_minutes for h in base.hours}
     return "stricter" if any(h.rest_minutes > b.get(h.hour, 0) for h in candidate.hours) else "same"
+
+
+def stricter_hours(old: dict, new: dict, from_hour: int, workload: str = "moderate") -> list[int]:
+    """Remaining hours (>= from_hour) where the new daily plan needs more rest than the old one."""
+    before = {h["hour"]: h["rest_minutes"] for h in old["plans"][workload]["hours"]}
+    return [h["hour"] for h in new["plans"][workload]["hours"]
+            if h["hour"] >= from_hour and h["rest_minutes"] > before.get(h["hour"], 0)]

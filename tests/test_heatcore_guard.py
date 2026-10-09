@@ -33,3 +33,15 @@ def test_dropping_an_hour_counts_as_looser():
 
 def test_same_plan():
     assert direction(BASE, copy.deepcopy(BASE)) == "same"
+
+
+def _daily(rests):
+    return {"plans": {"moderate": {"hours": [{"hour": 6 + i, "rest_minutes": r}
+                                             for i, r in enumerate(rests)]}}}
+
+
+def test_stricter_hours_only_counts_remaining_hours():
+    from heatcore.guard import stricter_hours
+    old, new = _daily([0, 15, 30, 30]), _daily([30, 15, 45, 30])
+    assert stricter_hours(old, new, from_hour=7) == [8]
+    assert stricter_hours(old, old, from_hour=6) == []
