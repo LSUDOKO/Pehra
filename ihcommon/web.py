@@ -61,6 +61,7 @@ def poster_page(site: dict, plan: dict, worker_url: str) -> str:
         cols.append(f'<div class="hour">{bar}<b>{clock(h["hour"])}</b></div>')
     cans = plan["water"]["cans_20l"]
     icons = CAN_ICON * cans if cans <= MAX_CAN_ICONS else CAN_ICON
+    can_label = f"{cans} can paani" if cans <= MAX_CAN_ICONS else f"× {cans} can paani"
     d = datetime.fromisoformat(plan["date"])
     stop = (f"{clock(plan['stop_from'])}–{clock(plan['stop_to'])} baje kaam band"
             if plan.get("stop_from") is not None else "Plan ke hisaab se aaram")
@@ -79,7 +80,7 @@ def poster_page(site: dict, plan: dict, worker_url: str) -> str:
 <span><i class="sw" style="background:var(--sun)"></i>Kaam</span>
 <span><i class="sw" style="background:var(--shade)"></i>Aaram (chhaon)</span>
 <span><i class="sw" style="background:var(--red)"></i>Kaam band</span></div>
-<div class="bottom"><div><div class="water">{icons}<span>{"" if cans <= MAX_CAN_ICONS else "× "}{cans} can paani</span></div>{new_line}
+<div class="bottom"><div><div class="water">{icons}<span>{can_label}</span></div>{new_line}
 <p class="note">Forecast: {html.escape(plan['forecast_model'])}, {issued:%d %b %H:%M} IST.
 WBGT (garmi + nami + dhoop) par bana plan. Yeh first aid nahi; emergency mein 108.</p></div>
 <div class="qr">{qr_svg(worker_url)}Aaram ke liye scan karein</div></div>
