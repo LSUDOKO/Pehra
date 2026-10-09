@@ -12,7 +12,10 @@ FC = ForecastMeta("open-meteo", datetime(2026, 10, 10, 12))
 NOW = datetime(2026, 10, 10, 19)
 
 
-def plan(crew=Crew(40, 10, 3, 1), now=NOW):
+DEFAULT_CREW = Crew(40, 10, 3, 1)
+
+
+def plan(crew=DEFAULT_CREW, now=NOW):
     return build_daily_plan(HEAT, crew, FC, now, site_id="s1", site_name="Test")
 
 
