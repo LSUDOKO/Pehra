@@ -94,3 +94,23 @@ Resources:
         ServerSideEncryptionConfiguration: [{ ServerSideEncryptionByDefault: { SSEAlgorithm: AES256 } }]
       PublicAccessBlockConfiguration:
         { BlockPublicAcls: true, BlockPublicPolicy: true, IgnorePublicAcls: true, RestrictPublicBuckets: true }
+
+  # ---------------------------------------------------------------- queues
+  PlanDLQ:
+    Type: AWS::SQS::Queue
+    Properties: { MessageRetentionPeriod: 1209600, SqsManagedSseEnabled: true }
+  PlanQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      VisibilityTimeout: 180
+      SqsManagedSseEnabled: true
+      RedrivePolicy: { deadLetterTargetArn: !GetAtt PlanDLQ.Arn, maxReceiveCount: 3 }
+  OutDLQ:
+    Type: AWS::SQS::Queue
+    Properties: { MessageRetentionPeriod: 1209600, SqsManagedSseEnabled: true }
+  OutQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      VisibilityTimeout: 180
+      SqsManagedSseEnabled: true
+      RedrivePolicy: { deadLetterTargetArn: !GetAtt OutDLQ.Arn, maxReceiveCount: 5 }
