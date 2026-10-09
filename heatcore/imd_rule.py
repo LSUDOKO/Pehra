@@ -25,3 +25,28 @@ def day_level(tmax_c: float, normal_c: float, region: str = "plains") -> Level:
     if departure >= 4.5 or tmax_c >= 45.0:
         return Level.HEATWAVE
     return Level.NONE
+
+
+def district_flags(
+    cells_tmax: list[list[float]],
+    cells_normal: list[list[float]],
+    region: str = "plains",
+    min_cells: int = 2,
+) -> list[bool]:
+    """Per-day heatwave flags for one district.
+
+    cells_tmax[c][d] is daily max temperature for cell c on day d.
+    A day qualifies if >= min_cells cells meet the rule; a heatwave is declared
+    only on qualifying days that are part of a run of >= 2 consecutive days.
+    """
+    if not cells_tmax:
+        return []
+    n_days = len(cells_tmax[0])
+    need = min(min_cells, len(cells_tmax))
+    qual = []
+    for d in range(n_days):
+        hits = sum(day_level(t[d], n[d], region) != Level.NONE
+                   for t, n in zip(cells_tmax, cells_normal, strict=True))
+        qual.append(hits >= need)
+    return [q and ((d > 0 and qual[d - 1]) or (d + 1 < n_days and qual[d + 1]))
+            for d, q in enumerate(qual)]
