@@ -39,3 +39,9 @@ def test_never_says_safe():
 
 def test_first_aid_is_fixed_and_mentions_108():
     assert "108" in FIRST_AID_HI and "jaanch nahi" in FIRST_AID_HI
+
+
+def test_day_word_today_vs_tomorrow():
+    from heatcore.templates_hi import day_word
+    assert day_word({"date": "2026-10-11", "generated_at": "2026-10-10T19:00:00"}) == "Kal"
+    assert day_word({"date": "2026-10-11", "generated_at": "2026-10-11T10:30:00"}) == "Aaj"

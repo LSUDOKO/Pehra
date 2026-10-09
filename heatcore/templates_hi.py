@@ -46,10 +46,16 @@ def rest_summary_hi(plan: dict) -> list[str]:
     return lines or ["Aaj koi zaroori aaram nahi. Phir bhi paani peete raho."]
 
 
+def day_word(plan: dict) -> str:
+    """'Aaj' if the plan is for the day it was generated, else 'Kal'."""
+    made = datetime.fromisoformat(plan["generated_at"]).date().isoformat()
+    return "Aaj" if made == plan["date"] else "Kal"
+
+
 def render_plan_hi(plan: dict) -> str:
     """The fallback plan message. Always works, no AI involved."""
     d = datetime.fromisoformat(plan["date"])
-    out = [f"Kal ka plan ({plan['site_name']}, {d:%d %b}):"]
+    out = [f"{day_word(plan)} ka plan ({plan['site_name']}, {d:%d %b}):"]
     if plan["stop_from"] is not None:
         out.append(f"- Kaam band: {when(plan['stop_from'])} se {when(plan['stop_to'])} tak.")
     else:
@@ -127,7 +133,7 @@ def render_voice_hi(plan: dict) -> str:
     """Short spoken version for Polly (one action per sentence)."""
     parts = []
     if plan["stop_from"] is not None:
-        parts.append(f"Kal {clock(plan['stop_from'])} se {clock(plan['stop_to'])} baje tak "
+        parts.append(f"{day_word(plan)} {clock(plan['stop_from'])} se {clock(plan['stop_to'])} baje tak "
                      "kaam rokna hai.")
     for p in plan["rest_summary"]:
         if 0 < p["rest_minutes"] < 60:
