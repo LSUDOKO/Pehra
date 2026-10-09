@@ -1,0 +1,31 @@
+// Invisible Heat authorization schema (Cedar).
+// Two trust rules live here, outside any prompt:
+//   1. The AI can never loosen a plan; only the site's supervisor can, with a reason.
+//   2. Organisations see aggregates; raw worker check-ins stay with the site supervisor.
+
+entity Supervisor;
+entity SystemAgent;
+entity LabourOfficer;
+entity Contractor = { tenant: String };
+entity Site = { owner: Supervisor, tenant: String };
+entity Plan = { site: Site };
+entity Worker = { site: Site };
+entity Record = { site: Site };
+
+type ChangeContext = { reason_length: Long, direction: String };
+
+action ViewPlan, ApprovePlan appliesTo {
+  principal: [Supervisor, SystemAgent, Contractor],
+  resource: Plan,
+};
+action StrictenPlan, LoosenPlan, OverridePlan appliesTo {
+  principal: [Supervisor, SystemAgent],
+  resource: Plan,
+  context: ChangeContext,
+};
+action LogCheckIn appliesTo { principal: Worker, resource: Site };
+action ViewCheckInsAggregate, ViewCheckInsRaw appliesTo {
+  principal: [Supervisor, Contractor, LabourOfficer],
+  resource: Site,
+};
+action ReadRecord appliesTo { principal: [Supervisor, Contractor], resource: Record };
