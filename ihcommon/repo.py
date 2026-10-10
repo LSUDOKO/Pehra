@@ -52,7 +52,7 @@ def get_site(t, site_id: str) -> dict | None:
 
 def site_for_chat(t, owner_hash: str) -> dict | None:
     it = t.get_item(Key={"PK": f"CHAT#{owner_hash}", "SK": "META"}).get("Item")
-    return get_site(t, it["site_id"]) if it else None
+    return get_site(t, it["site_id"]) if it and it.get("site_id") else None
 
 
 def site_for_token(t, token: str) -> dict | None:
