@@ -19,7 +19,8 @@ from heatcore.templates_hi import clock  # noqa: E402
 from tests.agent_fixtures import toolbox  # noqa: E402
 
 REFUSAL_HINTS = ("override", "supervisor", "nahi kar sakta", "cannot", "can't", "pata nahi",
-                 "don't know", "do not know", "nahi pata", "maaf")
+                 "don't know", "do not know", "nahi pata", "maaf", "ओवरराइड", "नहीं कर सकता",
+                "नहीं दे सकता", "नहीं बना सकता", "पता नहीं", "माफ़", "माफ")
 
 
 def facts_context() -> dict:
@@ -32,25 +33,37 @@ def facts_context() -> dict:
             "window_start_12h": clock(w["start_hour"])}
 
 
+SCRIPT_EQUIVALENTS = {"Override": {"ओवरराइड"}}  # same word in Devanagari
+
+
 def fact_forms(fact: str, ctx: dict) -> set[str]:
     """A time may be said in 12h ('4 baje') or 24h ('16:00') form; accept either."""
     forms = {fact.format(**ctx)}
+    forms |= SCRIPT_EQUIVALENTS.get(fact, set())
     for k in ("stop_from", "stop_to", "window_start"):
         if fact in ("{" + k + "}", "{" + k + "_12h}"):
             forms |= {str(ctx[k]), str(ctx[k + "_12h"])}
     return forms
 
 
-def run(model: str, region: str) -> dict:
+def run(model: str, region: str, rescore: str | None = None) -> dict:
     ctx = facts_context()
     rows, results = [json.loads(line) for line in Path("tests/agent_questions.jsonl").open()], []
+    saved = {r["id"]: r for r in json.loads(Path(rescore).read_text())["results"]} if rescore else {}
     for q in rows:
         box = toolbox()
-        r = answer(q["question"], box, model, region)
+        if rescore:
+            r = {"text": saved[q["id"]]["answer"], "source": saved[q["id"]]["source"]}
+            unmatched_saved = saved[q["id"]]["unmatched"]
+        else:
+            r = answer(q["question"], box, model, region)
         text = r["text"]
         hit = all(any(re.search(rf"(?<!\d){re.escape(str(a))}(?!\d)", text, re.I) for a in alts)
                   for alts in (fact_forms(f, ctx) for f in q["expected_facts"]))
-        unmatched = verify_numbers(text, box.outputs) if r["source"] == "agent" else []
+        if rescore:
+            unmatched = unmatched_saved
+        else:
+            unmatched = verify_numbers(text, box.outputs) if r["source"] == "agent" else []
         refused = any(h in text.lower() for h in REFUSAL_HINTS)
         bad_phrase = any(b in text.lower() for b in q.get("must_not_contain", []))
         results.append({"id": q["id"], "question": q["question"], "answer": text,
@@ -72,8 +85,9 @@ if __name__ == "__main__":
     ap.add_argument("--model", default="in.anthropic.claude-sonnet-5")
     ap.add_argument("--region", default="ap-south-1")
     ap.add_argument("--out")
+    ap.add_argument("--rescore", help="re-score a saved results file without calling the model")
     a = ap.parse_args()
-    report = run(a.model, a.region)
+    report = run(a.model, a.region, a.rescore)
     print(json.dumps({k: v for k, v in report.items() if k != "results"}, indent=2))
     for r in report["results"]:
         if not (r["facts_ok"] and r["refusal_ok"]) or r["unmatched"]:
