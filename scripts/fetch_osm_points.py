@@ -73,7 +73,11 @@ def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     for key in a.cities.split(","):
         c = CITIES[key]
-        pts = fetch(c.lat, c.lon)
+        try:
+            pts = fetch(c.lat, c.lon)
+        except RuntimeError as e:  # keep going; rerun later for the cities that failed
+            print(f"{c.name:24s} FAILED ({e})")
+            continue
         doc = {"city": key, "source": "OpenStreetMap contributors (ODbL)", "radius_m": RADIUS_M,
                "fetched_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "points": pts}
         (OUT / f"{key}.json").write_text(json.dumps(doc))
