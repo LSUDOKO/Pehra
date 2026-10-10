@@ -26,3 +26,30 @@ def test_heat_is_in_ist_and_roundtrips():
 def test_for_date_filters_local_day():
     heat = compute_heat(load(), 19.04, 73.07)
     assert all(h.time_local.day == 16 for h in for_date(heat, "2023-04-16"))
+
+
+def test_wx_rows_local_and_complete():
+    from heatcore.heat import wx_rows
+    rows = wx_rows(json.loads(FIX.read_text()))
+    assert len(rows) == 24 and rows[0]["t"].endswith("05:00:00")
+    assert rows[6]["temp"] is not None and "precip" in rows[6]
+
+
+def test_geocode_and_flood_parse():
+    from heatcore import openmeteo
+
+    class S:
+        def get(self, url, params, timeout):
+            class R:
+                def raise_for_status(self):
+                    pass
+
+                def json(self):
+                    if "geocoding" in url:
+                        return {"results": [{"name": "Varanasi", "latitude": 25.3, "longitude": 83.0,
+                                             "admin1": "Uttar Pradesh"}]}
+                    return {"daily": {"river_discharge": [1.0, 2.0]}}
+            return R()
+
+    assert openmeteo.geocode("varanasi", S())["state"] == "Uttar Pradesh"
+    assert openmeteo.fetch_flood(1, 2, session=S()) == [1.0, 2.0]

@@ -5,7 +5,7 @@ row is centred 30 min earlier. In IST (UTC+5:30) that lands on a whole hour.
 """
 
 from dataclasses import replace
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 
 from heatcore.plan import HourHeat
 from heatcore.wbgt import HourWeather, wbgt_hour
@@ -34,3 +34,20 @@ def heat_from_json(rows: list[dict]) -> list[HourHeat]:
 
 def for_date(heat: list[HourHeat], day: str) -> list[HourHeat]:
     return [h for h in heat if h.time_local.date().isoformat() == day]
+
+
+def wx_rows(payload: dict) -> list[dict]:
+    """Hourly weather in local time (same 30-minute centring as heat) for rain, nights and sensors."""
+    h = payload["hourly"]
+    out = []
+    for i, t in enumerate(h["time"]):
+        mid = datetime.fromisoformat(t).replace(tzinfo=UTC) - timedelta(minutes=30)
+        local = mid.astimezone(IST).replace(tzinfo=None)
+
+        def g(key, i=i):
+            return (h.get(key) or [None] * len(h["time"]))[i]
+        out.append({"t": local.isoformat(), "temp": g("temperature_2m"), "rh": g("relative_humidity_2m"),
+                    "precip": g("precipitation"), "pprob": g("precipitation_probability"),
+                    "pressure": g("surface_pressure"), "wind": g("wind_speed_10m"),
+                    "ghi": g("shortwave_radiation"), "direct": g("direct_radiation")})
+    return out
