@@ -20,3 +20,7 @@ Where a library or data source didn't match the build pack, we followed the libr
 | 2026-10-10 | Webhook answers fast; questions and voice go to an async assistant Lambda | Telegram expects a quick webhook response; Bedrock and Transcribe can take tens of seconds |
 | 2026-10-10 | Audit "danger" uses shade WBGT | conservative choice; sun counts are reported alongside |
 | 2026-10-10 | Polly input in Roman-script Hindi | Kajal (hi-IN, neural) accepts it; Devanagari comparison left for listening tests |
+| 2026-10-10 | Default runtime model: Amazon Nova Pro (`apac.amazon.nova-pro-v1:0`) | Claude on Bedrock needs an AWS Marketplace subscription; the account returned INVALID_PAYMENT_INSTRUMENT. Nova needs none. Claude stays a parameter switch |
+| 2026-10-10 | Plan intro = one AI sentence (Roman Hindi, no numbers) + fixed action line | Nova's second sentences were awkward Hindi; Devanagari or any number makes the intro fall back |
+| 2026-10-10 | Strip `<thinking>` tags from model output | Nova sometimes emits them |
+| 2026-10-10 | Eval scorer accepts 12h/24h times and Devanagari "ओवरराइड" | the model answered correctly in those forms; scores re-computed from saved answers |
