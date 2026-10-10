@@ -11,8 +11,11 @@ import time
 
 from agent.roster import parse_crew_roster, readback
 from heatcore.cities import get_city
-from ihcommon import authz, config, crypto, planning, repo, texts
+from heatcore.templates_hi import CALL_TEST_HI
+from ihcommon import authz, config, crypto, outbox, planning, repo, texts
+from ihcommon.channels import is_whatsapp
 from ihcommon.log import log, metric
+from ihcommon.voicecall import normalise_phone
 
 ASSISTANT_FN = os.environ.get("ASSISTANT_FN", "")
 
@@ -123,6 +126,21 @@ def apply_override(d, site: dict, owner: str, state: dict, reason: str) -> str:
 
 # ---- dispatch -----------------------------------------------------------------------
 
+ALIASES = {"start": "/start", "hi": "/start", "hello": "/start", "namaste": "/start", "help": "/help",
+           "plan": "/plan_now", "links": "/links", "crew": "/crew", "call": "/test_call"}
+
+
+def cmd_call_on(d, chat_id: str, site: dict, arg: str) -> str:
+    """Opt in to Hindi voice-call alerts. WhatsApp chats can use their own number."""
+    raw = arg.strip() or (chat_id if is_whatsapp(chat_id) else "")
+    phone = normalise_phone(raw) if raw else None
+    if not phone:
+        return texts.CALL_ASK_NUMBER
+    repo.set_site_fields(d.t, site["site_id"], call_enc=crypto.encrypt(phone, d.key))
+    metric("CallOptIn")
+    return texts.CALL_ON.format(last4=phone[-4:])
+
+
 def on_callback(d, cb: dict) -> None:
     chat_id = str(cb["message"]["chat"]["id"])
     owner = crypto.keyed_hash(chat_id, d.key)
@@ -165,7 +183,7 @@ def on_message(d, msg: dict) -> None:
     owner = crypto.keyed_hash(chat_id, d.key)
     text = (msg.get("text") or "").strip()
     cmd, _, arg = text.partition(" ")
-    cmd = cmd.split("@")[0].lower()
+    cmd = ALIASES.get(cmd.split("@")[0].lower(), cmd.split("@")[0].lower())
     if cmd == "/start":
         d.bot.send_text(chat_id, texts.PRIVACY)
         return
@@ -189,6 +207,13 @@ def on_message(d, msg: dict) -> None:
         reply, buttons = cmd_crew(d, owner, arg)
     elif cmd == "/plan_now":
         reply = cmd_plan_now(d, site, arg)
+    elif cmd == "/call_on":
+        reply = cmd_call_on(d, chat_id, site, arg)
+    elif cmd == "/call_off":
+        repo.set_site_fields(d.t, site["site_id"], call_enc=None)
+        reply = texts.CALL_OFF
+    elif cmd == "/test_call":
+        reply = texts.CALL_TEST_QUEUED if outbox.enqueue_call(site, CALL_TEST_HI) else texts.CALL_NOT_ON
     elif cmd == "/delete_my_data":
         reply, buttons = "Pakka sab data mitana hai?", [[("Haan, mitao", "del_yes")]]
     elif text:
