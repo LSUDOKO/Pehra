@@ -7,7 +7,7 @@ block Telegram. Replies go out through the SQS outbox.
 from agent.agent import answer
 from agent.roster import parse_crew_roster, readback
 from agent.tools import ToolBox
-from ihcommon import channels, config, heatstore, outbox, planning, repo, texts
+from ihcommon import channels, config, heatstore, outbox, people, planning, repo, texts
 from ihcommon.crypto import decrypt
 from ihcommon.log import log, metric
 from ihcommon.transcribe import transcribe_ogg
@@ -46,8 +46,20 @@ def on_voice(t, site: dict, event: dict) -> None:
     on_question(t, site, tr["text"], event["chat_enc"])
 
 
+def on_personal_today(t, owner: str) -> None:
+    person = repo.get_person(t, owner)
+    if not person:
+        return
+    r = people.today(person)
+    outbox.enqueue(person["chat_enc"], "text", text=r["text"])
+    metric("PersonalForecastSent", source="on_demand")
+
+
 def handler(event, _ctx):
     t = repo.table()
+    if event.get("kind") == "personal_today":
+        on_personal_today(t, event["owner"])
+        return {"done": True}
     site = repo.get_site(t, event["site_id"])
     if not site:
         return {"skipped": True}
