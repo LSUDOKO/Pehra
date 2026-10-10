@@ -132,3 +132,10 @@ def test_button_reply_becomes_callback(wa):
                "button_reply": {"id": "ov:2026-10-11", "title": "Override"}}}]}}]}]}
     post(app, payload)
     assert d.bot.sent[-1][1] == "Plan ko kaise badalna hai?"
+
+
+def test_outside_24h_window_is_its_own_error():
+    from ihcommon.channel import OutsideWindow
+    s = Session(Resp(400, {"error": {"code": 131047, "message": "Re-engagement message"}}))
+    with pytest.raises(OutsideWindow):
+        WhatsApp("T", "PID", s).send_text("wa:91", "plan")

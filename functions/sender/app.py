@@ -10,7 +10,7 @@ import time
 import boto3
 
 from ihcommon import channels, config
-from ihcommon.channel import RateLimited
+from ihcommon.channel import OutsideWindow, RateLimited
 from ihcommon.crypto import decrypt
 from ihcommon.log import log, metric
 
@@ -49,6 +49,10 @@ def handler(event, _ctx):
             last_sent[key] = time.time()
             metric("MessageSent", kind=msg["kind"])
             time.sleep(MIN_GAP_S)
+        except OutsideWindow:
+            # Expected on the free WhatsApp setup: drop it, the plan is still saved and on the poster.
+            log("whatsapp_outside_window")
+            metric("WhatsAppOutsideWindow")
         except RateLimited as e:
             log("telegram_rate_limited", retry_after=e.retry_after)
             failures.append({"itemIdentifier": rec["messageId"]})

@@ -14,6 +14,10 @@ class RateLimited(Exception):
         self.retry_after = retry_after
 
 
+class OutsideWindow(Exception):
+    """WhatsApp: no customer-service window open (user has not messaged in 24 h); needs a paid template."""
+
+
 class Channel(Protocol):
     def send_text(self, chat_id: str, text: str, buttons: Buttons | None = None) -> dict: ...
 
