@@ -242,8 +242,12 @@ def async_assist(d: Deps, payload: dict) -> None:
 def handler(event, _ctx):
     config.learn_base_url(event)
     headers = {k.lower(): v for k, v in (event.get("headers") or {}).items()}
-    if not hmac.compare_digest(headers.get("x-telegram-bot-api-secret-token", ""),
-                               config.param("webhook-secret")):
+    try:
+        expected = config.param("webhook-secret")
+    except Exception as e:  # secrets not set up yet: fail closed
+        log("webhook_secret_unavailable", error=type(e).__name__)
+        return {"statusCode": 401, "body": "unauthorized"}
+    if not hmac.compare_digest(headers.get("x-telegram-bot-api-secret-token", ""), expected):
         metric("WebhookRejected")
         return {"statusCode": 401, "body": "unauthorized"}
     update = json.loads(event.get("body") or "{}")
