@@ -39,3 +39,21 @@ def test_delete_site_data(ddb_table):
     assert repo.delete_site_data(ddb_table, site) >= 5
     assert repo.get_site(ddb_table, "s1") is None
     assert repo.site_for_token(ddb_table, "tok123") is None
+
+
+def test_person_roundtrip_and_listing(ddb_table):
+    person = {"place": "Varanasi", "lat": 25.3, "lon": 83.0, "household": {"elderly": 1}}
+    repo.put_person(ddb_table, "p1", person)
+    repo.update_person(ddb_table, "p1", family_enc="x")
+    assert repo.get_person(ddb_table, "p1")["family_enc"] == "x"
+    repo.update_person(ddb_table, "p1", family_enc=None)
+    assert "family_enc" not in repo.get_person(ddb_table, "p1")
+    assert [p["owner_hash"] for p in repo.list_people(ddb_table)] == ["p1"]
+
+
+def test_community_point_needs_two_reporters(ddb_table):
+    assert repo.report_point(ddb_table, "delhi", 28.63151, 77.21672, "community_water", "aaaa") == 1
+    assert repo.report_point(ddb_table, "delhi", 28.63151, 77.21672, "community_water", "aaaa") == 1
+    assert repo.community_points(ddb_table, "delhi") == []
+    assert repo.report_point(ddb_table, "delhi", 28.63152, 77.21671, "community_water", "bbbb") == 2
+    assert len(repo.community_points(ddb_table, "delhi")) == 1

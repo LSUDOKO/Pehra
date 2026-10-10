@@ -219,3 +219,64 @@ def set_site_fields(t, site_id: str, **fields) -> None:
     if sets:
         kw["ExpressionAttributeValues"] = {f":{k}": v for k, v in sets.items()}
     t.update_item(**kw)
+
+
+# ---- people (personal / family mode) -------------------------------------------
+
+def put_person(t, owner_hash: str, person: dict) -> None:
+    t.put_item(Item=_num({**person, "PK": f"PERSON#{owner_hash}", "SK": "META", "owner_hash": owner_hash,
+                          "GSI1PK": "PEOPLE", "GSI1SK": owner_hash}))
+
+
+def get_person(t, owner_hash: str) -> dict | None:
+    it = t.get_item(Key={"PK": f"PERSON#{owner_hash}", "SK": "META"}).get("Item")
+    return _clean(it) if it else None
+
+
+def update_person(t, owner_hash: str, **fields) -> None:
+    sets = {k: v for k, v in fields.items() if v is not None}
+    removes = [k for k, v in fields.items() if v is None]
+    expr = []
+    if sets:
+        expr.append("SET " + ", ".join(f"#{k} = :{k}" for k in sets))
+    if removes:
+        expr.append("REMOVE " + ", ".join(f"#{k}" for k in removes))
+    kw = {"Key": {"PK": f"PERSON#{owner_hash}", "SK": "META"}, "UpdateExpression": " ".join(expr),
+          "ExpressionAttributeNames": {f"#{k}": k for k in fields}}
+    if sets:
+        kw["ExpressionAttributeValues"] = _num({f":{k}": v for k, v in sets.items()})
+    t.update_item(**kw)
+
+
+def list_people(t) -> list[dict]:
+    out, kw = [], {"IndexName": "GSI1", "KeyConditionExpression": Key("GSI1PK").eq("PEOPLE")}
+    while True:
+        r = t.query(**kw)
+        out += [_clean(i) for i in r["Items"]]
+        if "LastEvaluatedKey" not in r:
+            return out
+        kw["ExclusiveStartKey"] = r["LastEvaluatedKey"]
+
+
+def delete_person(t, owner_hash: str) -> None:
+    t.delete_item(Key={"PK": f"PERSON#{owner_hash}", "SK": "META"})
+
+
+# ---- community water points (shown after 2 independent reports) -----------------
+
+def report_point(t, area: str, lat: float, lon: float, kind: str, reporter_hash: str) -> int:
+    """Add a report; returns the number of distinct reporters for this point (~11 m grid)."""
+    pid = f"{lat:.4f}_{lon:.4f}"
+    r = t.update_item(Key={"PK": f"PLACE#{area}", "SK": pid},
+                      UpdateExpression="ADD reporters :r SET lat = :lat, lon = :lon, kind = :k",
+                      ExpressionAttributeValues=_num({":lat": lat, ":lon": lon, ":k": kind})
+                      | {":r": {reporter_hash[:16]}},
+                      ReturnValues="ALL_NEW")
+    return len(r["Attributes"]["reporters"])
+
+
+def community_points(t, area: str, min_reports: int = 2) -> list[dict]:
+    r = t.query(KeyConditionExpression=Key("PK").eq(f"PLACE#{area}"))
+    return [{"lat": float(i["lat"]), "lon": float(i["lon"]), "kind": "community_water", "name": "",
+             "reports": len(i["reporters"])}
+            for i in r["Items"] if len(i.get("reporters", [])) >= min_reports]
