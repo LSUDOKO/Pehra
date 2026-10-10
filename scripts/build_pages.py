@@ -80,8 +80,25 @@ def model_card_page(md: str) -> str:
     return page("Invisible Heat model card", "\n".join(out))
 
 
+def home_page(s: dict) -> str:
+    """Landing page: fill the template with numbers from the audit and the Kharghar replay."""
+    t = s["total"]
+    k = json.loads((ROOT / "docs/results/kharghar_replay.json").read_text())
+    peak = max(h["wbgt_sun"] for h in k["hours"])
+    vals = {"N_INVISIBLE": f"{t['invisible_days_shade']:,}", "N_OUTSIDE": f"{t['invisible_shade_outside_mar_jun']:,}",
+            "N_CITIES": str(len(s["districts"])), "N_RAIN": f"{t.get('heavy_rain_days', 0):,}",
+            "N_NIGHTS": f"{t.get('warm_nights', 0):,}", "K_TMAX": str(k["imd"]["tmax_c"]), "K_WBGT": str(peak),
+            "LIMIT": str(t["limit_c"])}
+    tpl = (ROOT / "web/home/template.html").read_text()
+    for key, v in vals.items():
+        tpl = tpl.replace("{{" + key + "}}", html.escape(v))
+    assert "{{" not in tpl, "unfilled placeholder in home page"
+    return tpl
+
+
 if __name__ == "__main__":
     summary = json.loads((ROOT / "docs/results/audit_summary.json").read_text())
+    (ROOT / "web/home/index.html").write_text(home_page(summary))
     (ROOT / "web/audit/index.html").write_text(audit_page(summary))
     card = ROOT / "docs/MODEL_CARD.md"
     if card.exists():
