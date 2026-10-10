@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from ihcommon import config, repo
+from ihcommon import config, crypto, repo
 
 KEY = base64.b64encode(os.urandom(32)).decode()
 
@@ -85,7 +85,9 @@ def test_rejects_bad_secret(env):
 def test_register_stores_hashed_chat_only(env):
     app, d = env
     site = register(app, d)
-    assert site["city"] == "chennai" and "111" not in json.dumps(site)
+    assert site["city"] == "chennai"
+    assert all(v not in ("111", 111) for v in site.values())  # chat id never stored in clear
+    assert crypto.decrypt(site["chat_enc"], KEY) == "111"
     assert "QR page" in d.bot.sent[-1][1]
 
 
