@@ -1,6 +1,6 @@
 # Invisible Heat
 
-**Heat-safety work-rest plans for India's outdoor workers, built on WBGT, delivered in Hindi on Telegram.**
+**Heat-safety work-rest plans for India's outdoor workers, built on WBGT, delivered in Hindi on Telegram or WhatsApp, with Hindi phone-call alerts.**
 
 Environmental Hacks (Bharat Builds Tour, Event 02) · WeMakeDevs × AWS · Track 02: Heat and Water · Team Mavricks
 
@@ -31,6 +31,8 @@ A humid 36 °C day can be harder on a construction worker than a dry 42 °C day,
 | **Re-check** | Site supervisor | At 10:30 and 13:30 the plan is rebuilt from the newest forecast. An alert goes out only if any remaining hour got stricter, and it must be acknowledged. |
 | **Ask** | Site supervisor | Text or voice: "Kya hum 2 baje concrete daal sakte hain?" The Strands agent answers from tool results only; tools find the coolest 4-hour window. |
 | **Crew by voice** | Site supervisor | "40 log, 10 bhaari kaam, 3 naye aaye" → Transcribe (hi-IN) → rule-based parse → read back → confirm before saving. |
+| **WhatsApp too** | Site supervisor | The same bot on the WhatsApp Cloud API (free test number for the demo), with buttons and voice notes. See [`docs/WHATSAPP_AND_CALLS.md`](docs/WHATSAPP_AND_CALLS.md). |
+| **Hindi phone call** | Site supervisor | Opt in with `/call_on`. A worker's "chakkar" report or a stop-work re-check also rings the supervisor's phone with a fixed Hindi message (Polly voice, Twilio; free trial for the demo). |
 | **Worker QR page** | Workers | No app, no account: tap **Aaram shuru / khatam** to log a break, or **Chakkar aa raha hai** for fixed first-aid text, which also alerts the supervisor. |
 | **Picture poster** | Workers | A printable "day ruler": each hour is a column, filled green for the share of the hour that is rest, red with a hand for stop-work. Readable without reading Hindi. |
 | **Prove it** | Contractor / auditor | A nightly SHA-256 hash-chained record per site in S3 Object Lock, and a monthly compliance PDF built only from those records. |
@@ -66,6 +68,8 @@ flowchart LR
   NR[23:30 record λ] --> OL[(S3 Object Lock)]
 ```
 
+**Outside AWS (demo tiers):** Telegram Bot API (free), WhatsApp Cloud API test number (free, up to 5 recipients), Twilio trial for voice calls.
+
 **AWS services:** Lambda (arm64/Graviton), API Gateway HTTP API, Step Functions, EventBridge Scheduler, SQS, DynamoDB, S3 (+ Object Lock), Amazon Bedrock, Amazon Polly, Amazon Transcribe, SSM Parameter Store, CloudWatch, SNS and Budgets.
 **AWS open source:** Strands Agents SDK, Cedar (via `cedarpy`), SAM CLI.
 
@@ -73,7 +77,7 @@ flowchart LR
 
 ```bash
 uv sync --python 3.12          # Python 3.12, uv
-uv run pytest                  # 149 tests: science, Cedar, agent tools, webhook, check-ins, e2e
+uv run pytest                  # 168 tests: science, Cedar, agent tools, webhook, check-ins, e2e
 uv run python scripts/kharghar_replay.py
 uv run python scripts/run_audit.py              # ~1 min with cache; writes docs/results/audit_summary.json
 uv run python scripts/seed_sample_month.py && uv run python scripts/verify_hash_chain.py --dir out/sample_records
@@ -127,7 +131,7 @@ SHRAM (UC Berkeley IECC, 2026) sends district-level heat-stress forecasts by ema
 
 ## What's next (roadmap, not built)
 
-WhatsApp delivery (needs paid utility templates for scheduled pushes), red-day escalation to contractors, a weekly outlook, many sites per contractor, Tamil/Bengali/Odia voices, ECMWF ensembles for probabilities, a labour-department aggregate view, an insurance-trigger API, and site sensor correction.
+WhatsApp scheduled pushes (need paid utility templates), production voice calls with an Indian caller ID, red-day escalation to contractors, a weekly outlook, many sites per contractor, Tamil/Bengali/Odia voices, ECMWF ensembles for probabilities, a labour-department aggregate view, an insurance-trigger API, and site sensor correction.
 
 ## Credits and licences
 
