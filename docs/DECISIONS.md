@@ -24,3 +24,7 @@ Where a library or data source didn't match the build pack, we followed the libr
 | 2026-10-10 | Plan intro = one AI sentence (Roman Hindi, no numbers) + fixed action line | Nova's second sentences were awkward Hindi; Devanagari or any number makes the intro fall back |
 | 2026-10-10 | Strip `<thinking>` tags from model output | Nova sometimes emits them |
 | 2026-10-10 | Eval scorer accepts 12h/24h times and Devanagari "ओवरराइड" | the model answered correctly in those forms; scores re-computed from saved answers |
+| 2026-10-10 | WhatsApp via Meta Cloud API test number, sharing `ihcommon.bot` with Telegram | free for up to 5 recipients; one bot logic, two thin webhooks; chat ids prefixed `wa:` |
+| 2026-10-10 | WhatsApp messages outside the 24 h window are dropped, not retried | they need a paid utility template; retrying would only fill the DLQ |
+| 2026-10-10 | Hindi voice calls via Twilio trial, opt-in with `/call_on` | free trial credit, verified numbers only; Amazon Connect has no free India outbound and WhatsApp business calls need a payment method |
+| 2026-10-10 | Call audio = Polly MP3 played with TwiML `<Play>` from a presigned S3 URL | fixed Hindi text with our own voice; avoids relying on Twilio's Hindi TTS |
