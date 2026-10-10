@@ -14,9 +14,12 @@ ERA5 smooths extremes, so every count is a minimum.
 from collections import defaultdict
 from datetime import date
 
-from heatcore.climatology import normal_for
+from heatcore.climatology import normal_for, normals_by_mmdd
 from heatcore.imd_rule import district_flags
+from heatcore.nights import warm_night
 from heatcore.niosh import rel
+from heatcore.rain import ALERT as RAIN_ALERT
+from heatcore.rain import category
 from heatcore.workload import metabolic_rate
 
 LIMIT_C = round(rel(metabolic_rate("moderate")), 1)
@@ -34,14 +37,23 @@ def daily_max_work_wbgt(hours_ist: list[tuple[str, int, float, float]]) -> dict[
 
 
 def audit_city(wbgt_by_day: dict[str, tuple[float, float]], tmax_by_day: dict[str, float],
-               climatology: dict[str, float], region: str) -> list[dict]:
+               climatology: dict[str, float], region: str, tmin_by_day: dict[str, float] | None = None,
+               tmin_climatology: dict[str, float] | None = None,
+               rain_by_day: dict[str, float] | None = None) -> list[dict]:
     days = sorted(set(wbgt_by_day) & set(tmax_by_day))
     normals = [normal_for(date.fromisoformat(d), climatology) for d in days]
     hw = district_flags([[tmax_by_day[d] for d in days]], [normals], region, min_cells=1)
+    tmin_norm = normals_by_mmdd(tmin_climatology) if tmin_climatology else {}
     rows = []
     for d, n, flag in zip(days, normals, hw, strict=True):
         sun, shade = wbgt_by_day[d]
+        tmin = (tmin_by_day or {}).get(d)
+        night = (warm_night(tmax_by_day[d], tmin, tmin_norm[d[5:]])
+                 if tmin is not None and d[5:] in tmin_norm else "none")
+        rain = (rain_by_day or {}).get(d)
         rows.append({"date": d, "tmax_c": tmax_by_day[d], "normal_c": n, "imd_heatwave": flag,
+                     "tmin_c": tmin, "warm_night": night != "none", "rain_mm": rain,
+                     "heavy_rain": rain is not None and category(rain) in RAIN_ALERT,
                      "wbgt_sun_max": sun, "wbgt_shade_max": shade,
                      "danger_shade": shade > LIMIT_C, "danger_sun": sun > LIMIT_C,
                      "invisible_shade": shade > LIMIT_C and not flag,
@@ -58,4 +70,6 @@ def summarise(rows: list[dict]) -> dict:
             "invisible_days_shade": count("invisible_shade"),
             "invisible_days_sun": count("invisible_sun"),
             "invisible_shade_outside_mar_jun": count("invisible_shade", lambda r: r["outside_mar_jun"]),
+            "warm_nights": sum(1 for r in rows if r.get("warm_night")),
+            "heavy_rain_days": sum(1 for r in rows if r.get("heavy_rain")),
             "limit_c": LIMIT_C}
