@@ -9,7 +9,7 @@ PREFIX="${PARAM_PREFIX:-/invisible-heat}"
 
 put() {  # name value
   aws ssm put-parameter --region "$REGION" --name "$PREFIX/$1" --type SecureString \
-    --value "$2" --overwrite >/dev/null
+    --value="$2" --overwrite >/dev/null
   echo "stored $PREFIX/$1"
 }
 exists() { aws ssm get-parameter --region "$REGION" --name "$PREFIX/$1" >/dev/null 2>&1; }
