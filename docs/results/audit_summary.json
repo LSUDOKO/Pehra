@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-09T17:44:00+00:00",
+  "generated_at": "2026-10-10T14:07:45+00:00",
   "period": [
     "2021-01-01",
     "2025-12-31"
@@ -10,16 +10,20 @@
   "caveats": [
     "A minimum: ERA5 (~25 km) smooths humid extremes.",
     "IMD rule recreated on one grid cell per city; not IMD's official record.",
-    "Shade WBGT; sun counts are higher and listed separately."
+    "Shade WBGT; sun counts are higher and listed separately.",
+    "Warm nights: IMD rule recreated (only on days >= 40 C, min temp >= 4.5 C above normal).",
+    "Heavy rain: ERA5 daily total >= 64.5 mm (IMD 'heavy' category) at one grid cell."
   ],
   "total": {
-    "days": 18260,
-    "heatwave_days": 268,
-    "danger_days_shade": 3585,
-    "danger_days_sun": 12125,
-    "invisible_days_shade": 3459,
-    "invisible_days_sun": 11858,
-    "invisible_shade_outside_mar_jun": 1679,
+    "days": 21912,
+    "heatwave_days": 296,
+    "danger_days_shade": 4514,
+    "danger_days_sun": 14335,
+    "invisible_days_shade": 4372,
+    "invisible_days_sun": 14040,
+    "invisible_shade_outside_mar_jun": 2327,
+    "warm_nights": 68,
+    "heavy_rain_days": 90,
     "limit_c": 28.2
   },
   "districts": [
@@ -34,6 +38,8 @@
       "invisible_days_shade": 512,
       "invisible_days_sun": 1499,
       "invisible_shade_outside_mar_jun": 184,
+      "warm_nights": 0,
+      "heavy_rain_days": 12,
       "limit_c": 28.2
     },
     {
@@ -47,6 +53,8 @@
       "invisible_days_shade": 341,
       "invisible_days_sun": 914,
       "invisible_shade_outside_mar_jun": 237,
+      "warm_nights": 15,
+      "heavy_rain_days": 4,
       "limit_c": 28.2
     },
     {
@@ -60,6 +68,8 @@
       "invisible_days_shade": 112,
       "invisible_days_sun": 1252,
       "invisible_shade_outside_mar_jun": 15,
+      "warm_nights": 1,
+      "heavy_rain_days": 8,
       "limit_c": 28.2
     },
     {
@@ -73,6 +83,8 @@
       "invisible_days_shade": 338,
       "invisible_days_sun": 1219,
       "invisible_shade_outside_mar_jun": 140,
+      "warm_nights": 14,
+      "heavy_rain_days": 9,
       "limit_c": 28.2
     },
     {
@@ -86,6 +98,8 @@
       "invisible_days_shade": 223,
       "invisible_days_sun": 1427,
       "invisible_shade_outside_mar_jun": 30,
+      "warm_nights": 7,
+      "heavy_rain_days": 22,
       "limit_c": 28.2
     },
     {
@@ -99,6 +113,8 @@
       "invisible_days_shade": 656,
       "invisible_days_sun": 1392,
       "invisible_shade_outside_mar_jun": 293,
+      "warm_nights": 0,
+      "heavy_rain_days": 8,
       "limit_c": 28.2
     },
     {
@@ -112,6 +128,8 @@
       "invisible_days_shade": 5,
       "invisible_days_sun": 968,
       "invisible_shade_outside_mar_jun": 0,
+      "warm_nights": 0,
+      "heavy_rain_days": 2,
       "limit_c": 28.2
     },
     {
@@ -125,6 +143,8 @@
       "invisible_days_shade": 460,
       "invisible_days_sun": 1034,
       "invisible_shade_outside_mar_jun": 326,
+      "warm_nights": 10,
+      "heavy_rain_days": 4,
       "limit_c": 28.2
     },
     {
@@ -138,6 +158,8 @@
       "invisible_days_shade": 136,
       "invisible_days_sun": 898,
       "invisible_shade_outside_mar_jun": 89,
+      "warm_nights": 15,
+      "heavy_rain_days": 1,
       "limit_c": 28.2
     },
     {
@@ -151,6 +173,38 @@
       "invisible_days_shade": 676,
       "invisible_days_sun": 1255,
       "invisible_shade_outside_mar_jun": 365,
+      "warm_nights": 0,
+      "heavy_rain_days": 3,
+      "limit_c": 28.2
+    },
+    {
+      "city": "Guwahati",
+      "key": "guwahati",
+      "region": "plains",
+      "days": 1826,
+      "heatwave_days": 0,
+      "danger_days_shade": 342,
+      "danger_days_sun": 1076,
+      "invisible_days_shade": 342,
+      "invisible_days_sun": 1076,
+      "invisible_shade_outside_mar_jun": 270,
+      "warm_nights": 0,
+      "heavy_rain_days": 13,
+      "limit_c": 28.2
+    },
+    {
+      "city": "Patna",
+      "key": "patna",
+      "region": "plains",
+      "days": 1826,
+      "heatwave_days": 28,
+      "danger_days_shade": 587,
+      "danger_days_sun": 1134,
+      "invisible_days_shade": 571,
+      "invisible_days_sun": 1106,
+      "invisible_shade_outside_mar_jun": 378,
+      "warm_nights": 6,
+      "heavy_rain_days": 4,
       "limit_c": 28.2
     }
   ]
