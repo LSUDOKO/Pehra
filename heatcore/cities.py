@@ -28,7 +28,7 @@ CITIES: dict[str, City] = {c.key: c for c in [
     City("lucknow", "Lucknow", 26.85, 80.95, "plains"),
     City("jaipur", "Jaipur", 26.91, 75.79, "plains"),
     City("kolkata", "Kolkata", 22.57, 88.36, "coastal"),
-    City("guwahati", "Guwahati", 26.14, 91.74, "plains", river=(26.17, 91.70)),   # Brahmaputra main channel cell
+    City("guwahati", "Guwahati", 26.14, 91.74, "plains", river=(26.17, 91.70)),   # Brahmaputra
     City("patna", "Patna", 25.59, 85.14, "plains", river=(25.62, 85.15)),         # Ganga
 ]}
 
