@@ -50,9 +50,38 @@ def handle_location(d, chat_id: str, owner: str, lat: float, lon: float, assist)
         d.bot.send_text(chat_id, find_water(d.t, lat, lon))
 
 
+def cmd_device(d, chat_id: str, owner: str, arg: str, person: dict | None) -> str:
+    from ihcommon import config, devices
+
+    parts = arg.split()
+    if not parts or parts[0] not in devices.KINDS:
+        return texts.DEVICE_ASK
+    kind = parts[0]
+    try:
+        height = float(parts[1]) if len(parts) > 1 else 100.0
+    except ValueError:
+        return texts.DEVICE_ASK
+    if not 10 <= height <= 1000:
+        return "Unchai 10 se 1000 cm ke beech honi chahiye."
+    site = repo.site_for_chat(d.t, owner)
+    if site:
+        okind, oid, lat, lon, enc = "site", site["site_id"], site["lat"], site["lon"], site["chat_enc"]
+    elif person:
+        okind, oid, lat, lon, enc = "person", owner, person["lat"], person["lon"], person["chat_enc"]
+    else:
+        return texts.NOT_REGISTERED
+    token = devices.register(d.t, okind, oid, kind, float(lat), float(lon), enc, height, d.key)
+    metric("DeviceRegistered", kind=kind)
+    sim = f"{config.PUBLIC_BASE_URL.rstrip('/')}/device/{token}"
+    return texts.DEVICE_CREATED.format(kind=kind, token=token, sim=sim)
+
+
 def handle_message(d, chat_id: str, owner: str, text: str, cmd: str, arg: str, assist) -> bool:
     person = repo.get_person(d.t, owner)
     state = repo.get_chat_state(d.t, owner).get("awaiting")
+    if cmd == "/device":
+        d.bot.send_text(chat_id, cmd_device(d, chat_id, owner, arg, person))
+        return True
     if cmd == "/me":
         repo.set_chat_state(d.t, owner, {"awaiting": "place"})
         d.bot.send_text(chat_id, texts.ASK_PLACE)

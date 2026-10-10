@@ -19,6 +19,7 @@ HELP = (
     "/links - mazdoor QR page aur poster\n"
     "/call_on +91... - khatre par Hindi phone call\n"
     "/test_call - test call\n"
+    "/device - site sensor jodiye (ESP32 / simulator)\n"
     "/delete_my_data - sab data mitaiye\n"
     "Koi bhi sawaal likhiye, jaise: 'Kya hum 2 baje concrete daal sakte hain?'"
 )
@@ -54,6 +55,7 @@ PEOPLE_HELP = (
     "/ghar - ghar ki jaankari badliye\n"
     "/family_call +91... - buzurg ko khatre ke din Hindi call\n"
     "/family_call_off - call band\n"
+    "/device tank 120 - ghar ki tanki ka sensor\n"
     "/delete_my_data - sab data mitaiye"
 )
 ASK_LOCATION_PAANI = "📍 Apni location bhejiye (Attach → Location). Main sabse paas paani aur chhaon bataunga."
@@ -65,3 +67,7 @@ FAMILY_OFF = "Family call band. Number mita diya gaya."
 NOT_PERSON = "Pehle /start dabakar 'Mere aur parivar ke liye' chuniye."
 SITE_TYPE_ASK = "Yeh kis tarah ki jagah hai?"
 SITE_TYPE_SAVED = "Theek hai. Plan isi hisaab se banega."
+DEVICE_ASK = ("Sensor jodiye:\n/device weather - taapmaan aur nami (DHT22)\n/device tank 120 - paani ki tanki, unchai cm mein\n"
+              "/device drain 100 - naali/sadak ka paani, sensor ki unchai cm mein")
+DEVICE_CREATED = ("Sensor jud gaya ({kind}).\nToken (kisi ko na batayein): {token}\n\n"
+                  "Web simulator: {sim}\nAsli ya Wokwi ESP32 ke liye: devices/wokwi/sketch.ino mein yeh token daaliye.")
