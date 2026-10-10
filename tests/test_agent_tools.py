@@ -44,3 +44,8 @@ def test_symptoms_always_get_fixed_first_aid():
     from heatcore.templates_hi import FIRST_AID_HI
     r = answer("Ek mazdoor ko chakkar aa raha hai", toolbox(), "unused-model", "ap-south-1")
     assert r["text"] == FIRST_AID_HI and r["source"] == "fixed"
+
+
+def test_thinking_tags_removed():
+    from agent.agent import clean
+    assert clean("<thinking>calc 12+3</thinking>\nKaam 12 baje band.") == "Kaam 12 baje band."

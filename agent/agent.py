@@ -4,6 +4,7 @@ The model explains and answers; heatcore tools do every calculation.
 """
 
 import json
+import re
 
 from agent.number_check import verify_numbers
 from agent.prompts import INTRO_PROMPT, SYSTEM_PROMPT
@@ -14,6 +15,14 @@ from ihcommon.log import log, metric
 
 MAX_TOKENS = 400
 TEMPERATURE = 0.2
+
+
+THINKING_RE = re.compile(r"<thinking>.*?</thinking>\s*", re.S | re.I)
+
+
+def clean(text: str) -> str:
+    """Drop model reasoning tags (some Bedrock models emit <thinking>) before anything is checked or sent."""
+    return THINKING_RE.sub("", str(text)).replace("<thinking>", "").strip()
 
 
 def _model(model_id: str, region: str):
@@ -113,9 +122,9 @@ def answer(question: str, box: ToolBox, model_id: str, region: str) -> dict:
 
         def run(bad):
             if bad is None:
-                return str(agent(header + question)).strip()
-            return str(agent(f"Remove or correct these numbers; they are not in any tool result: "
-                             f"{', '.join(bad)}. Rewrite your last answer.")).strip()
+                return clean(agent(header + question))
+            return clean(agent(f"Remove or correct these numbers; they are not in any tool result: "
+                             f"{', '.join(bad)}. Rewrite your last answer."))
 
         text, bad = _checked(run, lambda: box.outputs, "answer")
         if text:
@@ -145,8 +154,8 @@ def plan_intro(plan: dict, model_id: str, region: str) -> str | None:
 
         def run(bad):
             extra = "" if bad is None else f"\nDo not use these numbers: {', '.join(bad)}."
-            return str(Agent(model=agent.model, callback_handler=None)(
-                INTRO_PROMPT + json.dumps(slim) + extra)).strip()
+            return clean(Agent(model=agent.model, callback_handler=None)(
+                INTRO_PROMPT + json.dumps(slim) + extra))
 
         text, _ = _checked(run, lambda: [slim], "intro")
         return text
