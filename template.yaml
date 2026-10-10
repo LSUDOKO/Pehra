@@ -100,6 +100,7 @@ Resources:
           - { Id: incoming-audio, Status: Enabled, Prefix: incoming/, ExpirationInDays: 1 }
           - { Id: transcripts, Status: Enabled, Prefix: transcripts/, ExpirationInDays: 1 }
           - { Id: reports, Status: Enabled, Prefix: reports/, ExpirationInDays: 30 }
+          - { Id: call-audio, Status: Enabled, Prefix: calls/, ExpirationInDays: 1 }
 
   # Object Lock can only be enabled when a bucket is created.
   RecordsBucket:
@@ -238,12 +239,15 @@ Resources:
   SenderFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Description: Drains outgoing messages into Telegram under rate limits
+      Description: Drains outgoing messages to Telegram, WhatsApp or a Twilio voice call, under rate limits
       CodeUri: functions/sender/
-      Timeout: 60
+      Timeout: 120
       Policies:
-        - S3ReadPolicy: { BucketName: !Ref MediaBucket }
+        - S3CrudPolicy: { BucketName: !Ref MediaBucket }
         - Statement:
+            - Effect: Allow
+              Action: polly:SynthesizeSpeech
+              Resource: "*"
             - Effect: Allow
               Action: ssm:GetParameter
               Resource: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ParamPrefix}/*"
@@ -276,6 +280,7 @@ Resources:
         - DynamoDBCrudPolicy: { TableName: !Ref Table }
         - StepFunctionsExecutionPolicy: { StateMachineName: !GetAtt DailyPlanStateMachine.Name }
         - LambdaInvokePolicy: { FunctionName: !Ref AssistantFunction }
+        - SQSSendMessagePolicy: { QueueName: !GetAtt OutQueue.QueueName }
         - Statement:
             - Effect: Allow
               Action: [states:SendTaskSuccess, states:SendTaskFailure]
@@ -291,6 +296,37 @@ Resources:
         Telegram:
           Type: HttpApi
           Properties: { ApiId: !Ref HttpApi, Method: POST, Path: /telegram }
+
+  WhatsAppWebhookFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: WhatsApp Cloud API webhook - same supervisor bot as Telegram (signature-checked)
+      CodeUri: functions/whatsapp_webhook/
+      Timeout: 25
+      MemorySize: 1024
+      Environment:
+        Variables:
+          PLAN_SFN_ARN: !Ref DailyPlanStateMachine
+          ASSISTANT_FN: !Ref AssistantFunction
+      Policies:
+        - DynamoDBCrudPolicy: { TableName: !Ref Table }
+        - StepFunctionsExecutionPolicy: { StateMachineName: !GetAtt DailyPlanStateMachine.Name }
+        - LambdaInvokePolicy: { FunctionName: !Ref AssistantFunction }
+        - SQSSendMessagePolicy: { QueueName: !GetAtt OutQueue.QueueName }
+        - Statement:
+            - Effect: Allow
+              Action: [states:SendTaskSuccess, states:SendTaskFailure]
+              Resource: !Ref DailyPlanStateMachine
+            - Effect: Allow
+              Action: ssm:GetParameter
+              Resource: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ParamPrefix}/*"
+            - Effect: Allow
+              Action: kms:Decrypt
+              Resource: "*"
+              Condition: { StringEquals: { "kms:ViaService": !Sub "ssm.${AWS::Region}.amazonaws.com" } }
+      Events:
+        Verify: { Type: HttpApi, Properties: { ApiId: !Ref HttpApi, Method: GET, Path: /whatsapp } }
+        Messages: { Type: HttpApi, Properties: { ApiId: !Ref HttpApi, Method: POST, Path: /whatsapp } }
 
   AssistantFunction:
     Type: AWS::Serverless::Function
@@ -468,6 +504,9 @@ Outputs:
   TelegramWebhookUrl:
     Description: Pass to scripts/set_webhook.py
     Value: !Sub "https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com/telegram"
+  WhatsAppWebhookUrl:
+    Description: Callback URL for the Meta app's WhatsApp webhook
+    Value: !Sub "https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com/whatsapp"
   StateMachineArn:
     Value: !Ref DailyPlanStateMachine
   RecordsBucketName:
