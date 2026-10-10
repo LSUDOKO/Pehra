@@ -14,6 +14,7 @@ class City:
     lat: float
     lon: float
     region: str
+    river: tuple[float, float] | None = None   # GloFAS river grid point for flood signals
 
 
 CITIES: dict[str, City] = {c.key: c for c in [
@@ -27,7 +28,15 @@ CITIES: dict[str, City] = {c.key: c for c in [
     City("lucknow", "Lucknow", 26.85, 80.95, "plains"),
     City("jaipur", "Jaipur", 26.91, 75.79, "plains"),
     City("kolkata", "Kolkata", 22.57, 88.36, "coastal"),
+    City("guwahati", "Guwahati", 26.14, 91.74, "plains", river=(26.18, 91.75)),   # Brahmaputra
+    City("patna", "Patna", 25.59, 85.14, "plains", river=(25.62, 85.15)),         # Ganga
 ]}
+
+
+def nearest_city(lat: float, lon: float, max_km: float = 60.0) -> City | None:
+    from heatcore.places import distance_km
+    best = min(CITIES.values(), key=lambda c: distance_km(lat, lon, c.lat, c.lon))
+    return best if distance_km(lat, lon, best.lat, best.lon) <= max_km else None
 
 
 def get_city(key: str) -> City:
