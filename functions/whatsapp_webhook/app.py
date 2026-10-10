@@ -67,6 +67,10 @@ def to_updates(payload: dict) -> list[dict]:
                 elif kind == "button":  # quick-reply on a template message
                     out.append({"callback_query": {"id": m["id"], "data": m["button"].get("payload", ""),
                                                    "message": {"chat": chat}}})
+                elif kind == "location":
+                    loc = m["location"]
+                    out.append({"message": {"chat": chat, "location": {"latitude": loc["latitude"],
+                                                                       "longitude": loc["longitude"]}}})
                 elif kind == "audio":
                     out.append({"message": {"chat": chat, "voice": {"file_id": m["audio"]["id"]}}})
     return out
