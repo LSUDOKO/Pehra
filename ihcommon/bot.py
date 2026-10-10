@@ -11,8 +11,9 @@ import time
 
 from agent.roster import parse_crew_roster, readback
 from heatcore.cities import get_city
+from heatcore.daily import SITE_TYPES
 from heatcore.templates_hi import CALL_TEST_HI
-from ihcommon import authz, config, crypto, outbox, planning, repo, texts
+from ihcommon import authz, bot_people, config, crypto, outbox, planning, repo, texts
 from ihcommon.channels import is_whatsapp
 from ihcommon.log import log, metric
 from ihcommon.voicecall import normalise_phone
@@ -146,12 +147,23 @@ def on_callback(d, cb: dict) -> None:
     owner = crypto.keyed_hash(chat_id, d.key)
     data, reply, buttons = cb.get("data", ""), None, None
     d.bot.answer_button(cb["id"])
+    kind, _, arg = data.partition(":")
+    if bot_people.handle_callback(d, chat_id, owner, kind, arg, lambda p: async_assist(d, p)):
+        return
     site = repo.site_for_chat(d.t, owner)
+    if kind == "del_yes":
+        if site:
+            repo.delete_site_data(d.t, site)
+        repo.delete_person(d.t, owner)
+        d.bot.send_text(chat_id, texts.DELETED)
+        return
     if not site:
         d.bot.send_text(chat_id, texts.NOT_REGISTERED)
         return
-    kind, _, arg = data.partition(":")
-    if kind == "ap":
+    if kind == "type" and arg in SITE_TYPES:
+        repo.set_site_fields(d.t, site["site_id"], site_type=arg)
+        reply = texts.SITE_TYPE_SAVED
+    elif kind == "ap":
         reply = approve(d, site, arg)
     elif kind == "ov":
         reply = "Plan ko kaise badalna hai?"
@@ -171,9 +183,6 @@ def on_callback(d, cb: dict) -> None:
         else:
             reply = texts.CREW_UNSURE
         repo.set_chat_state(d.t, owner, None)
-    elif kind == "del_yes":
-        repo.delete_site_data(d.t, site)
-        reply = texts.DELETED
     if reply:
         d.bot.send_text(chat_id, reply, buttons)
 
@@ -184,15 +193,30 @@ def on_message(d, msg: dict) -> None:
     text = (msg.get("text") or "").strip()
     cmd, _, arg = text.partition(" ")
     cmd = ALIASES.get(cmd.split("@")[0].lower(), cmd.split("@")[0].lower())
+    assist = lambda p: async_assist(d, p)  # noqa: E731
+    if msg.get("location"):
+        loc = msg["location"]
+        bot_people.handle_location(d, chat_id, owner, float(loc["latitude"]), float(loc["longitude"]), assist)
+        return
     if cmd == "/start":
         d.bot.send_text(chat_id, texts.PRIVACY)
+        d.bot.send_text(chat_id, texts.START_CHOICE, bot_people.START_BUTTONS)
         return
     if cmd == "/register":
-        d.bot.send_text(chat_id, cmd_register(d, chat_id, owner, arg))
+        reply = cmd_register(d, chat_id, owner, arg)
+        d.bot.send_text(chat_id, reply)
+        if reply.startswith("Site judi"):
+            d.bot.send_text(chat_id, texts.SITE_TYPE_ASK, bot_people.SITE_TYPE_BUTTONS)
+        return
+    if bot_people.handle_message(d, chat_id, owner, text, cmd, arg, assist):
         return
     site = repo.site_for_chat(d.t, owner)
     if not site:
-        d.bot.send_text(chat_id, texts.NOT_REGISTERED)
+        person = repo.get_person(d.t, owner)
+        if person and cmd == "/delete_my_data":
+            d.bot.send_text(chat_id, "Pakka sab data mitana hai?", [[("Haan, mitao", "del_yes")]])
+        else:
+            d.bot.send_text(chat_id, texts.PEOPLE_HELP if person else texts.NOT_REGISTERED)
         return
     reply, buttons = None, None
     if msg.get("voice"):

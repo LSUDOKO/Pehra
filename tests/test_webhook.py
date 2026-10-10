@@ -88,7 +88,8 @@ def test_register_stores_hashed_chat_only(env):
     assert site["city"] == "chennai"
     assert all(v not in ("111", 111) for v in site.values())  # chat id never stored in clear
     assert crypto.decrypt(site["chat_enc"], KEY) == "111"
-    assert "QR page" in d.bot.sent[-1][1]
+    assert any("QR page" in m[1] for m in d.bot.sent)
+    assert d.bot.sent[-1][2][0][1][1] == "type:school"  # site-type buttons follow
 
 
 def test_crew_text_needs_confirmation(env):
@@ -136,8 +137,8 @@ def test_questions_go_to_async_assistant(env):
 
 def test_unregistered_chat_is_told_to_register(env):
     app, d = env
-    msg(app, "hello", chat=999)
-    assert "/register" in d.bot.sent[-1][1]
+    msg(app, "kuch bhi", chat=999)
+    assert "/register" in d.bot.sent[-1][1] and "/me" in d.bot.sent[-1][1]
 
 
 def test_delete_my_data(env):
