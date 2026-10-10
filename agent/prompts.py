@@ -21,10 +21,14 @@ Rules you must follow:
    which includes humidity, sun and wind, not just temperature.
 Do not show your reasoning. Today's date (IST) and the site are given in the first message."""
 
-INTRO_PROMPT = """Write 1 or 2 short sentences in simple Roman-script Hindi that introduce tomorrow's
-heat plan for a site supervisor. Explain why: heat and humidity together (WBGT), not only temperature.
-If stop_from is null, say tomorrow has lower risk but breaks and water still matter.
-Use only numbers that appear in this JSON, and do not repeat the hour-by-hour details.
-Never use the word "safe". Do not add greetings.
-PLAN JSON:
+INTRO_PROMPT = """Write exactly ONE short sentence for a construction site supervisor in India.
+Write in Hindi using ROMAN (Latin) letters only, like: "Kal garmi aur nami milke khatarnak hai."
+Never use Devanagari script.
+Say that {day_word} heat and humidity together (WBGT) are {risk}, even if the thermometer
+does not look extreme. Use simple everyday words.
+Use no numbers at all. Never use the word "safe". No greetings, no lists, no quotes.
 """
+
+# Fixed second line under the AI sentence (never generated).
+INTRO_ACTION_STOP = "Neeche diye kaam-band ghante aur aaram ka palan karein."
+INTRO_ACTION_REST = "Neeche diya aaram aur paani ka plan zaroor maaniye."

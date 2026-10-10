@@ -3,14 +3,13 @@
 The model explains and answers; heatcore tools do every calculation.
 """
 
-import json
 import re
 
 from agent.number_check import verify_numbers
-from agent.prompts import INTRO_PROMPT, SYSTEM_PROMPT
+from agent.prompts import INTRO_ACTION_REST, INTRO_ACTION_STOP, INTRO_PROMPT, SYSTEM_PROMPT
 from agent.routing import LOOSEN_REPLY, is_loosen_request, is_symptom
 from agent.tools import ToolBox
-from heatcore.templates_hi import render_plan_hi
+from heatcore.templates_hi import day_word, render_plan_hi
 from ihcommon.log import log, metric
 
 MAX_TOKENS = 400
@@ -152,15 +151,20 @@ def plan_intro(plan: dict, model_id: str, region: str) -> str | None:
         from strands import Agent
         agent = Agent(model=_model(model_id, region), callback_handler=None)
         slim = {k: plan[k] for k in ("stop_from", "stop_to", "peak_wbgt", "stale", "date")}
-        slim["limit_c"] = plan["plans"]["moderate"]["limit_c"]
+        has_stop = plan["stop_from"] is not None
+        prompt = INTRO_PROMPT.format(
+            day_word=day_word(plan).lower(),
+            risk="dangerous for heavy and long work" if has_stop else "a moderate risk")
 
         def run(bad):
             extra = "" if bad is None else f"\nDo not use these numbers: {', '.join(bad)}."
-            return clean(Agent(model=agent.model, callback_handler=None)(
-                INTRO_PROMPT + json.dumps(slim) + extra))
+            return clean(Agent(model=agent.model, callback_handler=None)(prompt + extra))
 
         text, _ = _checked(run, lambda: [slim], "intro")
-        return text
+        if not text or re.search(r"[\u0900-\u097F]", text):  # must be Roman script
+            return None
+        first = re.split(r"(?<=[.!?])\s+", text.strip())[0]
+        return f"{first}\n{INTRO_ACTION_STOP if has_stop else INTRO_ACTION_REST}"
     except Exception as e:
         metric("AgentError", kind="intro")
         log("agent_error", kind="intro", error=type(e).__name__, detail=str(e)[:300])
