@@ -14,6 +14,9 @@ FORECAST_URL = "https://api.open-meteo.com/v1/forecast"
 ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive"
 HOURLY_VARS = ("temperature_2m", "relative_humidity_2m", "surface_pressure",
                "wind_speed_10m", "shortwave_radiation", "direct_radiation")
+EXTRA_VARS = ("precipitation", "precipitation_probability")  # forecast only
+FLOOD_URL = "https://flood-api.open-meteo.com/v1/flood"
+GEOCODE_URL = "https://geocoding-api.open-meteo.com/v1/search"
 TIMEOUT_S = 30
 
 
@@ -32,7 +35,7 @@ def _get(url: str, params: dict, session: requests.Session | None = None) -> dic
 
 def fetch_forecast(lat: float, lon: float, days: int = 4, session=None) -> dict:
     return _get(FORECAST_URL, {
-        "latitude": lat, "longitude": lon, "hourly": ",".join(HOURLY_VARS),
+        "latitude": lat, "longitude": lon, "hourly": ",".join(HOURLY_VARS + EXTRA_VARS),
         "wind_speed_unit": "ms", "timezone": "UTC", "forecast_days": days,
     }, session)
 
@@ -69,3 +72,29 @@ def fetch_daily_tmax(lat: float, lon: float, start: str, end: str, session=None)
         "daily": "temperature_2m_max", "timezone": "Asia/Kolkata",
     }, session)["daily"]
     return {t: v for t, v in zip(d["time"], d["temperature_2m_max"], strict=True) if v is not None}
+
+
+def fetch_daily(lat: float, lon: float, start: str, end: str, variables: tuple[str, ...],
+                session=None) -> dict[str, dict[str, float]]:
+    """ERA5 daily variables (IST days) as {variable: {date: value}}."""
+    d = _get(ARCHIVE_URL, {"latitude": lat, "longitude": lon, "start_date": start, "end_date": end,
+                           "daily": ",".join(variables), "timezone": "Asia/Kolkata"}, session)["daily"]
+    return {v: {t: x for t, x in zip(d["time"], d[v], strict=True) if x is not None} for v in variables}
+
+
+def fetch_flood(lat: float, lon: float, *, days: int = 7, start: str | None = None, end: str | None = None,
+                session=None) -> list[float | None]:
+    """GloFAS daily river discharge (m3/s): forecast by default, or history with start/end."""
+    params = {"latitude": lat, "longitude": lon, "daily": "river_discharge"}
+    params |= {"start_date": start, "end_date": end} if start else {"forecast_days": days}
+    return _get(FLOOD_URL, params, session)["daily"]["river_discharge"]
+
+
+def geocode(name: str, session=None) -> dict | None:
+    """Free Open-Meteo geocoding, India only: {'name', 'lat', 'lon', 'state'} or None."""
+    r = _get(GEOCODE_URL, {"name": name, "count": 1, "country_code": "IN", "language": "en"}, session)
+    hits = r.get("results") or []
+    if not hits:
+        return None
+    h = hits[0]
+    return {"name": h["name"], "lat": h["latitude"], "lon": h["longitude"], "state": h.get("admin1", "")}
