@@ -1,6 +1,6 @@
 # Invisible Heat
 
-**Heat-safety work-rest plans for India's outdoor workers, built on WBGT, delivered in Hindi on Telegram or WhatsApp, with Hindi phone-call alerts.**
+**Heat and water safety for India's outdoor workers and their families: WBGT-based plans, rain, flood and warm-night alerts, a drinking-water finder and site sensors, in Hindi on Telegram or WhatsApp, with Hindi phone-call alerts.**
 
 Environmental Hacks (Bharat Builds Tour, Event 02) · WeMakeDevs × AWS · Track 02: Heat and Water · Team Mavricks
 
@@ -21,7 +21,7 @@ A humid 36 °C day can be harder on a construction worker than a dry 42 °C day,
 
 `uv run python scripts/kharghar_replay.py` · details in [`docs/results/KHARGHAR.md`](docs/results/KHARGHAR.md)
 
-**The audit.** Across 10 cities from 2021 to 2025, there were **3,459 city-days** when WBGT in the *shade* crossed the NIOSH moderate-work limit with no heatwave under the recreated IMD rule (96% of all such days). **1,679** of them fell outside March–June, when heatwave bulletins don't run. These are minimums, because ERA5 smooths humid extremes. See [`docs/results/audit_summary.json`](docs/results/audit_summary.json).
+**The audit (12 cities, 2021–2025).** **4,372 city-days** when WBGT in the *shade* crossed the NIOSH moderate-work limit with no heatwave under the recreated IMD rule. **2,327** of them fell outside March–June, when heatwave bulletins don't run. The same period held **90 heavy-rain days** (≥ 64.5 mm) and **68 warm nights** (IMD rule recreated). These are minimums, because ERA5 smooths extremes. See [`docs/results/audit_summary.json`](docs/results/audit_summary.json).
 
 ## What it does
 
@@ -37,6 +37,23 @@ A humid 36 °C day can be harder on a construction worker than a dry 42 °C day,
 | **Picture poster** | Workers | A printable "day ruler": each hour is a column, filled green for the share of the hour that is rest, red with a hand for stop-work. Readable without reading Hindi. |
 | **Prove it** | Contractor / auditor | A nightly SHA-256 hash-chained record per site in S3 Object Lock, and a monthly compliance PDF built only from those records. |
 | **See it** | Public | The Invisible Heat Audit page and a model card. |
+
+### For everyone, and for water (v2)
+
+Track 02 is *"too much water, too little of it, and the heat in between"*. v2 extends the same engine (plan: [`docs/PLAN_V2.md`](docs/PLAN_V2.md)):
+
+| Feature | Who | What it does |
+|---|---|---|
+| **Garmi Saathi (personal and family mode)** | Anyone | `/start`, then *Mere aur parivar ke liye*. Send a city or share a 📍 location (any place in India: a 0.25° tile computed once and shared), answer 5 button questions about the household (counts only), and get a 07:00 message: the level for healthy adults and for vulnerable members (elderly, under-5s, pregnant, chronic illness, outdoor workers), hours to avoid, better hours for errands, and night, rain and flood lines. `/aaj` on demand. |
+| **Family call ("Dadi ko call")** | Elderly people | `/family_call +91…`: on *bahut zyada* or *khatarnak* days, one fixed Hindi phone call a day to an elderly relative (Twilio). |
+| **Paani aur chhaon** | Vendors, riders, everyone | Share a location and get the 3 nearest drinking-water and shade points from OpenStreetMap, cached per city. `/add_paani` adds community points, shown after 2 independent reports and labelled unverified. |
+| **Heavy rain and waterlogging** | Sites, everyone | IMD rainfall categories on the forecast. Sites get "stop digging, scaffolding, electrical work". |
+| **River-flood signal** | Guwahati (Brahmaputra), Patna (Ganga) | GloFAS discharge against the point's own 1991–2020 95th and 99th percentiles. |
+| **Warm nights** | Labour camps, families | IMD warm-night rule recreated with ERA5 normals; sleep and labour-camp advice. |
+| **More user types** | Schools, vendors, delivery riders | `/register`, then pick the type; each gets its own limits (schoolchildren against RAL) and fixed lines. |
+| **Site sensors (ESP32)** | Sites, households | `/device weather`, `/device tank 120` or `/device drain 100`. The DHT22 reading becomes a site-corrected WBGT ("site 12 °C hotter than forecast"); the HC-SR04 gives a low-tank or waterlogging alert, with a call for drains. Runs on real hardware, free in **Wokwi**, or in our web simulator. See [`devices/README.md`](devices/README.md). |
+
+![ESP32 in Wokwi posting to the live API](docs/img/wokwi-esp32.png)
 
 | Poster | Worker page | Audit |
 |---|---|---|
@@ -77,7 +94,7 @@ flowchart LR
 
 ```bash
 uv sync --python 3.12          # Python 3.12, uv
-uv run pytest                  # 168 tests: science, Cedar, agent tools, webhook, check-ins, e2e
+uv run pytest                  # 222 tests: science, Cedar, agent tools, webhook, check-ins, e2e
 uv run python scripts/kharghar_replay.py
 uv run python scripts/run_audit.py              # ~1 min with cache; writes docs/results/audit_summary.json
 uv run python scripts/seed_sample_month.py && uv run python scripts/verify_hash_chain.py --dir out/sample_records
@@ -105,6 +122,8 @@ Re-check demo (clearly labelled **SIMULATED** in the message): `aws lambda invok
 | NIOSH limits | REL 28.2 °C, RAL 25.0 °C at 300 W, matching the worked example |
 | Cedar decisions | All 7 required cases plus 5 more pass; the AI is denied LoosenPlan and OverridePlan |
 | Agent test set (20 Hindi/English questions, Amazon Nova Pro, 2 runs) | Facts correct **19/20** in both runs · unmatched numbers shipped **0** · correct refusals **4/4** · fixed-text fallbacks 2 and 4. Misses: one answer gave the stop window but not the suggested concrete window; one did not mention WBGT. Raw answers: `docs/results/agent_eval_run{1,2}.json` |
+| v2 live smoke test (`scripts/smoke_v2.py`) | Personal forecast for Delhi and an on-demand Varanasi tile; water finder found 3 points within 350 m of Connaught Place; 07:00 fan-out Lambda sent 2; weather and drain sensors alerted through the live API |
+| ESP32 in Wokwi (`devices/wokwi/`) | Simulated DHT22 at 40 °C / 70% → site WBGT 36.3 °C vs forecast 24.2 °C → alert and red LED; HC-SR04 → tank 7% → alert |
 | Deployed smoke test (`scripts/smoke_deployed.py`) | Plan built by the live plan Lambda with AI intro and Polly voice note; worker page, poster and audit served; break logged; nightly record written in Object Lock (GOVERNANCE, 90 days); hash chain verified |
 | Audit 2021–2025, 10 cities | 3,459 invisible heat city-days (shade), 1,679 outside March–June (a minimum) |
 
@@ -119,6 +138,9 @@ Re-check demo (clearly labelled **SIMULATED** in the message): `aws lambda invok
 - One deterministic forecast, no ensemble, so plans never state probabilities. A fixed +1.0 °C margin is used (+0.5 °C if the forecast is stale).
 - Open-Meteo's free API is for non-commercial use.
 - The first-aid page is fixed text, not medical advice or a diagnosis.
+- Personal risk levels are our own rule on NIOSH light-activity limits, not a medical assessment. Rain categories, warm nights and flood signals are computed from forecasts and reanalysis; they are not IMD or CWC warnings.
+- OpenStreetMap water and shade coverage is patchy (7 points near Kharghar, 658 near Delhi). Community points are unverified.
+- A DHT22 sensor corrects air temperature and humidity only; wind and sun still come from the forecast.
 - **Simulated or sample:** the re-check demo forecast (labelled SIMULATED), the sample compliance month (labelled SAMPLE DATA), and the "Ramesh" story.
 
 ## Privacy
@@ -137,7 +159,8 @@ WhatsApp scheduled pushes (need paid utility templates), production voice calls 
 
 - WBGT: [thermofeel](https://github.com/ecmwf/thermofeel) (ECMWF, Apache-2.0), Liljegren et al. 2008.
 - Limits and acclimatisation: NIOSH Criteria for a Recommended Standard, Occupational Exposure to Heat and Hot Environments (2016-106), public domain.
-- Weather: Open-Meteo forecast and archive APIs; ERA5 (Copernicus/ECMWF, CC BY 4.0).
+- Weather: Open-Meteo forecast, archive, flood (GloFAS) and geocoding APIs; ERA5 (Copernicus/ECMWF, CC BY 4.0).
+- Water and shade points: © OpenStreetMap contributors (ODbL). Device simulator: Wokwi.
 - Validation: OSHA Outdoor WBGT Calculator.
 - Guidance passages: NIOSH/CDC, NDMA heat-wave guidelines (2019), OSHA, IMD.
 - Code licence: see [LICENSE](LICENSE).
