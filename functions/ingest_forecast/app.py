@@ -1,32 +1,30 @@
-"""Fetch the forecast twice a day, compute WBGT once per city, store it on S3.
+"""Fetch the forecast three times a day, compute WBGT, rain, night heat and river flow once per city.
 
-Every site plan later reads heat/{city}/latest.json; nothing else calls a weather API.
+Every site plan later reads heat/{city}/latest.json; nothing else calls a weather API for cities.
+Normals (1991-2020) and flood percentiles are computed once per city and cached.
 """
 
 from datetime import UTC, datetime
 
 from heatcore.cities import CITIES
-from heatcore.heat import compute_heat, heat_to_json
-from heatcore.openmeteo import fetch_forecast, parse_hourly
-from ihcommon import heatstore, repo
+from ihcommon import heatstore, locdata, repo
 from ihcommon.log import log, metric
-
-MODEL = "Open-Meteo best_match"
 
 
 def ingest_city(key: str, now: datetime) -> dict:
     city = CITIES[key]
-    rows = parse_hourly(fetch_forecast(city.lat, city.lon, days=4))
-    heat = compute_heat(rows, city.lat, city.lon)
-    run_id = now.strftime("%Y%m%dT%H%MZ")
-    doc = {"city": key, "run_id": run_id, "model": MODEL, "issued_at": now.isoformat(),
-           "lat": city.lat, "lon": city.lon, "hours": heat_to_json(heat)}
-    s3_key = heatstore.put_heat(key, run_id, doc)
+    doc = locdata.build_doc(key, city.lat, city.lon, now, city.river)
+    s3_key = heatstore.put_heat(key, doc["run_id"], doc)
     t = repo.table()
-    for sk in (f"RUN#{run_id}", "LATEST"):
+    for sk in (f"RUN#{doc['run_id']}", "LATEST"):
         t.put_item(Item={"PK": f"HEAT#{key}", "SK": sk, "s3_key": s3_key,
                          "issued_at": now.isoformat(), "ttl": repo.ttl_in(30)})
-    return {"city": key, "hours": len(heat), "s3_key": s3_key}
+    try:
+        locdata.get_normals(key, city.lat, city.lon, city.river)  # cached after the first run
+    except Exception as e:
+        log("normals_failed", city=key, error=str(e)[:200])
+    return {"city": key, "hours": len(doc["hours"]), "s3_key": s3_key,
+            "flood": doc.get("flood_forecast") is not None}
 
 
 def handler(event, _ctx):
