@@ -61,7 +61,8 @@ def flood_line(flood: dict | None) -> str | None:
 
 def personal_message(place: str, f: dict, cond: dict, forecast_line: str) -> str:
     lvl = f["overall_level"]
-    out = [f"{LEVEL_ICON[lvl]} Aaj {place}: {LEVEL_HI[lvl]}"]
+    who = " (ghar ke sabse kamzor sadasya ke liye)" if len(f["groups"]) > 1 else ""
+    out = [f"{LEVEL_ICON[lvl]} Aaj {place}{who}: {LEVEL_HI[lvl]}"]
     for g, data in f["groups"].items():
         line = f"- {GROUP_HI[g]}: {LEVEL_HI[data['peak_level']]}"
         if data["avoid"]:
