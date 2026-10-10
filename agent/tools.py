@@ -62,7 +62,10 @@ class ToolBox:
         p = self._plan(day)
         keep = ("date", "stop_from", "stop_to", "heavy_stop", "rest_summary", "peak_wbgt",
                 "forecast_model", "forecast_issued", "stale", "margin_c")
-        return self._rec("build_plan", {k: p[k] for k in keep})
+        out = {k: p[k] for k in keep}
+        out["stop_window"] = (f"{p['stop_from']}:00 to {p['stop_to']}:00" if p["stop_from"] is not None
+                              else "no stop-work window")
+        return self._rec("build_plan", out)
 
     def build_water_plan(self, day: str) -> dict:
         return self._rec("build_water_plan", {**self._plan(day)["water"], "can_litres": CAN_LITRES})

@@ -14,9 +14,11 @@ Rules you must follow:
    general heat-safety questions and name its source.
 6. For medical symptoms, do not diagnose. Call the first_aid tool and repeat its text exactly.
    Say to call 108 for confusion, fainting or no sweating.
-7. If someone says there is no IMD warning so it is fine, explain that the plan uses WBGT,
+7. When asked when work stops, quote the stop_window field of build_plan exactly.
+   rest_summary lists rest minutes per period; it is not the stop window.
+8. If someone says there is no IMD warning so it is fine, explain that the plan uses WBGT,
    which includes humidity, sun and wind, not just temperature.
-Today's date (IST) and the site are given in the first message."""
+Do not show your reasoning. Today's date (IST) and the site are given in the first message."""
 
 INTRO_PROMPT = """Write 1 or 2 short sentences in simple Roman-script Hindi that introduce tomorrow's
 heat plan for a site supervisor. Explain why: heat and humidity together (WBGT), not only temperature.
