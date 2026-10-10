@@ -154,3 +154,21 @@ Commit style: one line, `area: what changed` (e.g. `heatcore: add NIOSH REL/RAL 
 123. docs: add AI tools used and credits
 124. docs: add demo video script notes
 125. chore: tag submission-v1
+
+---
+
+## Status (10 Oct 2026)
+
+| Phase | Status |
+|---|---|
+| 0 Scaffold | Done |
+| 1 Science core | Done; 0.21 °C mean difference vs OSHA calculator |
+| 2 Data + Kharghar replay | Done; replay shows danger with no heatwave |
+| 3 Hindi templates | Done |
+| 4 AWS foundation (SAM) | Template written, `sam validate --lint` clean, `sam build` passes |
+| 5 Telegram bot + plan flow | Done (tested with fakes and moto) |
+| 6 Cedar | Done |
+| 7 Strands agent | Done; live eval pending Bedrock account verification |
+| 8 Re-check + worker side | Done |
+| 9 Records, audit, report | Done |
+| 10 Deploy + submission | README, architecture, demo script done. **Remaining:** `sam deploy`, set Telegram webhook, run agent eval, record video, tag `submission-v1` |
