@@ -108,6 +108,8 @@ make layer && sam build && sam deploy                          # samconfig.toml 
 uv run python scripts/set_webhook.py                           # points the bot at the API
 ```
 
+Live bot: **Telegram [@Pehra_AWS_bot](https://t.me/Pehra_AWS_bot)** · WhatsApp test number +1 555-648-9580 (Meta test number: only pre-approved recipients) · Hindi call alerts from a Twilio trial number.
+
 Live stack: `https://yj61i9i7g0.execute-api.ap-south-1.amazonaws.com` ([/audit](https://yj61i9i7g0.execute-api.ap-south-1.amazonaws.com/audit), [/model-card](https://yj61i9i7g0.execute-api.ap-south-1.amazonaws.com/model-card)). Smoke test without sending any message: `uv run python scripts/smoke_deployed.py`.
 
 Then open the bot and send `/start`, then `/register Ramesh Tower, Chennai`, `/crew 40 10 3` and `/plan_now`. Optional: `sam deploy --parameter-overrides AlertEmail=you@example.com` adds a $5 budget alert and alarm emails.
