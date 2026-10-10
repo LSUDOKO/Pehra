@@ -44,9 +44,10 @@ def city_rows(key: str) -> list[dict]:
     hourly = cached(f"{key}_hourly", {"latitude": c.lat, "longitude": c.lon, "start_date": START,
                                        "end_date": END, "hourly": ",".join(HOURLY_VARS),
                                        "wind_speed_unit": "ms", "timezone": "UTC"})["hourly"]
-    daily = cached(f"{key}_daily", {"latitude": c.lat, "longitude": c.lon, "start_date": "1991-01-01",
-                                     "end_date": END, "daily": "temperature_2m_max",
-                                     "timezone": "Asia/Kolkata"})["daily"]
+    daily = cached(f"{key}_daily2", {"latitude": c.lat, "longitude": c.lon, "start_date": "1991-01-01",
+                                      "end_date": END,
+                                      "daily": "temperature_2m_max,temperature_2m_min,precipitation_sum",
+                                      "timezone": "Asia/Kolkata"})["daily"]
     labels = np.array(hourly["time"], dtype="datetime64[m]")
     centres = labels - np.timedelta64(30, "m")  # radiation is a preceding-hour mean
     arr = {v: np.array([np.nan if x is None else x for x in hourly[v]], float) for v in HOURLY_VARS}
@@ -62,7 +63,12 @@ def city_rows(key: str) -> list[dict]:
     pairs = zip(daily["time"], daily["temperature_2m_max"], strict=True)
     tmax_all = {t: v for t, v in pairs if v is not None}
     tmax = {d: v for d, v in tmax_all.items() if START <= d <= END}
-    return [{"city": key, **r} for r in audit_city(by_day, tmax, tmax_all, c.region)]
+    tmin_all = {t: v for t, v in zip(daily["time"], daily["temperature_2m_min"], strict=True) if v is not None}
+    rain = {t: v for t, v in zip(daily["time"], daily["precipitation_sum"], strict=True)
+            if v is not None and START <= t <= END}
+    rows = audit_city(by_day, tmax, tmax_all, c.region, {d: v for d, v in tmin_all.items() if START <= d <= END},
+                      tmin_all, rain)
+    return [{"city": key, **r} for r in rows]
 
 
 def main() -> None:
@@ -79,7 +85,8 @@ def main() -> None:
         districts.append({"city": CITIES[key].name, "key": key, "region": CITIES[key].region, **s})
         print(f"{CITIES[key].name:24s} invisible(shade) {s['invisible_days_shade']:4d}  "
               f"of which outside Mar-Jun {s['invisible_shade_outside_mar_jun']:4d}  "
-              f"heatwave days {s['heatwave_days']:3d}")
+              f"heatwave days {s['heatwave_days']:3d}  warm nights {s['warm_nights']:3d}  "
+              f"heavy rain days {s['heavy_rain_days']:3d}")
     total = summarise(all_rows)
     summary = {
         "generated_at": datetime.now(UTC).isoformat(timespec="seconds"), "period": [START, END],
@@ -88,7 +95,9 @@ def main() -> None:
                       "work on at least one hour, with no heatwave under the recreated IMD rule.",
         "caveats": ["A minimum: ERA5 (~25 km) smooths humid extremes.",
                     "IMD rule recreated on one grid cell per city; not IMD's official record.",
-                    "Shade WBGT; sun counts are higher and listed separately."],
+                    "Shade WBGT; sun counts are higher and listed separately.",
+                    "Warm nights: IMD rule recreated (only on days >= 40 C, min temp >= 4.5 C above normal).",
+                    "Heavy rain: ERA5 daily total >= 64.5 mm (IMD 'heavy' category) at one grid cell."],
         "total": total, "districts": districts}
     for p in (Path("docs/results/audit_summary.json"), Path("agent/data/audit_summary.json")):
         p.parent.mkdir(parents=True, exist_ok=True)
