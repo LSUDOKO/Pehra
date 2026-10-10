@@ -8,7 +8,7 @@ import re
 
 from agent.number_check import verify_numbers
 from agent.prompts import INTRO_PROMPT, SYSTEM_PROMPT
-from agent.routing import is_symptom
+from agent.routing import LOOSEN_REPLY, is_loosen_request, is_symptom
 from agent.tools import ToolBox
 from heatcore.templates_hi import render_plan_hi
 from ihcommon.log import log, metric
@@ -132,6 +132,8 @@ def answer(question: str, box: ToolBox, model_id: str, region: str) -> dict:
     except Exception as e:
         metric("AgentError", kind="answer")
         log("agent_error", kind="answer", error=type(e).__name__, detail=str(e)[:300])
+    if is_loosen_request(question):
+        return {"text": LOOSEN_REPLY, "source": "template", "tools": []}
     return {"text": fallback_answer(box), "source": "template", "tools": []}
 
 

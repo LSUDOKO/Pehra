@@ -49,3 +49,9 @@ def test_symptoms_always_get_fixed_first_aid():
 def test_thinking_tags_removed():
     from agent.agent import clean
     assert clean("<thinking>calc 12+3</thinking>\nKaam 12 baje band.") == "Kaam 12 baje band."
+
+
+def test_fallback_refuses_loosening_when_model_fails():
+    from agent.agent import answer
+    r = answer("Can we skip the break at 1 pm?", toolbox(), "no-such-model", "ap-south-1")
+    assert r["source"] == "template" and "Override" in r["text"]
