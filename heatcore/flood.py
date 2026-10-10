@@ -14,12 +14,17 @@ def percentile(values: list[float], q: float) -> float:
     return round(v[lo] + (v[hi] - v[lo]) * (idx - lo), 1)
 
 
-def flood_signal(forecast: list[float | None], history: list[float | None]) -> dict:
+def classify(forecast: list[float | None], p95: float, p99: float) -> dict:
     vals = [x for x in forecast if x is not None]
-    if not vals or not any(h is not None for h in history):
+    if not vals:
         return {"available": False}
-    p95, p99 = percentile(history, 0.95), percentile(history, 0.99)
     peak = round(max(vals), 1)
     level = "severe" if peak > p99 else "high" if peak > p95 else "normal"
     return {"available": True, "peak_m3s": peak, "p95_m3s": p95, "p99_m3s": p99, "level": level,
             "alert": level != "normal"}
+
+
+def flood_signal(forecast: list[float | None], history: list[float | None]) -> dict:
+    if not any(h is not None for h in history):
+        return {"available": False}
+    return classify(forecast, percentile(history, 0.95), percentile(history, 0.99))
