@@ -26,7 +26,9 @@ def audit_page(s: dict) -> str:
         f"<td class='n'>{d['invisible_days_shade']}</td>"
         f"<td class='vis'><div class='bar' style='width:{d['invisible_days_shade'] / top * 100:.0f}%'></div></td>"
         f"<td class='n'>{d['invisible_shade_outside_mar_jun']}</td>"
-        f"<td class='n'>{d['heatwave_days']}</td></tr>"
+        f"<td class='n'>{d['heatwave_days']}</td>"
+        f"<td class='n'>{d.get('warm_nights', '–')}</td>"
+        f"<td class='n'>{d.get('heavy_rain_days', '–')}</td></tr>"
         for d in sorted(s["districts"], key=lambda d: -d["invisible_days_shade"]))
     share = round(100 * t["invisible_days_shade"] / max(t["danger_days_shade"], 1))
     caveats = "".join(f"<li>{html.escape(c)}</li>" for c in s["caveats"])
@@ -38,10 +40,14 @@ temperature-based heatwave rule would not have raised an alarm. {html.escape(s['
 <p>city-days with WBGT in the shade above the NIOSH limit for moderate work ({t['limit_c']} °C)
 and no heatwave declared — {share}% of all such days. {t['invisible_shade_outside_mar_jun']:,} of them fell
 outside March–June, when heatwave bulletins do not run.</p>
+<h2>The water side</h2>
+<p>The same five years held <b>{t.get('heavy_rain_days', 0):,}</b> city-days of heavy rain (IMD "heavy", 64.5 mm or more in a day) and
+<b>{t.get('warm_nights', 0):,}</b> warm nights, when the body cannot cool down after a hot day. Invisible Heat adds both to its plans.</p>
 <div class="caveat"><b>These numbers are a minimum.</b><ul>{caveats}</ul></div>
 <h2>By city</h2>
 <table><thead><tr><th>City</th><th style="text-align:right">Invisible heat days</th><th class="vis"></th>
-<th style="text-align:right">Outside Mar–Jun</th><th style="text-align:right">Heatwave days (recreated rule)</th></tr></thead>
+<th style="text-align:right">Outside Mar–Jun</th><th style="text-align:right">Heatwave days (recreated rule)</th>
+<th style="text-align:right">Warm nights</th><th style="text-align:right">Heavy-rain days</th></tr></thead>
 <tbody>{rows}</tbody></table>
 <h2>How it was counted</h2>
 <p>{html.escape(s['definition'])} In the sun, {t['invisible_days_sun']:,} city-days crossed the same limit.</p>
