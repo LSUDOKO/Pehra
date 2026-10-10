@@ -14,6 +14,10 @@ class RateLimited(Exception):
         self.retry_after = retry_after
 
 
+class PermanentError(Exception):
+    """The provider will never accept this message (unverified or not-allowed number). Do not retry."""
+
+
 class OutsideWindow(Exception):
     """WhatsApp: no customer-service window open (user has not messaged in 24 h); needs a paid template."""
 

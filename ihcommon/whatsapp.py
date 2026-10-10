@@ -12,7 +12,7 @@ import os
 
 import requests
 
-from ihcommon.channel import Buttons, OutsideWindow, RateLimited
+from ihcommon.channel import Buttons, OutsideWindow, PermanentError, RateLimited
 
 GRAPH = "https://graph.facebook.com"
 API_VERSION = os.environ.get("WHATSAPP_API_VERSION", "v23.0")
@@ -22,6 +22,7 @@ MAX_BUTTON_TITLE = 20
 MAX_INTERACTIVE_BODY = 1024
 RATE_LIMIT_CODES = {130429, 131056, 80007}  # throughput, pair rate limit, account rate limit
 OUTSIDE_WINDOW_CODE = 131047  # "Re-engagement message": more than 24 h since the user's last message
+PERMANENT_CODES = {131030, 131026, 131021}  # not in allowed list, undeliverable, sender == recipient
 PREFIX = "wa:"
 
 
@@ -46,6 +47,8 @@ class WhatsApp:
                 raise RateLimited(6)
             if err.get("code") == OUTSIDE_WINDOW_CODE:
                 raise OutsideWindow(err.get("message", ""))
+            if err.get("code") in PERMANENT_CODES:
+                raise PermanentError(f"{err.get('code')} {err.get('message', '')}")
             raise RuntimeError(f"whatsapp failed: {r.status_code} {err.get('code')} {err.get('message', '')}")
         return body
 

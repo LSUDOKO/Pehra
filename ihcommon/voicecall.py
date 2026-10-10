@@ -13,11 +13,13 @@ import boto3
 import requests
 
 from ihcommon import config
+from ihcommon.channel import PermanentError
 from ihcommon.log import log, metric, short_hash
 
 TWILIO_API = "https://api.twilio.com/2010-04-01"
 E164_RE = re.compile(r"^\+[1-9]\d{7,14}$")
 URL_TTL_S = 900
+PERMANENT_CODES = {21219, 21211, 21214, 21215, 13224}  # unverified (trial), invalid, unreachable, geo-blocked
 
 
 def normalise_phone(raw: str) -> str | None:
@@ -55,6 +57,9 @@ def place_call(to: str, twiml_doc: str, session: requests.Session | None = None)
     r = (session or requests).post(f"{TWILIO_API}/Accounts/{sid}/Calls.json", auth=(sid, token), timeout=15,
                                    data={"To": to, "From": config.param("twilio-from"), "Twiml": twiml_doc})
     if r.status_code >= 400:
+        code = (r.json() or {}).get("code") if r.content else None
+        if code in PERMANENT_CODES:
+            raise PermanentError(f"twilio {code}: {r.text[:160]}")
         raise RuntimeError(f"twilio call failed: {r.status_code} {r.text[:200]}")
     return r.json()["sid"]
 

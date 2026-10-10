@@ -139,3 +139,10 @@ def test_outside_24h_window_is_its_own_error():
     s = Session(Resp(400, {"error": {"code": 131047, "message": "Re-engagement message"}}))
     with pytest.raises(OutsideWindow):
         WhatsApp("T", "PID", s).send_text("wa:91", "plan")
+
+
+def test_not_allowed_recipient_is_permanent():
+    from ihcommon.channel import PermanentError
+    s = Session(Resp(400, {"error": {"code": 131030, "message": "not in allowed list"}}))
+    with pytest.raises(PermanentError):
+        WhatsApp("T", "PID", s).send_text("wa:91", "hi")
