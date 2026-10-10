@@ -87,6 +87,8 @@ make layer && sam build && sam deploy                          # samconfig.toml 
 uv run python scripts/set_webhook.py                           # points the bot at the API
 ```
 
+Live stack: `https://yj61i9i7g0.execute-api.ap-south-1.amazonaws.com` ([/audit](https://yj61i9i7g0.execute-api.ap-south-1.amazonaws.com/audit), [/model-card](https://yj61i9i7g0.execute-api.ap-south-1.amazonaws.com/model-card)). Smoke test without sending any message: `uv run python scripts/smoke_deployed.py`.
+
 Then open the bot and send `/start`, then `/register Ramesh Tower, Chennai`, `/crew 40 10 3` and `/plan_now`. Optional: `sam deploy --parameter-overrides AlertEmail=you@example.com` adds a $5 budget alert and alarm emails.
 
 Re-check demo (clearly labelled **SIMULATED** in the message): `aws lambda invoke --function-name <RecheckFunctionName> --payload '{"simulate_delta_c": 1.5}' out.json`.
@@ -98,7 +100,8 @@ Re-check demo (clearly labelled **SIMULATED** in the message): `aws lambda invok
 | WBGT vs OSHA online calculator, 15 Chennai hours | Mean absolute difference **0.21 °C**, max 0.49 °C (OSHA output to 1 °F). `tests/test_heatcore_wbgt.py` |
 | NIOSH limits | REL 28.2 °C, RAL 25.0 °C at 300 W, matching the worked example |
 | Cedar decisions | All 7 required cases plus 5 more pass; the AI is denied LoosenPlan and OverridePlan |
-| Agent test set (20 questions, `tests/agent_questions.jsonl`) | **Pending.** Bedrock access was still under account verification when this was written. Run `uv run python scripts/eval_agent.py --out docs/results/agent_eval.json` to get it. We will publish the numbers as measured. |
+| Agent test set (20 Hindi/English questions, Amazon Nova Pro, 2 runs) | Facts correct **19/20** in both runs · unmatched numbers shipped **0** · correct refusals **4/4** · fixed-text fallbacks 2 and 4. Misses: one answer gave the stop window but not the suggested concrete window; one did not mention WBGT. Raw answers: `docs/results/agent_eval_run{1,2}.json` |
+| Deployed smoke test (`scripts/smoke_deployed.py`) | Plan built by the live plan Lambda with AI intro and Polly voice note; worker page, poster and audit served; break logged; nightly record written in Object Lock (GOVERNANCE, 90 days); hash chain verified |
 | Audit 2021–2025, 10 cities | 3,459 invisible heat city-days (shade), 1,679 outside March–June (a minimum) |
 
 ## Limits (read before quoting anything)
@@ -108,6 +111,7 @@ Re-check demo (clearly labelled **SIMULATED** in the message): `aws lambda invok
 - The IMD heatwave rule is **recreated** on one ERA5 grid cell per city. It is not IMD's official declaration record, and its "2 or more stations" condition is approximated.
 - ERA5 smooths extremes, so audit counts are a **minimum**.
 - The rest-minute bands (15/30/45/stop by each 1 °C above the limit) are **this project's own planning rule** inspired by NIOSH guidance, not a quoted standard. ACGIH tables are not used.
+- The deployed agent uses Amazon Nova through the `apac.` inference profile, so model requests may be served from other Asia-Pacific regions. Stored data stays in `ap-south-1`. Claude via the India-only `in.` profiles keeps model processing in India once Marketplace access is enabled on the account.
 - One deterministic forecast, no ensemble, so plans never state probabilities. A fixed +1.0 °C margin is used (+0.5 °C if the forecast is stale).
 - Open-Meteo's free API is for non-commercial use.
 - The first-aid page is fixed text, not medical advice or a diagnosis.
@@ -139,7 +143,7 @@ WhatsApp delivery (needs paid utility templates for scheduled pushes), red-day e
 As the hackathon rules require:
 
 - **Claude Code** (Anthropic, Claude Opus 5.5): planned the phases and wrote most of the code, tests and docs in this repo, under the team's direction and review.
-- **Claude on Amazon Bedrock** (via Strands Agents, India inference profiles): runtime explanations and Q&A inside the product, behind the number check and Cedar.
+- **Amazon Nova Pro on Amazon Bedrock** (via Strands Agents): runtime explanations and Q&A inside the product, behind the number check and Cedar. Claude via the India (`in.`) inference profiles is supported by changing two stack parameters.
 - Amazon Polly and Amazon Transcribe for voice in and out.
 
 ## Team
