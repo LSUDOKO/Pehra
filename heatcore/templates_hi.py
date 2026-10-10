@@ -52,15 +52,27 @@ def day_word(plan: dict) -> str:
     return "Aaj" if made == plan["date"] else "Kal"
 
 
+TYPE_LINES = {
+    "school": "- School: in ghanton mein assembly, khel aur bahar ki class nahi. Har period ke baad paani.",
+    "vendor": "- Dukaan: in ghanton mein chhaon lagaiye, grahakon ke liye bhi paani rakhiye.",
+    "rider": "- Delivery: rest ke minute chhaon mein rukiye, helmet utaar kar paani piyiye.",
+}
+
+
 def render_plan_hi(plan: dict) -> str:
     """The fallback plan message. Always works, no AI involved."""
     d = datetime.fromisoformat(plan["date"])
     out = [f"{day_word(plan)} ka plan ({plan['site_name']}, {d:%d %b}):"]
+    type_line = TYPE_LINES.get(plan.get("site_type", "site"))
     if plan["stop_from"] is not None:
         out.append(f"- Kaam band: {when(plan['stop_from'])} se {when(plan['stop_to'])} tak.")
     else:
         out.append("- Pura din kaam band karne ki zaroorat nahi.")
     out += [f"- {line}" for line in rest_summary_hi(plan)]
+    if type_line and (plan["stop_from"] is not None or any(p["rest_minutes"] for p in plan["rest_summary"])):
+        out.append(type_line)
+    for extra in plan.get("extra_lines", []):
+        out.append(extra)
     hs = plan.get("heavy_stop")
     if hs and hs["from"] is not None:
         out.append(f"- Bhaari kaam band: {clock(hs['from'])} se {clock(hs['to'])} baje tak.")

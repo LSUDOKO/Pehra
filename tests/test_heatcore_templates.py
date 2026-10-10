@@ -45,3 +45,9 @@ def test_day_word_today_vs_tomorrow():
     from heatcore.templates_hi import day_word
     assert day_word({"date": "2026-10-11", "generated_at": "2026-10-10T19:00:00"}) == "Kal"
     assert day_word({"date": "2026-10-11", "generated_at": "2026-10-11T10:30:00"}) == "Aaj"
+
+
+def test_type_and_extra_lines_render():
+    plan = dict(PLAN, site_type="school", extra_lines=["- Bhaari baarish (80 mm): khudai band."])
+    text = render_plan_hi(plan)
+    assert "School:" in text and "Bhaari baarish" in text
