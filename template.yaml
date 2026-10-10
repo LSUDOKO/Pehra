@@ -421,6 +421,8 @@ Resources:
         ModelCard: { Type: HttpApi, Properties: { ApiId: !Ref HttpApi, Method: GET, Path: /model-card } }
         Sensor: { Type: HttpApi, Properties: { ApiId: !Ref HttpApi, Method: POST, Path: /api/sensor } }
         DevicePage: { Type: HttpApi, Properties: { ApiId: !Ref HttpApi, Method: GET, Path: "/device/{token}" } }
+        Home: { Type: HttpApi, Properties: { ApiId: !Ref HttpApi, Method: GET, Path: / } }
+        Images: { Type: HttpApi, Properties: { ApiId: !Ref HttpApi, Method: GET, Path: "/img/{name}" } }
 
   NightlyRecordFunction:
     Type: AWS::Serverless::Function

@@ -151,6 +151,19 @@ def page_device(t, token: str) -> dict:
     return resp(200, tpl, "text/html; charset=utf-8")
 
 
+IMAGES = {"poster.png", "worker-page.png", "wokwi-esp32.png"}
+
+
+def image(name: str) -> dict:
+    import base64
+
+    if name not in IMAGES or not (WEB / "img" / name).exists():
+        return resp(404, "not found", "text/plain")
+    return {"statusCode": 200, "isBase64Encoded": True,
+            "headers": {"content-type": "image/png", "cache-control": "max-age=86400"},
+            "body": base64.b64encode((WEB / "img" / name).read_bytes()).decode()}
+
+
 def static(name: str) -> dict:
     path = WEB / name
     return html_resp(path.read_text()) if path.exists() else resp(404, "not found", "text/plain")
@@ -174,6 +187,10 @@ def handler(event, _ctx):
             return page_worker(t, parts[1])
         if method == "GET" and len(parts) == 2 and parts[0] == "p":
             return page_poster(t, parts[1])
+        if method == "GET" and path == "/":
+            return static("home/index.html")
+        if method == "GET" and len(parts) == 2 and parts[0] == "img":
+            return image(parts[1])
         if method == "GET" and path in ("/audit", "/audit/"):
             return static("audit/index.html")
         if method == "GET" and path in ("/model-card", "/model-card/"):
