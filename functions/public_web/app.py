@@ -5,6 +5,7 @@ GET  /p/{token}      printable poster     GET  /audit, /model-card
 Security: unguessable site token, per-device and per-IP rate limits, Cedar check, no names.
 """
 
+import html as html_lib
 import json
 from datetime import datetime, timedelta
 
@@ -102,6 +103,54 @@ def _ts(item: dict) -> datetime:
     return datetime.fromisoformat(item["SK"].split("#")[2]).astimezone(IST).replace(tzinfo=None)
 
 
+SENSOR_LIMIT_PER_MIN = 12
+
+
+def sensor(t, body: dict, ip: str) -> dict:
+    """POST /api/sensor from a real or simulated ESP32. The token identifies the device."""
+    from ihcommon import devices
+
+    token = str(body.get("device_token", ""))
+    if not token.startswith("dev_") or len(token) > 64:
+        return resp(400, {"error": "bad token"})
+    key = config.param("data-key")
+    th, dev = devices.get_device(t, token, key)
+    if not dev:
+        return resp(404, {"error": "unknown device"})
+    if repo.rate_limited(t, th, SENSOR_LIMIT_PER_MIN) or \
+            repo.rate_limited(t, crypto.keyed_hash(ip, key), IP_LIMIT_PER_MIN):
+        return resp(429, {"error": "slow down"})
+    owner = f"{dev['owner_kind']}:{dev['owner_id']}"
+    if not authz.authorize(authz.uid("Device", th), "PostReading", authz.uid("SensorStream", owner),
+                           [authz.entity("Device", th, owner=owner), authz.entity("SensorStream", owner, owner=owner)]):
+        return resp(403, {"error": "forbidden"})
+    try:
+        if dev["kind"] == "weather":
+            float(body["temp_c"]), float(body["rh"])
+        else:
+            float(body["distance_cm"])
+        out = devices.process(t, th, dev, body)
+    except (KeyError, TypeError, ValueError) as e:
+        return resp(400, {"error": f"bad reading: {e}"})
+    metric("SensorReading", kind=dev["kind"])
+    return resp(200, out)
+
+
+def page_device(t, token: str) -> dict:
+    from ihcommon import devices
+
+    _, dev = devices.get_device(t, token, config.param("data-key"))
+    if not dev:
+        return resp(404, "Device not found.", "text/plain; charset=utf-8")
+    labels = {"weather": "Weather sensor · DHT22", "tank": "Water tank · HC-SR04", "drain": "Drain level · HC-SR04"}
+    h = int(float(dev.get("height_cm") or 100))
+    tpl = (WEB / "device" / "index.html").read_text()
+    for k, v in {"KIND_LABEL": labels[dev["kind"]], "KIND": dev["kind"], "API_URL": f"{base_url()}/api/sensor",
+                 "TOKEN": token, "HEIGHT": str(h), "HALF": str(h // 2)}.items():
+        tpl = tpl.replace("{{" + k + "}}", html_lib.escape(v))
+    return resp(200, tpl, "text/html; charset=utf-8")
+
+
 def static(name: str) -> dict:
     path = WEB / name
     return html_resp(path.read_text()) if path.exists() else resp(404, "not found", "text/plain")
@@ -115,6 +164,10 @@ def handler(event, _ctx):
     ip = event.get("requestContext", {}).get("http", {}).get("sourceIp", "")
     parts = [p for p in path.split("/") if p]
     try:
+        if method == "POST" and path == "/api/sensor":
+            return sensor(t, json.loads(event.get("body") or "{}"), ip)
+        if method == "GET" and len(parts) == 2 and parts[0] == "device":
+            return page_device(t, parts[1])
         if method == "POST" and path == "/api/checkin":
             return checkin(t, json.loads(event.get("body") or "{}"), ip)
         if method == "GET" and len(parts) == 2 and parts[0] == "s":
