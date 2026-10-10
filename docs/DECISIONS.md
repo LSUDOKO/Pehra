@@ -13,3 +13,10 @@ Where a library or data source didn't match the build pack, we followed the libr
 | 2026-10-10 | Symptom messages are routed to fixed first-aid text before any model call | first aid must never be generated, even when Bedrock is up |
 | 2026-10-10 | Agent tools take no `site_id`; they are bound to the supervisor's own site | the model cannot read another site's data |
 | 2026-10-10 | Secrets in SSM SecureString, not Secrets Manager | free tier; pack allows either |
+| 2026-10-10 | Forecast ingest three times a day (05:30, 09:30, 17:30 IST) instead of two | the 10:30 re-check needs a morning run; still one call per city per run |
+| 2026-10-10 | Sender limited with SQS `ScalingConfig.MaximumConcurrency: 2`, not reserved concurrency | new accounts often have a 10-concurrency limit, which does not allow reservations |
+| 2026-10-10 | Object Lock in GOVERNANCE mode, 90-day default retention | tamper-evident records that an admin can still clean up after the hackathon; COMPLIANCE mode is a one-line change |
+| 2026-10-10 | Public links derived from the API's own domain at request time | putting the HTTP API URL in function env vars creates a CloudFormation cycle |
+| 2026-10-10 | Webhook answers fast; questions and voice go to an async assistant Lambda | Telegram expects a quick webhook response; Bedrock and Transcribe can take tens of seconds |
+| 2026-10-10 | Audit "danger" uses shade WBGT | conservative choice; sun counts are reported alongside |
+| 2026-10-10 | Polly input in Roman-script Hindi | Kajal (hi-IN, neural) accepts it; Devanagari comparison left for listening tests |
