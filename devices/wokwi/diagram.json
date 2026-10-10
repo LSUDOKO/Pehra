@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "author": "Invisible Heat",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-dht22", "id": "dht1", "top": -105, "left": 150, "attrs": { "temperature": "38", "humidity": "65" } },
+    { "type": "wokwi-hc-sr04", "id": "sonar", "top": -120, "left": -190, "attrs": { "distance": "100" } },
+    { "type": "wokwi-led", "id": "led1", "top": 150, "left": 170, "attrs": { "color": "red" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": 190, "left": 110, "attrs": { "value": "220" } },
+    { "type": "wokwi-buzzer", "id": "bz1", "top": 140, "left": 240, "attrs": { "volume": "0.2" } }
+  ],
+  "connections": [
+    [ "esp:TX", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX", "$serialMonitor:TX", "", [] ],
+    [ "dht1:VCC", "esp:3V3", "red", [] ],
+    [ "dht1:GND", "esp:GND.1", "black", [] ],
+    [ "dht1:SDA", "esp:15", "green", [] ],
+    [ "sonar:VCC", "esp:5V", "red", [] ],
+    [ "sonar:GND", "esp:GND.1", "black", [] ],
+    [ "sonar:TRIG", "esp:5", "orange", [] ],
+    [ "sonar:ECHO", "esp:18", "blue", [] ],
+    [ "esp:2", "r1:1", "yellow", [] ],
+    [ "r1:2", "led1:A", "yellow", [] ],
+    [ "led1:C", "esp:GND.2", "black", [] ],
+    [ "esp:4", "bz1:2", "purple", [] ],
+    [ "bz1:1", "esp:GND.2", "black", [] ]
+  ],
+  "dependencies": {}
+}
