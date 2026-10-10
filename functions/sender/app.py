@@ -15,11 +15,15 @@ from ihcommon.crypto import decrypt
 from ihcommon.log import log, metric
 
 MIN_GAP_S = 0.05        # ~20 msgs/s overall, below Telegram's ~30/s bot limit
-WHATSAPP_PAIR_GAP_S = 6  # WhatsApp: about one message per 6 s to the same user
+WHATSAPP_PAIR_GAP_S = 6
+TEST_PREFIX = "test:"  # WhatsApp: about one message per 6 s to the same user
 
 
 def deliver(msg: dict, s3=None) -> str:
     chat_id = decrypt(msg["chat_enc"], config.param("data-key"))
+    if chat_id.startswith(TEST_PREFIX):  # smoke tests: never contact anyone
+        log("smoke_message_dropped", kind=msg["kind"], chars=len(msg.get("text", "")))
+        return chat_id
     if msg["kind"] == "call":
         from ihcommon import voicecall
         voicecall.alert_call(chat_id, msg)
