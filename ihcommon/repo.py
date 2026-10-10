@@ -203,3 +203,19 @@ def delete_site_data(t, site: dict) -> int:
         for k in keys:
             b.delete_item(Key=k)
     return len(keys)
+
+
+def set_site_fields(t, site_id: str, **fields) -> None:
+    """Set (value) or remove (None) attributes on the site META item."""
+    sets = {k: v for k, v in fields.items() if v is not None}
+    removes = [k for k, v in fields.items() if v is None]
+    expr = []
+    if sets:
+        expr.append("SET " + ", ".join(f"#{k} = :{k}" for k in sets))
+    if removes:
+        expr.append("REMOVE " + ", ".join(f"#{k}" for k in removes))
+    kw = {"Key": {"PK": f"SITE#{site_id}", "SK": "META"}, "UpdateExpression": " ".join(expr),
+          "ExpressionAttributeNames": {f"#{k}": k for k in fields}}
+    if sets:
+        kw["ExpressionAttributeValues"] = {f":{k}": v for k, v in sets.items()}
+    t.update_item(**kw)
