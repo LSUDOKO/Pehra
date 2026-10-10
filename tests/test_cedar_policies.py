@@ -65,3 +65,10 @@ def test_policies_validate():
     root = Path(__file__).parents[1] / "cedar"
     text = "\n".join(p.read_text() for p in sorted((root / "policies").glob("*.cedar")))
     assert cedarpy.validate_policies(text, (root / "schema.cedarschema").read_text()).validation_passed
+
+
+def test_device_posts_only_to_own_stream():
+    ents = [entity("Device", "d1", owner="site:s1"), entity("SensorStream", "site:s1", owner="site:s1"),
+            entity("SensorStream", "site:s2", owner="site:s2")]
+    assert authorize(uid("Device", "d1"), "PostReading", uid("SensorStream", "site:s1"), ents)
+    assert not authorize(uid("Device", "d1"), "PostReading", uid("SensorStream", "site:s2"), ents)

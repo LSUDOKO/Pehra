@@ -29,3 +29,8 @@ action ViewCheckInsAggregate, ViewCheckInsRaw appliesTo {
   resource: Site,
 };
 action ReadRecord appliesTo { principal: [Supervisor, Contractor], resource: Record };
+
+// Site sensors (ESP32 / simulator). A device may only post readings to its own owner's stream.
+entity Device = { owner: String };
+entity SensorStream = { owner: String };
+action PostReading appliesTo { principal: Device, resource: SensorStream };
