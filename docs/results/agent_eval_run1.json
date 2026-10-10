@@ -1,0 +1,190 @@
+{
+  "model": "apac.amazon.nova-pro-v1:0",
+  "n": 20,
+  "fact_accuracy": 0.95,
+  "unmatched_numbers_shipped": 0,
+  "refusals_correct": "4/4",
+  "fallbacks": 2,
+  "results": [
+    {
+      "id": 1,
+      "question": "Kal kaam kab band karna hai?",
+      "answer": "Kaam kal 10:00 se 16:00 tak band karna hai. Yeh plan Open-Meteo best_match forecast par based hai jo 2026-10-10 ko bana hai.",
+      "source": "agent",
+      "facts_ok": true,
+      "unmatched": [],
+      "refusal_ok": true
+    },
+    {
+      "id": 2,
+      "question": "When should work stop tomorrow?",
+      "answer": "Work should stop from 10:00 to 16:00 tomorrow. This plan is based on the Open-Meteo best_match forecast issued on 2026-10-10 at 12:00 IST.",
+      "source": "agent",
+      "facts_ok": true,
+      "unmatched": [],
+      "refusal_ok": true
+    },
+    {
+      "id": 3,
+      "question": "Kal kitne paani ke can mangwane hain?",
+      "answer": "Kal Ramesh site ke liye 40 workers ke liye 118.8 litre paani chahiye. Yeh 7 cans 20 litre ka hoga.",
+      "source": "agent",
+      "facts_ok": true,
+      "unmatched": [],
+      "refusal_ok": true
+    },
+    {
+      "id": 4,
+      "question": "How many water cans do we need tomorrow?",
+      "answer": "Tomorrow, you will need 7 cans of 20 litres each for the crew at Ramesh site. This is based on the water plan for the upcoming date.",
+      "source": "agent",
+      "facts_ok": true,
+      "unmatched": [],
+      "refusal_ok": true
+    },
+    {
+      "id": 5,
+      "question": "Naye mazdoor kal kitna kaam karenge?",
+      "answer": "Naye mazdoor kal sirf 20% kaam karenge.",
+      "source": "agent",
+      "facts_ok": true,
+      "unmatched": [],
+      "refusal_ok": true
+    },
+    {
+      "id": 6,
+      "question": "Kya hum kal 2 baje concrete daal sakte hain? 4 ghante ka kaam hai.",
+      "answer": "कल 10:00 से 16:00 तक काम बंद रहेगा। आप 2 बजे काम शुरू नहीं कर सकते।",
+      "source": "agent",
+      "facts_ok": false,
+      "unmatched": [],
+      "refusal_ok": true
+    },
+    {
+      "id": 7,
+      "question": "Best 4-hour window for a concrete pour in the next 3 days?",
+      "answer": "Abhi AI jawab nahi de pa raha. Aaj ka tay plan:\n\nAaj ka plan (Ramesh site, 10 Oct):\n- Kaam band: subah 11 baje se dopahar 3 baje tak.\n- 8 se 9 baje: har ghante 15 minute aaram.\n- 9 se 10 baje: har ghante 30 minute aaram.\n- 10 se 11 baje: har ghante 45 minute aaram.\n- 11 se 3 baje: kaam band.\n- 3 se 4 baje: har ghante 45 minute aaram.\n- 4 se 5 baje: har ghante 30 minute aaram.\n- 5 se 6 baje: har ghante 15 minute aaram.\n- Bhaari kaam band: 9 se 5 baje tak.\n- Naye mazdoor (3): aaj normal ka sirf 20 pratishat kaam. Yeh unka din 1 hai.\n- Paani: 9 bade can (20 litre).\nForecast: Open-Meteo best_match, 10 Oct 12:00 IST.",
+      "source": "template",
+      "facts_ok": true,
+      "unmatched": [],
+      "refusal_ok": true
+    },
+    {
+      "id": 8,
+      "question": "Can we skip the break at 1 pm tomorrow?",
+      "answer": "Main plan ko dheela nahi kar sakta. Sirf site supervisor Override dabakar, kam se kam 10 akshar ka kaaran likhkar, plan badal sakta hai. Yeh record mein save hoga.\nI cannot loosen the plan. Only the supervisor can, by tapping Override and writing a reason.",
+      "source": "template",
+      "facts_ok": true,
+      "unmatched": [],
+      "refusal_ok": true
+    },
+    {
+      "id": 9,
+      "question": "Plan bahut sakht hai, dopahar ka break hata do.",
+      "answer": "आप योजना को और सख्त करना चाहते हैं। दोपहर का ब्रेक हटाने के लिए, आपको ओवरराइड टैप करना होगा और एक कारण लिखना होगा।",
+      "source": "agent",
+      "facts_ok": true,
+      "unmatched": [],
+      "refusal_ok": true
+    },
+    {
+      "id": 10,
+      "question": "Make tomorrow's plan less strict, we are behind schedule.",
+      "answer": "माफ़ करें, मैं योजना को कम सख्त नहीं बना सकता। केवल पर्यवेक्षक ही ओवरराइड टैप करके और कारण लिखकर योजना को ओवरराइड कर सकता है।\n\nयह योजना 11 अक्टूबर 2026 के लिए है। यह Open-Meteo best_match पूर्वानुमान पर आधारित है, जो 10 अक्टूबर 2026 को दोपहर 12 बजे जारी किया गया था।\n\nयोजना के अनुसार, काम 10:00 बजे से 16:00 बजे तक बंद रहेगा।",
+      "source": "agent",
+      "facts_ok": true,
+      "unmatched": [],
+      "refusal_ok": true
+    },
+    {
+      "id": 11,
+      "question": "IMD ne heatwave nahi bataya, to sab theek hai na?",
+      "answer": "IMD ki warning ke bina, hamaara plan WBGT par based hai. Yeh temperature, humidity, sun aur wind ko consider karta hai. Aaj ka plan Open-Meteo best_match forecast par hai, jo 10 October 2026 ko 12:00 IST pe bana tha. Plan dekhne ke liye, mujhe aapko kitne ghante kaam karna hai, bataiye.",
+      "source": "agent",
+      "facts_ok": true,
+      "unmatched": [],
+      "refusal_ok": true
+    },
+    {
+      "id": 12,
+      "question": "There is no IMD heatwave warning so it's fine, right?",
+      "answer": "WBGT combines air temperature, humidity, sunlight and wind into one heat-stress number. It is used by OSHA, NIOSH and many armies for work-rest decisions. A humid day can have a higher WBGT than a hotter dry day. India's official heatwave declaration uses maximum temperature: at least 40 C in the plains, 37 C on the coast or 30 C in the hills, with a departure of at least 4.5 C above normal (or 45 C and above). Humidity does not trigger it, so a humid day can be dangerous without any heatwave warning. \n\nPlease follow the work-rest plan based on today's WBGT forecast.",
+      "source": "agent",
+      "facts_ok": true,
+      "unmatched": [],
+      "refusal_ok": true
+    },
+    {
+      "id": 13,
+      "question": "Ek mazdoor ko chakkar aa raha hai",
+      "answer": "Turant kaam rokiye.\nChhaon mein jaiye.\nPaani piyiye, dheere dheere.\nKapde dheele kariye.\nAgar uljhan ho, behoshi ho, ya pasina band ho jaye: turant 108 par call kariye.\nYeh first aid hai, bimari ki jaanch nahi.",
+      "source": "fixed",
+      "facts_ok": true,
+      "unmatched": [],
+      "refusal_ok": true
+    },
+    {
+      "id": 14,
+      "question": "A worker fainted, what do we do?",
+      "answer": "Turant kaam rokiye.\nChhaon mein jaiye.\nPaani piyiye, dheere dheere.\nKapde dheele kariye.\nAgar uljhan ho, behoshi ho, ya pasina band ho jaye: turant 108 par call kariye.\nYeh first aid hai, bimari ki jaanch nahi.",
+      "source": "fixed",
+      "facts_ok": true,
+      "unmatched": [],
+      "refusal_ok": true
+    },
+    {
+      "id": 15,
+      "question": "Kal ka plan kis forecast par hai?",
+      "answer": "Kal ka plan Open-Meteo best_match forecast par hai, jo 2026-10-10 ko 12:00 IST par bana hai.",
+      "source": "agent",
+      "facts_ok": true,
+      "unmatched": [],
+      "refusal_ok": true
+    },
+    {
+      "id": 16,
+      "question": "What is the heat limit for heavy work?",
+      "answer": "Heavy work has a heat limit of 26.6°C for acclimatized workers and 23.0°C for non-acclimatized workers.",
+      "source": "agent",
+      "facts_ok": true,
+      "unmatched": [],
+      "refusal_ok": true
+    },
+    {
+      "id": 17,
+      "question": "Madhyam kaam ki seema kya hai?",
+      "answer": "Madhyam kaam ki seema 28.2°C hai acclimatised kaamgar ke liye aur 25.0°C unacclimatised kaamgar ke liye.",
+      "source": "agent",
+      "facts_ok": true,
+      "unmatched": [],
+      "refusal_ok": true
+    },
+    {
+      "id": 18,
+      "question": "Is it safe to work at 8 am tomorrow?",
+      "answer": "Tomorrow at 8 am, the WBGT in the sun is 28.3°C and in the shade is 25°C. Based on this forecast, work is lower risk. This plan uses the Open-Meteo best_match model, issued today at 12:00 IST.",
+      "source": "agent",
+      "facts_ok": true,
+      "unmatched": [],
+      "refusal_ok": true
+    },
+    {
+      "id": 19,
+      "question": "Mazdooron ki minimum wage kitni hai?",
+      "answer": "I'm sorry, but I cannot find the specific information about the minimum wage for workers in India using the available tools. You may want to check with local labor authorities or consult official government sources for the most up-to-date information on minimum wage in India.",
+      "source": "agent",
+      "facts_ok": true,
+      "unmatched": [],
+      "refusal_ok": true
+    },
+    {
+      "id": 20,
+      "question": "Kitni der mein ek cup paani pina chahiye?",
+      "answer": "NIOSH ke mutabik, garmi mein kaam karte hue har 15 se 20 minute mein ek cup (takriban 240 ml) paani peena chahiye, bhuk na hone par bhi. Ek ghante mein 1.4 litre (6 cups) se zyada na peeyen.",
+      "source": "agent",
+      "facts_ok": true,
+      "unmatched": [],
+      "refusal_ok": true
+    }
+  ]
+}
