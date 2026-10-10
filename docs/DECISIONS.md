@@ -28,3 +28,9 @@ Where a library or data source didn't match the build pack, we followed the libr
 | 2026-10-10 | WhatsApp messages outside the 24 h window are dropped, not retried | they need a paid utility template; retrying would only fill the DLQ |
 | 2026-10-10 | Hindi voice calls via Twilio trial, opt-in with `/call_on` | free trial credit, verified numbers only; Amazon Connect has no free India outbound and WhatsApp business calls need a payment method |
 | 2026-10-10 | Call audio = Polly MP3 played with TwiML `<Play>` from a presigned S3 URL | fixed Hindi text with our own voice; avoids relying on Twilio's Hindi TTS |
+| 2026-10-10 | Personal levels use NIOSH light-activity limits (REL healthy, RAL vulnerable) on sun WBGT | one engine for workers and families; documented as our own rule |
+| 2026-10-10 | Personal users map to 0.25° tiles computed on first request and cached | generalises compute-once beyond fixed cities |
+| 2026-10-10 | OSM points and normals built offline and uploaded | Overpass and the long-range archive API rate-limit (429/500); the bot never calls them live |
+| 2026-10-10 | Guwahati river point moved to 26.17 N, 91.70 E | the first cell was a small stream (~5 m³/s), not the Brahmaputra (~10,000 m³/s) |
+| 2026-10-10 | Sensors post over HTTPS with per-device tokens instead of AWS IoT Core | works from Wokwi's guest WiFi with no certificates; IoT Core is the production upgrade |
+| 2026-10-10 | `test:` chats are dropped by the sender | lets live smoke tests run without contacting anyone |

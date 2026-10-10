@@ -109,3 +109,18 @@ Everything below uses free data: Open-Meteo forecast, archive and flood APIs, Op
 - NDMA platform advisory (reported): https://wri-india.org/perspectives/rising-heats-invisible-burden-delivery-workers
 - WHO heat-health guidance (2026): https://mb.cision.com/Public/15083/4361767/9efb66ce0ef156ad.pdf
 - Track brief: https://www.wemakedevs.org/aws/env
+
+
+## Status (10 Oct 2026, night)
+
+| Item | Status |
+|---|---|
+| V2-01 personal and family mode | Done, deployed, live smoke test (city and tile) |
+| V2-02 family call | Done (needs Twilio keys to ring) |
+| V2-03 water and shade finder | Done; OSM points for 10 cities (Guwahati and Patna pending an Overpass retry); community points with the 2-report rule |
+| V2-04 heavy-rain alerts | Done (sites and personal) |
+| V2-05 warm nights | Done; normals for all 12 cities |
+| V2-06 school, vendor, rider types | Done |
+| V2-07 audit v2 | Done: 4,372 invisible heat days, 90 heavy-rain days, 68 warm nights (12 cities) |
+| V2-08 river-flood signal | Done for Guwahati and Patna |
+| Sensors (ESP32 / Wokwi / web simulator) | Done; Wokwi run verified against the live API |
