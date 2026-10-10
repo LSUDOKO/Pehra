@@ -144,3 +144,18 @@ def render_voice_hi(plan: dict) -> str:
         parts.append(f"Jo {nw['count']} naye mazdoor hain, woh kam kaam karenge.")
     parts.append(f"{plan['water']['cans_20l']} bade paani ke can mangwa lo.")
     return " ".join(parts)
+
+
+# Fixed Hindi phone-call scripts (spoken by Polly; numbers only from the plan).
+CALL_SYMPTOM_HI = ("Dhyan dein. Aapki site par ek mazdoor ne chakkar aane ki khabar di hai. "
+                   "Turant unke paas jaiye. Chhaon mein le jaiye, paani dijiye, aaram karaiye. "
+                   "Behoshi ya uljhan ho to 108 par call kariye.")
+CALL_TEST_HI = ("Namaste. Yeh Invisible Heat ki test call hai. Khatre wale din par hum aapko "
+                "isi tarah phone karke batayenge.")
+
+
+def render_call_recheck_hi(plan: dict) -> str:
+    out = "Dhyan dein. Naya forecast zyada garam hai. "
+    if plan.get("stop_from") is not None:
+        out += f"Aaj {clock(plan['stop_from'])} se {clock(plan['stop_to'])} baje tak kaam band rakhiye. "
+    return out + "Naya plan apne phone par dekhiye aur Samajh gaya dabaiye."
