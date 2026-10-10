@@ -82,7 +82,7 @@ def run(model: str, region: str, rescore: str | None = None) -> dict:
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("--model", default="in.anthropic.claude-sonnet-5")
+    ap.add_argument("--model", default="apac.amazon.nova-pro-v1:0")
     ap.add_argument("--region", default="ap-south-1")
     ap.add_argument("--out")
     ap.add_argument("--rescore", help="re-score a saved results file without calling the model")

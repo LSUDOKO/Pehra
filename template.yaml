@@ -9,12 +9,14 @@ Parameters:
     Type: String
     Default: /invisible-heat
     Description: SSM prefix holding telegram-token, webhook-secret and data-key (SecureString)
+  # Amazon Nova by default (no Marketplace subscription needed). Claude via India profiles works too:
+  # in.anthropic.claude-haiku-4-5-20251001-v1:0 / in.anthropic.claude-sonnet-5
   BedrockModelFast:
     Type: String
-    Default: in.anthropic.claude-haiku-4-5-20251001-v1:0
+    Default: apac.amazon.nova-lite-v1:0
   BedrockModelQa:
     Type: String
-    Default: in.anthropic.claude-sonnet-5
+    Default: apac.amazon.nova-pro-v1:0
   AgentEnabled:
     Type: String
     Default: "true"
@@ -188,7 +190,9 @@ Resources:
               Action: [bedrock:InvokeModel, bedrock:InvokeModelWithResponseStream]
               Resource:
                 - !Sub "arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/in.anthropic.*"
+                - !Sub "arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/apac.amazon.nova-*"
                 - "arn:aws:bedrock:*::foundation-model/anthropic.*"
+                - "arn:aws:bedrock:*::foundation-model/amazon.nova-*"
 
   DailyPlanStateMachine:
     Type: AWS::Serverless::StateMachine
@@ -305,7 +309,9 @@ Resources:
               Action: [bedrock:InvokeModel, bedrock:InvokeModelWithResponseStream]
               Resource:
                 - !Sub "arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/in.anthropic.*"
+                - !Sub "arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/apac.amazon.nova-*"
                 - "arn:aws:bedrock:*::foundation-model/anthropic.*"
+                - "arn:aws:bedrock:*::foundation-model/amazon.nova-*"
             - Effect: Allow
               Action: [transcribe:StartTranscriptionJob, transcribe:GetTranscriptionJob]
               Resource: "*"
