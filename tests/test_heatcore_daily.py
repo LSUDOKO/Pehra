@@ -43,3 +43,14 @@ def test_hash_is_deterministic_and_ignores_generated_at():
 def test_crew_validation():
     with pytest.raises(ValueError):
         Crew(5, 4, 3)
+
+
+def test_school_type_uses_light_work_and_ral():
+    p = build_daily_plan(HEAT, Crew(30), FC, NOW, site_type="school")
+    assert p["site_type"] == "school" and p["base_workload"] == "light"
+    assert p["plans"]["moderate"]["limit_c"] == 28.1 and not p["plans"]["moderate"]["acclimatised"]
+
+
+def test_unknown_site_type_rejected():
+    with pytest.raises(KeyError):
+        build_daily_plan(HEAT, Crew(30), FC, NOW, site_type="spaceship")

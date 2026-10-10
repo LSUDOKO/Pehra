@@ -14,6 +14,14 @@ from heatcore.margin import planning_margin
 from heatcore.plan import HourHeat, Plan, build_plan
 from heatcore.water import BUFFER, CAN_LITRES, water_plan
 
+# site type -> (base workload, acclimatised). Children in schools are planned against RAL.
+SITE_TYPES: dict[str, tuple[str, bool]] = {
+    "site": ("moderate", True),
+    "school": ("light", False),
+    "vendor": ("light", True),
+    "rider": ("moderate", True),
+}
+
 
 @dataclass
 class Crew:
@@ -56,9 +64,11 @@ def build_daily_plan(
     *,
     site_id: str = "",
     site_name: str = "",
+    site_type: str = "site",
 ) -> dict:
     margin, stale = planning_margin(forecast.issued_at, now)
-    main = build_plan(heat, "moderate", margin_c=margin)
+    base_workload, acclimatised = SITE_TYPES[site_type]
+    main = build_plan(heat, base_workload, acclimatised=acclimatised, margin_c=margin)
     heavy = build_plan(heat, "heavy", margin_c=margin) if crew.heavy_count else None
 
     new = None
@@ -83,13 +93,14 @@ def build_daily_plan(
     water.pop("cups_per_worker", None)
 
     out = {
-        "site_id": site_id, "site_name": site_name, "date": main.date,
+        "site_id": site_id, "site_name": site_name, "site_type": site_type, "date": main.date,
         "forecast_model": forecast.model, "forecast_issued": forecast.issued_at.isoformat(),
         "generated_at": now.isoformat(), "stale": stale, "margin_c": margin,
         "crew": asdict(crew),
         "stop_from": main.stop_from, "stop_to": main.stop_to,
         "heavy_stop": ({"from": heavy.stop_from, "to": heavy.stop_to} if heavy else None),
         "plans": {"moderate": main.to_dict(), **({"heavy": heavy.to_dict()} if heavy else {})},
+        "base_workload": base_workload,
         "rest_summary": _summary(main),
         "new_workers": new, "water": water,
         "peak_wbgt": max((h.wbgt for h in main.hours), default=None),
