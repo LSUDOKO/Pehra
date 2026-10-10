@@ -31,3 +31,22 @@ All code lives in `heatcore/` (pure Python, no AWS). Same inputs give the same p
 
 ## Output
 `heatcore.daily.build_daily_plan` returns one JSON-able dict (plans, rest summary, stop window, new-worker schedule, water, forecast model and issue time, stale flag) plus a SHA-256 `plan_hash`. Every message, poster and record is filled from this dict only.
+
+## Personal and family risk (Garmi Saathi)
+
+Same WBGT engine and margin. **Our own planning rule, not a medical assessment:**
+
+| Group | WBGT used | Limit |
+|---|---|---|
+| Healthy adults outdoors | sun | NIOSH REL, light activity (180 W) = 30.8 °C |
+| Elderly (65+), under-5s, pregnant, chronic illness | sun | NIOSH RAL, light activity = 28.1 °C |
+| Household member who works outdoors | sun | NIOSH REL, moderate work (300 W) = 28.2 °C |
+
+Exceedance over the limit maps to five levels with the same 1 °C edges as the work bands: *kam* (≤ 0), *saavdhaan* (≤ 1), *zyada* (≤ 2), *bahut zyada* (≤ 3), *khatarnak* (> 3). "Avoid going out" hours are those at *bahut zyada* or above. "Better hours" are those at *saavdhaan* or below, for the strictest group in the household. An opt-in family call goes to an elderly relative only on *bahut zyada* or *khatarnak* days, once a day.
+
+## Water and night context (all from code)
+
+- **Rain:** forecast daily total in IMD's categories; alerts from "heavy" (≥ 64.5 mm/day). Site plans add a fixed line to stop digging, scaffolding and electrical work.
+- **Warm nights:** IMD's definition recreated: only on days ≥ 40 °C, with the night minimum 4.5–6.4 °C above the 1991–2020 normal (warm) or more (very warm).
+- **River flood:** GloFAS river discharge at the city's river grid point (Guwahati, Patna). Alert above the point's own 1991–2020 95th percentile; severe above the 99th.
+- **Site sensor:** measured air temperature and humidity plus forecast wind and sun give a site-corrected WBGT. An alert fires when it is ≥ 1 °C above the forecast.

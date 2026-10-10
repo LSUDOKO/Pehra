@@ -14,6 +14,14 @@
 - New workers: NIOSH acclimatisation, 20% of normal exposure on day 1, rising 20% a day.
 - Water: one 240 ml cup per 17.5 minutes of work, at most 6 cups an hour, plus 10% buffer, in 20 litre cans.
 
+## Personal mode, water and sensors
+- Personal and family risk levels use NIOSH light-activity limits (REL healthy, RAL vulnerable). This is a planning rule, not medical advice.
+- Rain categories are IMD's published 24-hour thresholds, applied to a forecast. They are not IMD warnings.
+- Warm nights follow IMD's definition, recreated with ERA5 normals.
+- River-flood signals come from GloFAS discharge against the point's own history. They exist only for river grid points (Guwahati, Patna).
+- Drinking-water and shade points come from OpenStreetMap (ODbL). Coverage in India is patchy: 7 points around Kharghar against 658 around Delhi. Community points show only after 2 independent reports and are labelled unverified.
+- Site sensors (DHT22) correct the air temperature and humidity; wind and sun still come from the forecast.
+
 ## Inputs
 - Live plans: Open-Meteo forecast (best_match), fetched twice a day, about 11 km grid, free for non-commercial use.
 - Kharghar replay and audit: ERA5 reanalysis via the Open-Meteo archive (CC BY 4.0), about 25 km grid.
