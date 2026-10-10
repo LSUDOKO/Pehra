@@ -127,6 +127,7 @@ def apply_override(d, site: dict, owner: str, state: dict, reason: str) -> str:
 
 # ---- dispatch -----------------------------------------------------------------------
 
+START_LINKS = {"me": "/me", "paani": "/paani", "family": "/family_call", "site": "/help"}
 ALIASES = {"start": "/start", "hi": "/start", "hello": "/start", "namaste": "/start", "help": "/help",
            "plan": "/plan_now", "links": "/links", "crew": "/crew", "call": "/test_call"}
 
@@ -198,6 +199,8 @@ def on_message(d, msg: dict) -> None:
         loc = msg["location"]
         bot_people.handle_location(d, chat_id, owner, float(loc["latitude"]), float(loc["longitude"]), assist)
         return
+    if cmd == "/start" and arg.strip() in START_LINKS:  # deep links from the website
+        cmd, arg = START_LINKS[arg.strip()], ""
     if cmd == "/start":
         d.bot.send_text(chat_id, texts.PRIVACY)
         d.bot.send_text(chat_id, texts.START_CHOICE, bot_people.START_BUTTONS)
