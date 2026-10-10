@@ -9,7 +9,7 @@ import json
 from datetime import datetime, timedelta
 
 from heatcore.heat import IST
-from heatcore.templates_hi import FIRST_AID_HI, render_symptom_alert_hi
+from heatcore.templates_hi import CALL_SYMPTOM_HI, FIRST_AID_HI, render_symptom_alert_hi
 from ihcommon import authz, config, crypto, outbox, planning, repo
 from ihcommon.log import log, metric, short_hash
 from ihcommon.web import WEB, poster_page, worker_page
@@ -88,6 +88,7 @@ def checkin(t, body: dict, ip: str) -> dict:
             last_hour = 1 + sum(1 for c in recent if _ts(c) > now - timedelta(hours=1))
             outbox.enqueue(site["chat_enc"], "text",
                            text=render_symptom_alert_hi(now.strftime("%H:%M"), last_hour))
+            outbox.enqueue_call(site, CALL_SYMPTOM_HI)  # only if the supervisor opted in
             metric("SymptomReported")
         return resp(200, {"ok": True, "first_aid": FIRST_AID_HI})
     repo.put_checkin(t, site["site_id"], day, kind, dev_hash)

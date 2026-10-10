@@ -8,7 +8,7 @@ from dataclasses import replace
 
 from heatcore.guard import stricter_hours
 from heatcore.heat import heat_to_json
-from heatcore.templates_hi import render_recheck_alert_hi
+from heatcore.templates_hi import render_call_recheck_hi, render_recheck_alert_hi
 from ihcommon import heatstore, outbox, planning, repo
 from ihcommon.log import log, metric, short_hash
 
@@ -38,6 +38,9 @@ def recheck_site(t, site: dict, day: str, now, delta: float = 0.0) -> dict:
     if delta:
         text = "[SIMULATED forecast for demo]\n" + text
     outbox.enqueue(site["chat_enc"], "text", text=text, buttons=[[("Samajh gaya", f"ack:{sk}")]])
+    if new.get("stop_from") is not None:  # a stop-work change is worth a phone call
+        speech = render_call_recheck_hi(new)
+        outbox.enqueue_call(site, ("Yeh demo ke liye simulated forecast hai. " if delta else "") + speech)
     metric("RecheckAlert", simulated=str(bool(delta)))
     return {"site": short_hash(site["site_id"]), "result": "alerted", "hours": worse}
 
