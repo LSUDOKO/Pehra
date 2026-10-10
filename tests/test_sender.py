@@ -40,4 +40,4 @@ def test_routes_by_channel_and_calls(monkeypatch):
     ])]
     assert app.handler({"Records": recs}, None) == {"batchItemFailures": []}
     assert [entry[0] for entry in log] == ["telegram", "whatsapp"]
-    assert log[1][3] == [("Approve", "ap:d")] and calls == [("+919876543210", "Dhyan dein")]
+    assert log[1][3] == [[("Approve", "ap:d")]] and calls == [("+919876543210", "Dhyan dein")]
