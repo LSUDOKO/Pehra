@@ -36,8 +36,31 @@ def plan_for_site(t, site: dict, day: str, *, heat_doc: dict | None = None,
     heat = for_date(heatstore.hours(doc), day)
     if not heat:
         raise ValueError(f"no forecast hours for {day} in run {doc['run_id']}")
-    return build_daily_plan(heat, crew_for(t, site["site_id"]), forecast_meta(doc),
-                            now or now_ist(), site_id=site["site_id"], site_name=site["name"])
+    plan = build_daily_plan(heat, crew_for(t, site["site_id"]), forecast_meta(doc), now or now_ist(),
+                            site_id=site["site_id"], site_name=site["name"],
+                            site_type=site.get("site_type", "site"))
+    return add_conditions(plan, doc, site["city"])
+
+
+def add_conditions(plan: dict, doc: dict, key: str) -> dict:
+    """Attach rain, warm-night and river-flood context (from code) and the matching site lines."""
+    from heatcore.daily import plan_hash
+    from heatcore.templates_people import site_night_line, site_rain_line
+    from ihcommon import locdata
+
+    try:
+        normals = locdata._get_json(f"normals/{key}.json")
+    except Exception:
+        normals = None
+    cond = locdata.conditions(doc, normals, plan["date"])
+    plan["conditions"] = cond
+    flood = cond.get("flood")
+    lines = [site_rain_line(cond.get("rain")), site_night_line(cond.get("night")),
+             "- Nadi ka paani badh sakta hai: kinare ke paas ka kaam band, raasta pehle se tay karein."
+             if flood and flood.get("alert") else None]
+    plan["extra_lines"] = [x for x in lines if x]
+    plan["plan_hash"] = plan_hash(plan)
+    return plan
 
 
 def heat_days(doc: dict, start: date, days: int):
