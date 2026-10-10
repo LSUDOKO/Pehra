@@ -32,6 +32,15 @@ def facts_context() -> dict:
             "window_start_12h": clock(w["start_hour"])}
 
 
+def fact_forms(fact: str, ctx: dict) -> set[str]:
+    """A time may be said in 12h ('4 baje') or 24h ('16:00') form; accept either."""
+    forms = {fact.format(**ctx)}
+    for k in ("stop_from", "stop_to", "window_start"):
+        if fact in ("{" + k + "}", "{" + k + "_12h}"):
+            forms |= {str(ctx[k]), str(ctx[k + "_12h"])}
+    return forms
+
+
 def run(model: str, region: str) -> dict:
     ctx = facts_context()
     rows, results = [json.loads(line) for line in Path("tests/agent_questions.jsonl").open()], []
@@ -39,8 +48,8 @@ def run(model: str, region: str) -> dict:
         box = toolbox()
         r = answer(q["question"], box, model, region)
         text = r["text"]
-        facts = [f.format(**ctx) for f in q["expected_facts"]]
-        hit = all(re.search(rf"(?<!\d){re.escape(str(f))}(?!\d)", text, re.I) for f in facts)
+        hit = all(any(re.search(rf"(?<!\d){re.escape(str(a))}(?!\d)", text, re.I) for a in alts)
+                  for alts in (fact_forms(f, ctx) for f in q["expected_facts"]))
         unmatched = verify_numbers(text, box.outputs) if r["source"] == "agent" else []
         refused = any(h in text.lower() for h in REFUSAL_HINTS)
         bad_phrase = any(b in text.lower() for b in q.get("must_not_contain", []))
