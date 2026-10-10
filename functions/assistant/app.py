@@ -7,9 +7,9 @@ block Telegram. Replies go out through the SQS outbox.
 from agent.agent import answer
 from agent.roster import parse_crew_roster, readback
 from agent.tools import ToolBox
-from ihcommon import config, heatstore, outbox, planning, repo, texts
+from ihcommon import channels, config, heatstore, outbox, planning, repo, texts
+from ihcommon.crypto import decrypt
 from ihcommon.log import log, metric
-from ihcommon.telegram import Telegram
 from ihcommon.transcribe import transcribe_ogg
 
 MIN_VOICE_CONFIDENCE = 0.6
@@ -29,8 +29,8 @@ def on_question(t, site: dict, text: str, chat_enc: str) -> None:
 
 
 def on_voice(t, site: dict, event: dict) -> None:
-    bot = Telegram(config.param("telegram-token"))
-    audio = bot.download_file(event["file_id"])
+    chat_id = decrypt(event["chat_enc"], config.param("data-key"))
+    audio = channels.client_for(chat_id).download_file(event["file_id"])
     tr = transcribe_ogg(audio)
     log("voice_transcribed", confidence=tr["confidence"], chars=len(tr["text"]))
     if tr["confidence"] < MIN_VOICE_CONFIDENCE or not tr["text"]:
