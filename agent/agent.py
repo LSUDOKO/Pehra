@@ -169,3 +169,61 @@ def plan_intro(plan: dict, model_id: str, region: str) -> str | None:
         metric("AgentError", kind="intro")
         log("agent_error", kind="intro", error=type(e).__name__, detail=str(e)[:300])
         return None
+
+
+def _personal_tools(box) -> list:
+    from strands import tool
+
+    @tool
+    def get_family_forecast(day: str) -> dict:
+        """Heat levels for this household on a date (YYYY-MM-DD): overall level, per-group levels,
+        hours to avoid, better hours to go out, peak WBGT and forecast details."""
+        return box.get_family_forecast(day)
+
+    @tool
+    def get_conditions() -> dict:
+        """Today's rain category, warm-night flag and river-flood signal for this place."""
+        return box.get_conditions()
+
+    @tool
+    def search_guidance(query: str) -> list:
+        """Short vetted heat-safety passages with sources (NIOSH, NDMA, OSHA, IMD)."""
+        return box.search_guidance(query)
+
+    @tool
+    def first_aid() -> dict:
+        """The fixed first-aid text for heat symptoms. Repeat it exactly; never change it."""
+        return box.first_aid()
+
+    return [get_family_forecast, get_conditions, search_guidance, first_aid]
+
+
+def answer_personal(question: str, box, model_id: str, region: str) -> dict:
+    """Answer a family's question with the number check; fall back to today's fixed message."""
+    from agent.prompts import PERSONAL_PROMPT
+
+    if is_symptom(question):
+        return {"text": box.first_aid()["text"], "source": "fixed", "tools": ["first_aid"]}
+    hh = box.household
+    header = (f"Today (IST): {box.now.date().isoformat()}. Place: {box.place}. "
+              f"Household: {hh.adults} adults, {hh.elderly} elderly, {hh.young_children} young children, "
+              f"{hh.pregnant} pregnant, {hh.chronic} with chronic illness, "
+              f"works outdoors: {hh.works_outdoors}.\n\n")
+    try:
+        from strands import Agent
+        agent = Agent(model=_model(model_id, region), system_prompt=PERSONAL_PROMPT,
+                      tools=_personal_tools(box), callback_handler=None)
+
+        def run(bad):
+            if bad is None:
+                return clean(agent(header + question))
+            return clean(agent(f"Remove or correct these numbers; they are not in any tool result: "
+                               f"{', '.join(bad)}. Rewrite your last answer."))
+
+        text, _ = _checked(run, lambda: box.outputs, "personal")
+        if text:
+            return {"text": text, "source": "agent", "tools": [o["tool"] for o in box.outputs]}
+    except Exception as e:
+        metric("AgentError", kind="personal")
+        log("agent_error", kind="personal", error=type(e).__name__, detail=str(e)[:300])
+    return {"text": None, "source": "template", "tools": []}
