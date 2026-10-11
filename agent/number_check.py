@@ -44,4 +44,44 @@ def allowed_numbers(tool_outputs: list) -> set[str]:
 def verify_numbers(reply_text: str, tool_outputs: list) -> list[str]:
     """Return the numbers in the reply that no tool produced (empty list = pass)."""
     allowed = allowed_numbers(tool_outputs)
-    return sorted({n for n in numbers_in_text(reply_text) if n not in allowed})
+    unmatched = {n for n in numbers_in_text(reply_text) if n not in allowed}
+    return sorted(unmatched | set(verify_units(reply_text, tool_outputs)))
+
+
+# Unit-aware checks: a number written next to a unit must equal that unit's tool value.
+# Catches "9 can" when build_water_plan said 7 even though 9 exists elsewhere (an hour).
+UNIT_RULES = (
+    (re.compile(r"(\d+(?:\.\d+)?)\s*(?:bade\s+|big\s+|paani\s+ke\s+)?(?:can|cans|कैन)\b", re.I), "cans_20l"),
+    (re.compile(r"(\d+(?:\.\d+)?)\s*(?:litre|liter|litres|liters|लीटर)\b", re.I), "litres"),
+)
+NEUTRAL_UNIT_VALUES = {"20"}  # "20 litre" describes the can size, not the order
+
+
+def _tool_values(tool_outputs: list, key: str) -> set[str]:
+    found = set()
+
+    def walk(o):
+        if isinstance(o, dict):
+            for k, v in o.items():
+                if k == key and isinstance(v, (int, float)):
+                    found.add(canon(str(v)))
+                walk(v)
+        elif isinstance(o, list):
+            for x in o:
+                walk(x)
+    walk(tool_outputs)
+    return found
+
+
+def verify_units(reply_text: str, tool_outputs: list) -> list[str]:
+    """Numbers attached to a unit that disagree with that unit's tool value (only if the tool ran)."""
+    bad = []
+    for rx, key in UNIT_RULES:
+        expected = _tool_values(tool_outputs, key)
+        if not expected:
+            continue
+        for m in rx.finditer(reply_text):
+            n = canon(m.group(1))
+            if n not in expected and n not in NEUTRAL_UNIT_VALUES:
+                bad.append(n)
+    return sorted(set(bad))

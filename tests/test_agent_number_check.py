@@ -24,3 +24,12 @@ def test_ignores_list_markers_and_allows_108():
 
 def test_extracts_times():
     assert numbers_in_text("subah 6:30 se 10:00") == ["6:30", "10"]
+
+
+def test_unit_aware_check_catches_wrong_can_count():
+    tools = [{"tool": "build_water_plan", "output": {"cans_20l": 7, "litres": 118.8, "can_litres": 20}},
+             {"tool": "build_plan", "output": {"stop_from": 9}}]
+    assert verify_numbers("9 can paani mangwa lo.", tools) == ["9"]
+    assert verify_numbers("7 bade can (20 litre) mangwa lo.", tools) == []
+    assert verify_numbers("118.8 litre paani chahiye.", tools) == []
+    assert verify_numbers("Kaam 9 baje band.", [{"stop_from": 9}]) == []
