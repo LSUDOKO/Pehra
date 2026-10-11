@@ -34,7 +34,7 @@ def on_voice(t, site: dict, event: dict) -> None:
     tr = transcribe_ogg(audio)
     log("voice_transcribed", confidence=tr["confidence"], chars=len(tr["text"]))
     if tr["confidence"] < MIN_VOICE_CONFIDENCE or not tr["text"]:
-        outbox.enqueue(event["chat_enc"], "text", text=texts.CREW_UNSURE)
+        outbox.enqueue(event["chat_enc"], "text", text=texts.VOICE_UNCLEAR)
         return
     roster = parse_crew_roster(tr["text"])
     if roster["confidence"] == 1.0:
