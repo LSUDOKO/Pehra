@@ -132,7 +132,7 @@ export const Kharghar: React.FC<SceneProps> = ({ track }) => {
           <div style={{ marginTop: 26, display: "inline-block", border: `5px solid ${C.red}`, color: C.red, borderRadius: 12, padding: "10px 26px", fontFamily: FONT, fontWeight: 800, fontSize: 52, letterSpacing: 1, transform: `rotate(-4deg) scale(${0.7 + 0.3 * kStamp})`, opacity: clamp01(kStamp * 2) }}>NO HEATWAVE · NO ALERT</div>
         )}
       </div>
-      <Source delay={40}>Replay on ERA5 reanalysis (Open-Meteo archive, CC BY 4.0), grid cell 19.02 N 73.05 E. The IMD rule is recreated, not IMD's record. docs/results/KHARGHAR.md</Source>
+      <Source delay={40} style={{ maxWidth: 760 }}>Replay on ERA5 reanalysis (Open-Meteo archive, CC BY 4.0), grid cell 19.02 N 73.05 E. The IMD rule is recreated, not IMD's record.</Source>
     </Frame>
   );
 };
