@@ -128,8 +128,14 @@ def apply_override(d, site: dict, owner: str, state: dict, reason: str) -> str:
 # ---- dispatch -----------------------------------------------------------------------
 
 START_LINKS = {"me": "/me", "paani": "/paani", "family": "/family_call", "site": "/help"}
-ALIASES = {"start": "/start", "hi": "/start", "hello": "/start", "namaste": "/start", "help": "/help",
-           "plan": "/plan_now", "links": "/links", "crew": "/crew", "call": "/test_call"}
+ALIASES = {"start": "/start", "hi": "/start", "hello": "/start", "namaste": "/start", "hey": "/start",
+           "help": "/help", "madad": "/help", "menu": "/help", "plan": "/plan_now", "links": "/links",
+           "crew": "/crew", "call": "/test_call", "aaj": "/aaj", "today": "/aaj", "paani": "/paani",
+           "water": "/paani", "ghar": "/ghar", "family": "/family_call", "device": "/device",
+           "register": "/register", "mitao": "/delete_my_data", "delete": "/delete_my_data"}
+ARG_ALIASES = {"register", "crew", "family", "device"}  # these words take arguments
+MENU_PERSON = [[("Aaj ka plan", "menu:aaj"), ("Paani kahan", "menu:paani"), ("Madad", "menu:help")]]
+MENU_SITE = [[("Abhi plan", "menu:plan"), ("Links/QR", "menu:links"), ("Madad", "menu:help")]]
 
 
 def cmd_call_on(d, chat_id: str, site: dict, arg: str) -> str:
@@ -149,6 +155,12 @@ def on_callback(d, cb: dict) -> None:
     data, reply, buttons = cb.get("data", ""), None, None
     d.bot.answer_button(cb["id"])
     kind, _, arg = data.partition(":")
+    if kind == "menu":  # menu buttons behave exactly like typing the command
+        menu = {"aaj": "/aaj", "paani": "/paani", "help": "/help", "plan": "/plan_now", "links": "/links"}
+        cmd = menu.get(arg)
+        if cmd:
+            on_message(d, {"chat": {"id": chat_id}, "text": cmd})
+        return
     if bot_people.handle_callback(d, chat_id, owner, kind, arg, lambda p: async_assist(d, p)):
         return
     site = repo.site_for_chat(d.t, owner)
@@ -193,7 +205,11 @@ def on_message(d, msg: dict) -> None:
     owner = crypto.keyed_hash(chat_id, d.key)
     text = (msg.get("text") or "").strip()
     cmd, _, arg = text.partition(" ")
-    cmd = ALIASES.get(cmd.split("@")[0].lower(), cmd.split("@")[0].lower())
+    word = cmd.split("@")[0].lower()
+    if word in ALIASES and (not arg or word in ARG_ALIASES) and "?" not in text:
+        cmd = ALIASES[word]
+    else:
+        cmd = word
     assist = lambda p: async_assist(d, p)  # noqa: E731
     if msg.get("location"):
         loc = msg["location"]
@@ -224,8 +240,10 @@ def on_message(d, msg: dict) -> None:
         elif person and text and not text.startswith("/"):
             assist({"kind": "personal_question", "owner": owner, "text": text[:1000]})
             d.bot.send_text(chat_id, texts.WORKING)
+        elif person:
+            d.bot.send_text(chat_id, texts.PEOPLE_HELP, MENU_PERSON)
         else:
-            d.bot.send_text(chat_id, texts.PEOPLE_HELP if person else texts.NOT_REGISTERED)
+            d.bot.send_text(chat_id, texts.NOT_REGISTERED, bot_people.START_BUTTONS)
         return
     reply, buttons = None, None
     if msg.get("voice"):
@@ -233,7 +251,7 @@ def on_message(d, msg: dict) -> None:
                          "owner": owner, "file_id": msg["voice"]["file_id"]})
         reply = texts.WORKING
     elif cmd == "/help":
-        reply = texts.HELP
+        reply, buttons = texts.HELP, MENU_SITE
     elif cmd == "/links":
         reply = links_text(site)
     elif cmd == "/crew":

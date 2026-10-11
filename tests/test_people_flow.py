@@ -94,3 +94,15 @@ def test_personal_answer_falls_back_without_model():
     assert answer_personal("chakkar aa raha hai", box, "x", "ap-south-1")["source"] == "fixed"
     assert answer_personal("kab bahar jaun?", box, "no-such-model", "ap-south-1")["text"] is None
     assert box.get_family_forecast("2026-05-01")["household"]["elderly"] == 1
+
+
+def test_whatsapp_style_words_and_questions(env):  # noqa: F811
+    app, d = env
+    tap(app, "mode:me")
+    location(app, 28.61, 77.21)
+    msg(app, "paani")
+    assert "location" in d.bot.sent[-1][1].lower()
+    msg(app, "paani kitna peena chahiye?")
+    assert d.lam.calls[-1]["kind"] == "personal_question"
+    tap(app, "menu:aaj")
+    assert d.lam.calls[-1]["kind"] == "personal_today"

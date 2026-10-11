@@ -46,7 +46,8 @@ START_CHOICE = "Aap kiske liye istemal karenge?"
 ASK_PLACE = "Apna shahar ya gaon likhiye (jaise: Varanasi), ya 📍 location bhejiye."
 PLACE_NOT_FOUND = "Yeh jagah nahi mili. Paas ke bade shahar ka naam likhiye ya 📍 location bhejiye."
 PERSON_SAVED = "Jagah save: {place}. Ab 5 chhote sawaal, taaki plan aapke ghar ke hisaab se bane (naam nahi poochhenge)."
-PROFILE_DONE = "Shukriya! Har subah 7 baje aapko aaj ka garmi-plan milega. Abhi ka plan aa raha hai..."
+PROFILE_DONE = ("Shukriya! Har subah 7 baje aapko aaj ka garmi-plan milega. Abhi ka plan aa raha hai...\n"
+                "Kabhi bhi likhiye: aaj, paani, madad, ya koi bhi sawaal.")
 PEOPLE_HELP = (
     "Aapke liye commands:\n"
     "/aaj - aaj ka garmi-plan\n"
