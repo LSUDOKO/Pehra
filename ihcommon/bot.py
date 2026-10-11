@@ -10,8 +10,9 @@ import re
 import time
 
 from agent.roster import parse_crew_roster, readback
-from heatcore.cities import get_city
+from heatcore.cities import CITIES, get_city, nearest_city
 from heatcore.daily import SITE_TYPES
+from heatcore.openmeteo import geocode
 from heatcore.templates_hi import CALL_TEST_HI
 from ihcommon import authz, bot_people, config, crypto, outbox, planning, repo, texts
 from ihcommon.channels import is_whatsapp
@@ -29,16 +30,29 @@ def cmd_register(d, chat_id: str, owner: str, arg: str) -> str:
     m = re.match(r"\s*(.+?)\s*,\s*(.+?)\s*$", arg or "")
     if not m:
         return "Aise likhiye: /register Site ka naam, shahar"
-    try:
-        city = get_city(m.group(2))
-    except KeyError as e:
-        return str(e).strip("'\"")
+    city, note = resolve_city(m.group(2))
+    if not city:
+        return texts.CITY_NOT_COVERED.format(cities=", ".join(c.name.split(",")[0] for c in CITIES.values()))
     site = {"site_id": f"site-{crypto.new_site_token()[:8].lower()}", "name": m.group(1)[:60],
             "city": city.key, "lat": city.lat, "lon": city.lon,
             "site_token": crypto.new_site_token(), "tenant_id": "default"}
     repo.put_site(d.t, site, owner, crypto.encrypt(chat_id, d.key))
     metric("SiteRegistered")
-    return f"Site judi: {site['name']} ({city.name}).\n\n" + links_text(site) + "\n\n" + texts.HELP
+    return f"Site judi: {site['name']} ({city.name}).{note}\n\n" + links_text(site) + "\n\n" + texts.HELP
+
+
+def resolve_city(name: str):
+    """A supported city by key, else the nearest supported city (within 60 km) to the geocoded place."""
+    try:
+        return get_city(name), ""
+    except KeyError:
+        pass
+    try:
+        hit = geocode(name)
+    except Exception:
+        hit = None
+    city = nearest_city(hit["lat"], hit["lon"]) if hit else None
+    return city, (texts.CITY_NEAREST.format(place=hit["name"], city=city.name) if city else "")
 
 
 def links_text(site: dict) -> str:

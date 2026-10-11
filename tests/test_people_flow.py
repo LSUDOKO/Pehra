@@ -126,3 +126,14 @@ def test_water_finder_by_place_name(env, monkeypatch):  # noqa: F811
     assert "nahi mili" in d.bot.sent[-1][1]
     msg(app, "paani kitna peena chahiye?")
     assert d.lam.calls[-1]["kind"] == "personal_question"
+
+
+def test_register_snaps_to_nearest_supported_city(env, monkeypatch):  # noqa: F811
+    from ihcommon import bot
+    app, d = env
+    monkeypatch.setattr(bot, "geocode", lambda name: {"name": "Mumbai", "lat": 19.0728, "lon": 72.8826}
+                        if name == "Mumbai" else None)
+    msg(app, "/register Ramesh Tower, Mumbai")
+    assert "Site judi" in d.bot.sent[-2][1] and "Kharghar" in d.bot.sent[-2][1]
+    msg(app, "/register Other Site, Atlantis", chat=222)
+    assert "abhi nahi juda" in d.bot.sent[-1][1] and "Chennai" in d.bot.sent[-1][1]
