@@ -14,3 +14,5 @@ samconfig.local.toml
 out/
 .playwright-mcp/
 layers/core/python/
+.aws/
+out/
