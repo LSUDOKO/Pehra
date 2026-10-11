@@ -4,8 +4,8 @@ import { C } from "../brand";
 import { clamp01, easeOut, sp } from "../lib/motion";
 
 /** A phone bezel playing one of the real recordings (720x1600 → fits the given height). */
-export const Phone: React.FC<{ src: string; x: number; y: number; h: number; delay?: number; from?: number; volume?: number; muted?: boolean }> = ({
-  src, x, y, h, delay = 0, from = 0, volume = 1, muted = false,
+export const Phone: React.FC<{ src: string; x: number; y: number; h: number; delay?: number; from?: number; volume?: number; muted?: boolean; rate?: number }> = ({
+  src, x, y, h, delay = 0, from = 0, volume = 1, muted = false, rate = 1,
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -17,7 +17,7 @@ export const Phone: React.FC<{ src: string; x: number; y: number; h: number; del
       <div style={{ width: w + 2 * bez, height: h + 2 * bez, borderRadius: 48, background: C.ink, padding: bez, boxSizing: "border-box" }}>
         <div style={{ width: w, height: h, borderRadius: 36, overflow: "hidden", background: "#000" }}>
           {frame >= delay && (
-            <OffthreadVideo src={staticFile(src)} startFrom={Math.round(from * fps)} style={{ width: w, height: h, objectFit: "cover" }} volume={volume} muted={muted} />
+            <OffthreadVideo src={staticFile(src)} startFrom={Math.round(from * fps)} playbackRate={rate} style={{ width: w, height: h, objectFit: "cover" }} volume={volume} muted={muted} />
           )}
         </div>
       </div>

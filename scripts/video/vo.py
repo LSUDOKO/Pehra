@@ -72,6 +72,45 @@ SCRIPT = {
     "outro": "Pehra. A guard for the heat you cannot see. Built on AWS by Team Mavricks.",
 }
 
+# ---- the 6 to 7 minute cut: characters read the real chats ----
+SCRIPT.update({
+    "v2_open": "India warns its people with a thermometer. But the heat that hurts is the heat you cannot see. This is Pehra.",
+    "v2_problem": "Heat and humidity together are measured as W B G T. On 16 April 2023, in Kharghar, people died of heatstroke "
+                  "at an open-air event. It was 38.8 degrees, so there was no heatwave alert. But W B G T in the sun reached 30.8, "
+                  "far above the safe work limit of 28.2.",
+    "v2_audit": "Our audit, live on the Pehra website, found 4,372 such days in twelve cities over five years, with no alert. "
+                "2,327 of them fell outside the heatwave season. Every number is shown with its caveats.",
+    "v2_intro": "Pehra turns the free forecast into W B G T, and W B G T into a plan, in Hindi, on WhatsApp. No app to install. "
+                "Here is how four people use it.",
+    "v2_ramesh": "Ramesh runs a construction site in Kharghar. He types his crew in Hindi: forty people, ten on heavy work, three new. "
+                 "Pehra reads it back. Then it sends tomorrow's plan: stop work from nine to five, rest every hour around it, "
+                 "new workers at twenty percent, and seven big cans of water. The same plan comes as a Hindi voice note. "
+                 "He taps Approve, and it is saved to the record.",
+    "v2_ask": "He asks: can we pour concrete at two tomorrow? Pehra answers: no, heavy work is stopped in the afternoon. "
+              "The AI explains, but every number comes from code.",
+    "v2_gurpreet": "Gurpreet works on that site. He scans the site QR code. No app, no login. He logs his rest. "
+                   "When he feels dizzy, he taps chakkar, and sees first aid: stop work, go to the shade, drink water slowly. "
+                   "At that moment Ramesh gets this alert, and his phone rings in Hindi.",
+    "v2_meena": "Meena is expecting, and lives with her son and her mother-in-law in Mumbai. She says hi, and answers five quick "
+                "questions. Her plan reads: today is khatarnak. The elderly, children and pregnant women should stay inside "
+                "from nine to five. And on a day like this, Dadi gets a phone call in Hindi.",
+    "v2_lakshmi": "Lakshmi sells fruit in Delhi. She types: paani, Connaught Place. Pehra replies with drinking water 190 metres "
+                  "away, and a water A T M at 220 metres, with map links.",
+    "v2_box": "Some sites have no smartphone. For them, Pehra is a six hundred rupee box. A humidity sensor and a black globe "
+              "measure the real W B G T on site. Sonar watches the water tank and the drain. It rings a rest siren, runs a "
+              "mist fan, refills the tank, and has an SOS button.",
+    "v2_sim": "Here is the real firmware running in the Wokwi simulator. A hot day: W B G T 35.7, khatarnak, sixty minutes of "
+              "rest every hour, work stopped.",
+    "v2_twin": "Readings go to AWS IoT Core, and every box gets a live 3D twin. When a worker presses SOS, the twin turns red, "
+               "Ramesh gets a WhatsApp alert, and a Hindi call.",
+    "v2_arch": "Under the hood it is one serverless stack on AWS in Mumbai. The forecast becomes W B G T once per city. "
+               "Step Functions waits for Approve. Bedrock explains, Cedar makes sure the AI can never loosen a limit, "
+               "Polly speaks Hindi, and every record is locked in S3.",
+    "v2_proof": "And this is the real account: the deployed stack, the IoT thing and its rule, the Step Functions runs, "
+                "the locked records, and the six Hindi calls from today's test.",
+    "v2_outro": "Pehra does not claim to save lives. It is designed to reduce exposure. Pehra. A guard for the heat you cannot see.",
+})
+
 
 def synth(key: str, text: str) -> dict:
     OUT.mkdir(parents=True, exist_ok=True)

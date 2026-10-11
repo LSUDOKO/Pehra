@@ -38,3 +38,29 @@ export function sceneSeconds(b: Beat, vo: Record<string, Track>, clips: Clips): 
   const clipDur = b.clips ? 1.0 + b.clips.reduce((s, k) => s + (clips[k]?.dur ?? 0), 0) : 0;
   return Math.max(b.min, voDur, clipDur) + (b.hold ?? 0.6);
 }
+
+// ---- the 6 to 7 minute cut ----
+export type Beat2 = { key: string; vo: string; min: number; clipSecs?: number; extra?: number; hold?: number };
+export const BEATS2: Beat2[] = [
+  { key: "open", vo: "v2_open", min: 7.5, hold: 0.6 },
+  { key: "problemSite", vo: "v2_problem", min: 23, hold: 0.8 },
+  { key: "kharghar_wbgt", vo: "kharghar_wbgt", min: 15, hold: 0.8 },
+  { key: "auditSite", vo: "v2_audit", min: 20, hold: 0.8 },
+  { key: "intro", vo: "v2_intro", min: 11, hold: 0.6 },
+  { key: "ramesh", vo: "v2_ramesh", min: 26, clipSecs: 40, hold: 0.6 },
+  { key: "ask", vo: "v2_ask", min: 12, clipSecs: 18, hold: 0.6 },
+  { key: "gurpreet", vo: "v2_gurpreet", min: 20, clipSecs: 38, extra: 8, hold: 0.6 },
+  { key: "meena", vo: "v2_meena", min: 20, clipSecs: 40, extra: 8, hold: 0.6 },
+  { key: "lakshmi", vo: "v2_lakshmi", min: 13, clipSecs: 22, hold: 0.8 },
+  { key: "box_what", vo: "v2_box", min: 20, hold: 0.8 },
+  { key: "box_sim", vo: "v2_sim", min: 14, hold: 0.8 },
+  { key: "box_twin", vo: "v2_twin", min: 24, hold: 0.8 },
+  { key: "arch", vo: "v2_arch", min: 19, hold: 1.0 },
+  { key: "proof", vo: "v2_proof", min: 30, hold: 0.6 },
+  { key: "outro", vo: "v2_outro", min: 11, hold: 2.0 },
+];
+
+export function beat2Seconds(b: Beat2, vo: Record<string, Track>): number {
+  const voDur = (vo[b.vo]?.dur ?? b.min) + 0.6 + (b.extra ?? 0);
+  return Math.max(b.min, voDur, b.clipSecs ?? 0) + (b.hold ?? 0.6);
+}

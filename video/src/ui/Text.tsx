@@ -68,8 +68,8 @@ export const Subtitle: React.FC<{ chunks: Chunk[]; t: number }> = ({ chunks, t }
   return (
     <div style={{ position: "absolute", left: 0, right: 0, bottom: 44, display: "flex", justifyContent: "center", pointerEvents: "none" }}>
       <div style={{
-        fontFamily: FONT, fontSize: 30, fontWeight: 500, color: C.surface, background: "rgba(25,40,57,0.86)",
-        padding: "12px 22px", borderRadius: 12, maxWidth: 1400, textAlign: "center", lineHeight: 1.3,
+        fontFamily: FONT, fontSize: 36, fontWeight: 600, color: C.surface, background: "rgba(25,40,57,0.9)",
+        padding: "14px 26px", borderRadius: 12, maxWidth: 1400, textAlign: "center", lineHeight: 1.3,
         opacity: k, transform: `translateY(${(1 - k) * 8}px)`,
       }}>{c.text}</div>
     </div>
