@@ -1,0 +1,9 @@
+# Wokwi library manager
+DHT sensor library for ESPx
+OneWire
+DallasTemperature
+Adafruit SSD1306
+Adafruit GFX Library
+Adafruit NeoPixel
+PubSubClient
+ArduinoJson

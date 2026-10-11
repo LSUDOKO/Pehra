@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "author": "Pehra",
+  "editor": "wokwi",
+  "parts": [
+    {"type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {}},
+    {"type": "wokwi-ssd1306", "id": "oled", "top": -170, "left": 170, "attrs": {"i2cAddress": "0x3c"}},
+    {"type": "wokwi-dht22", "id": "dht1", "top": -180, "left": 350, "attrs": {"temperature": "38", "humidity": "65"}},
+    {"type": "wokwi-ds18b20", "id": "globe", "top": -150, "left": 440, "attrs": {"temperature": "47"}},
+    {"type": "wokwi-resistor", "id": "r_ow", "top": -40, "left": 420, "attrs": {"value": "4700"}},
+    {"type": "wokwi-hc-sr04", "id": "tank", "top": 10, "left": 180, "attrs": {"distance": "100"}},
+    {"type": "wokwi-hc-sr04", "id": "drain", "top": 130, "left": 180, "attrs": {"distance": "80"}},
+    {"type": "wokwi-led-ring", "id": "ring", "top": -190, "left": -170, "attrs": {"pixels": "12"}},
+    {"type": "wokwi-photoresistor-sensor", "id": "ldr", "top": -40, "left": -240, "attrs": {"lux": "30000"}},
+    {"type": "wokwi-buzzer", "id": "bz1", "top": 40, "left": -130, "attrs": {"volume": "0.2"}},
+    {"type": "wokwi-pushbutton", "id": "sos", "top": 140, "left": -130, "attrs": {"color": "red", "label": "SOS", "bounce": "0"}},
+    {"type": "wokwi-relay-module", "id": "relay_fan", "top": 220, "left": -200, "attrs": {}},
+    {"type": "wokwi-relay-module", "id": "relay_pump", "top": 320, "left": -200, "attrs": {}},
+    {"type": "wokwi-led", "id": "led_fan", "top": 215, "left": -265, "attrs": {"color": "cyan", "label": "FAN"}},
+    {"type": "wokwi-led", "id": "led_pump", "top": 315, "left": -265, "attrs": {"color": "blue", "label": "PUMP"}},
+    {"type": "wokwi-resistor", "id": "r_fan", "top": 285, "left": -300, "attrs": {"value": "220"}},
+    {"type": "wokwi-resistor", "id": "r_pump", "top": 385, "left": -300, "attrs": {"value": "220"}}
+  ],
+  "connections": [
+    [ "esp:TX", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX", "$serialMonitor:TX", "", [] ],
+
+    [ "oled:VCC", "esp:3V3", "red", [] ],
+    [ "oled:GND", "esp:GND.2", "black", [] ],
+    [ "oled:SDA", "esp:21", "blue", [] ],
+    [ "oled:SCL", "esp:22", "green", [] ],
+
+    [ "dht1:VCC", "esp:3V3", "red", [] ],
+    [ "dht1:GND", "esp:GND.2", "black", [] ],
+    [ "dht1:SDA", "esp:15", "green", [] ],
+
+    [ "globe:VCC", "esp:3V3", "red", [] ],
+    [ "globe:GND", "esp:GND.2", "black", [] ],
+    [ "globe:DQ", "esp:4", "yellow", [] ],
+    [ "r_ow:1", "globe:DQ", "yellow", [] ],
+    [ "r_ow:2", "globe:VCC", "red", [] ],
+
+    [ "tank:VCC", "esp:5V", "red", [] ],
+    [ "tank:GND", "esp:GND.2", "black", [] ],
+    [ "tank:TRIG", "esp:5", "orange", [] ],
+    [ "tank:ECHO", "esp:18", "blue", [] ],
+
+    [ "drain:VCC", "esp:5V", "red", [] ],
+    [ "drain:GND", "esp:GND.2", "black", [] ],
+    [ "drain:TRIG", "esp:17", "orange", [] ],
+    [ "drain:ECHO", "esp:16", "blue", [] ],
+
+    [ "ring:VCC", "esp:5V", "red", [] ],
+    [ "ring:GND", "esp:GND.1", "black", [] ],
+    [ "ring:DIN", "esp:13", "magenta", [] ],
+
+    [ "ldr:VCC", "esp:3V3", "red", [] ],
+    [ "ldr:GND", "esp:GND.1", "black", [] ],
+    [ "ldr:AO", "esp:34", "violet", [] ],
+
+    [ "bz1:2", "esp:25", "purple", [] ],
+    [ "bz1:1", "esp:GND.1", "black", [] ],
+
+    [ "sos:1.r", "esp:32", "gold", [] ],
+    [ "sos:2.r", "esp:GND.1", "black", [] ],
+
+    [ "relay_fan:VCC", "esp:5V", "red", [] ],
+    [ "relay_fan:GND", "esp:GND.1", "black", [] ],
+    [ "relay_fan:IN", "esp:26", "cyan", [] ],
+    [ "relay_fan:COM", "esp:3V3", "red", [] ],
+    [ "relay_fan:NO", "led_fan:A", "cyan", [] ],
+    [ "led_fan:C", "r_fan:1", "black", [] ],
+    [ "r_fan:2", "esp:GND.1", "black", [] ],
+
+    [ "relay_pump:VCC", "esp:5V", "red", [] ],
+    [ "relay_pump:GND", "esp:GND.1", "black", [] ],
+    [ "relay_pump:IN", "esp:27", "limegreen", [] ],
+    [ "relay_pump:COM", "esp:3V3", "red", [] ],
+    [ "relay_pump:NO", "led_pump:A", "limegreen", [] ],
+    [ "led_pump:C", "r_pump:1", "black", [] ],
+    [ "r_pump:2", "esp:GND.1", "black", [] ]
+  ],
+  "dependencies": {}
+}
