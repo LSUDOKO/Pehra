@@ -52,4 +52,13 @@ def test_geocode_and_flood_parse():
             return R()
 
     assert openmeteo.geocode("varanasi", S())["state"] == "Uttar Pradesh"
+
+    class Abroad(S):
+        def get(self, url, params, timeout):
+            assert params["countryCode"] == "IN"
+            r = super().get(url, params, timeout)
+            r.json = lambda: {"results": [{"name": "Deder", "latitude": 9.3, "longitude": 41.4, "country_code": "ET"}]}
+            return r
+
+    assert openmeteo.geocode("Dadar", Abroad()) is None
     assert openmeteo.fetch_flood(1, 2, session=S()) == [1.0, 2.0]

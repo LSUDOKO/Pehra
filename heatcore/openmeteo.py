@@ -92,9 +92,12 @@ def fetch_flood(lat: float, lon: float, *, days: int = 7, start: str | None = No
 
 def geocode(name: str, session=None) -> dict | None:
     """Free Open-Meteo geocoding, India only: {'name', 'lat', 'lon', 'state'} or None."""
-    r = _get(GEOCODE_URL, {"name": name, "count": 1, "country_code": "IN", "language": "en"}, session)
-    hits = r.get("results") or []
-    if not hits:
-        return None
-    h = hits[0]
-    return {"name": h["name"], "lat": h["latitude"], "lon": h["longitude"], "state": h.get("admin1", "")}
+    tries = [name.strip()] + [part.strip() for part in name.split(",")[:1] if "," in name]
+    for q in tries:
+        r = _get(GEOCODE_URL, {"name": q, "count": 5, "countryCode": "IN", "language": "en"}, session)
+        hits = [h for h in r.get("results") or [] if h.get("country_code", "IN") == "IN"]
+        if hits:
+            h = hits[0]
+            return {"name": h["name"], "lat": h["latitude"], "lon": h["longitude"],
+                    "state": h.get("admin1", "")}
+    return None
