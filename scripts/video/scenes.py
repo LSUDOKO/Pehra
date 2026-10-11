@@ -60,6 +60,7 @@ from kit import (
     sprite,
     text,
     text_w,
+    wrap,
 )
 from PIL import Image, ImageDraw
 
@@ -100,6 +101,7 @@ class Scene:
     lang: str = "en-IN"
     label: str = ""
     overlays: list = field(default_factory=list)  # (clip_key, box, t0, t1) in scene-local time; t1 None = end
+    extra_audio: list = field(default_factory=list)  # (scene-local start, audio file, volume)
     dur: float = 0.0
     start: float = 0.0
     cue: Cue | None = None
@@ -606,7 +608,9 @@ def still(name: str, w: int, h: int) -> Image.Image | None:
         if p.exists():
             im = Image.open(p).convert("RGBA")
             if p.name == "sitebox-wokwi.png":
-                im = im.crop((800, 80, 1600, 1000))
+                im = im.crop((800, 80, 1600, 800))
+            elif p.name == "wokwi_still.png":
+                im = im.crop((0, 0, im.width, int(im.height * 0.78)))  # serial monitor shows a device token
             im.thumbnail((w, h), Image.LANCZOS)
             return im
     return None
@@ -883,6 +887,140 @@ def chat(c, t, x, y, w, h):
     paste(c, top, x, y)
 
 
+
+# ---------- 7b. WhatsApp chapters from the real phone recording ----------
+WA_BEZEL = (132, 40, 414, 884)
+WA_SCREEN = (150, 62, 378, 840)    # 720x1600 phone recording, scaled to fit
+
+WA = [  # key, title, bullets, pose, voice-over
+    ("wa_hi", "Say hi on WhatsApp", ["No app to install: Pehra is a WhatsApp number",
+                                     "Choose: site, school, shop, or me and my family"], "meena_and_chotu_1",
+     "Here it is on a real phone. A family says hi to Pehra on WhatsApp, and taps: for me and my family."),
+    ("wa_profile", "Five taps build the family profile", ["Elderly, under-5s, pregnancy, illness, outdoor work",
+                                                          "Counts only, never names"], "meena_and_chotu_2",
+     "Five quick button questions build the household: an elderly parent, a small child, a pregnancy, and someone "
+     "who works outdoors. Only counts, never names."),
+    ("wa_today", "Today's plan for Mumbai, in Hindi", ["From this morning's Open-Meteo forecast",
+                                                        "Khatarnak: vulnerable people indoors 9 to 5",
+                                                        "Best hours for errands, and 108 if unwell"], "dadi_2",
+     "Today's plan arrives in seconds, from this morning's forecast for Mumbai. It is dangerous for the vulnerable "
+     "from nine to five, and it lists the best hours for errands."),
+    ("wa_paani", "\"paani Connaught Place\"", ["Nearest drinking water: 190 m, with a map link",
+                                              "OpenStreetMap points plus community reports",
+                                              "Send a location pin or type a landmark"], "lakshmi_3",
+     "Paani, Connaught Place. The nearest drinking water is 190 metres away, from OpenStreetMap, with a map link."),
+    ("wa_register", "A supervisor registers a site", ["/register Ramesh Tower, Kharghar",
+                                                       "Construction, school, shop or delivery rider"], "ramesh_2",
+     "Now the supervisor. Ramesh registers his site in Kharghar and picks construction."),
+    ("wa_crew", "The crew, in plain Hindi", ["\"40 log, 10 bhaari kaam, 3 naye aaye\"", "Read back before saving",
+                                             "/call_on: Hindi call alerts to this phone"], "ramesh_2",
+     "He types his crew in plain Hindi: forty people, ten on heavy work, three new. Pehra reads it back before "
+     "saving, and he turns on Hindi call alerts."),
+    ("wa_plan", "Tomorrow's plan + a Hindi voice note", ["Stop work 9 to 5, rest bands around it",
+                                                          "Heavy work stopped, new workers at 20%",
+                                                          "7 water cans · Approve or Override"], "ramesh_1",
+     "He asks for tomorrow's plan. Stop work from nine to five, rest every hour around it, heavy work stopped, new "
+     "workers at twenty percent, and seven water cans. Then the same plan as a Hindi voice note."),
+    ("wa_links", "Worker QR page + printable poster", ["One link per site, printed as a QR code",
+                                                        "Workers need no app and no login"], "gurpreet_1",
+     "Links gives the worker QR page and a printable poster for the site."),
+    ("wa_worker", "A worker taps \"chakkar\"", ["Aaram shuru logs a rest break",
+                                              "Chakkar aa raha hai shows fixed first aid",
+                                              "The supervisor is told at once"], "gurpreet_3",
+     "A worker scans the QR. No app, no login. He logs a rest break, then taps chakkar: I feel dizzy. He gets fixed "
+     "first aid, and the supervisor is told at once."),
+    ("wa_alert", "The supervisor's alert", ["When, and how many reports in the last hour",
+                                            "First aid and 108: fixed text, never AI"], "ramesh_1",
+     "The supervisor sees when it was pressed, with first aid and 108."),
+    ("wa_call", "A Hindi phone call", ["Amazon Polly Hindi voice, played by Twilio",
+                                       "Trial account: a short notice plays first",
+                                       "You hear the exact audio the call played"], "ramesh_1",
+     "And his phone rings with a Hindi call. On this Twilio trial, a short notice plays first. Then the message."),
+    ("wa_agent", "Ask anything", ["\"Kya hum kal dopahar 2 baje concrete daal sakte hain?\"",
+                                  "Bedrock (Nova Pro) + Strands, answers from tools",
+                                  "A number check blocks invented numbers"], "ramesh_3",
+     "He asks: can we pour concrete at two tomorrow afternoon? Amazon Bedrock answers from the plan's own tools: "
+     "no, heavy work is stopped then."),
+    ("wa_family", "Dadi gets a call on dangerous days", ["/family_call adds an elder's number (blurred here)",
+                                                          "Today is khatarnak, so one Hindi call goes out",
+                                                          "Stay inside 9 to 5, sip water, 108"], "dadi_1",
+     "Meena adds Dadi's number for family calls. Today is dangerous, so Dadi gets one Hindi call, telling her to "
+     "stay inside from nine to five."),
+    ("wa_box", "The Site Box joins from WhatsApp", ["/device box: box id, device token, 3D twin link",
+                                                     "Readings over AWS IoT Core (here from a laptop script)",
+                                                     "Alerts: hotter than forecast, tank low, pump on"], "boondi_3",
+     "The Site Box joins from WhatsApp too. Its readings arrive over AWS IoT Core: the site is hotter than the "
+     "forecast, and the water tank is low, so the pump starts."),
+    ("wa_twin", "The live 3D twin, on the phone", ["Measured WBGT 34.2 °C: khatarnak, kaam band",
+                                                    "Tank refilling, mist fan on",
+                                                    "Updates every 3 s from the box state"], "boondi_4",
+     "Every box has a live 3D twin. Measured WBGT is thirty four degrees, so work stops. Watch the tank refill."),
+    ("wa_sos", "SOS from the site", ["The red SOS button on the box",
+                                     "The twin turns red, WhatsApp alert, Hindi call"], "boondi_1",
+     "A worker presses the red SOS button. The twin turns red, the supervisor gets a WhatsApp alert, and a Hindi "
+     "call."),
+    ("wa_override", "Only the supervisor can loosen a plan", ["Override, Dheela, and a written reason",
+                                                               "Cedar policy: never the AI",
+                                                               "The reason is saved to the record"], "ramesh_3",
+     "Only the supervisor can loosen a plan, and only with a written reason. Cedar enforces it, and the reason "
+     "goes on the record."),
+]
+
+
+def make_wa(i: int, n: int, title: str, bullets: list, pose_name: str, speed: float, beats: list) -> Callable:
+    def render(t: float, d: float, cue: Cue) -> Image.Image:
+        c = gradient((222, 245, 228), (200, 232, 214)).copy()
+        x, y, w, h = WA_BEZEL
+        card(c, x, y, w, h, 56, (16, 16, 20), 1.0)
+        sx, sy, sw, sh = WA_SCREEN
+        paste(c, rrect(sw, sh, 26, (0, 0, 0)), sx, sy)
+        k = ease_out(prog(t, 0.1, 0.6))
+        tx = 640 + lerp(60, 0, k)
+        pill(c, f"WHATSAPP · REAL PHONE · {i}/{n}", tx, 110, 22, WA_DARK, WHITE, fade(t, 0.1))
+        text(c, title, tx, 180, fit(title, 58, 1180), "Black", INK, alpha=fade(t, 0.2))
+        yy = 290
+        for j, b in enumerate(bullets):
+            a = fade(t, 0.5 + j * 0.35)
+            paste(c, rrect(16, 16, 8, WA_GREEN), tx + 4, yy + 18, a)
+            for ln in wrap(b, 34, 980, "Bold"):
+                text(c, ln, tx + 34, yy, 34, "Bold", INK, alpha=a)
+                yy += 48
+            yy += 18
+        if speed > 1:
+            pill(c, f"waits shown at {speed:g}× speed", sx + sw - 8, sy + sh + 8, 18, INK, WHITE, 0.85, "r")
+        seen = [b for b in beats if b["at"] + 0.4 <= t]
+        if beats:
+            by = max(yy + 10, 600)
+            text(c, "ON THE PHONE NOW", tx, by, 20, "Bold", MUTED, alpha=fade(t, 0.6))
+            for j, b in enumerate(seen[-4:]):
+                now = b is seen[-1]
+                a = fade(t, b["at"] + 0.4, 0.3) * (1.0 if now else 0.55)
+                yb = by + 40 + j * 54
+                paste(c, rrect(12, 12, 6, WA_GREEN if now else MUTED), tx + 4, yb + 14, a)
+                text(c, b["text"], tx + 30, yb, 32 if now else 28, "Bold" if now else "Medium", INK, alpha=a)
+        sprite(c, pose_name, 1660, 950 + bob(t, 1.3, 3), 400 * fade(t, 0.6), shadow=True)
+        corner_label(c, "real phone recording · WhatsApp test number · Twilio trial", t)
+        return c
+    return render
+
+
+def s_phone_intro(t: float, d: float, cue: Cue) -> Image.Image:
+    c = gradient((222, 245, 228), (196, 230, 210)).copy()
+    brand_mark(c, t)
+    k = ease_out(prog(t, 0.2, 0.9))
+    text(c, "Live on WhatsApp", 140 + lerp(-60, 0, k), 210, 110, "Black", INK, alpha=fade(t, 0.2))
+    text(c, "recorded on a real phone (moto g34, Android 15) on 11 October 2026", 146, 360, 34, "Medium", MUTED,
+         alpha=fade(t, 0.6))
+    for j, s_ in enumerate(("in Hindi: text, voice notes and phone calls", "families, supervisors, workers, sites",
+                            "no app to install")):
+        a = fade(t, 1.0 + j * 0.4)
+        paste(c, rrect(16, 16, 8, WA_DARK), 150, 470 + j * 70 + 18, a)
+        text(c, s_, 180, 466 + j * 70, 38, "Bold", INK, alpha=a)
+    sprite(c, "ramesh_1", 1350, 960 + bob(t, 1.2, 3), 560, alpha=fade(t, 0.8))
+    sprite(c, "boondi_2", 1700, 960 + bob(t, 1.8, 7), 330 * pop(t, 1.4, 0.6), shadow=False)
+    sprite(c, "dadi_1", 1000, 980, 420, alpha=fade(t, 1.1))
+    return c
+
 # ---------- 8. outro ----------
 LINEUP = ["ms_fernandes_2", "dadi_2", "gurpreet_2", "ramesh_3", "bhanwari_2"]
 
@@ -946,7 +1084,7 @@ VO = {
 
 
 def timeline(clips: dict) -> list[Scene]:
-    """clips: {'wokwi': (path, w, h, dur), 'twin': ..., 'phone': ...} for the footage that exists."""
+    """clips: {'wokwi': (path, w, h, dur), 'twin': ..., 'phone_<chapter>': ...} for the footage that exists."""
     have = set(clips)
     sc = [Scene("cold", VO["cold"], 10.5, s_cold, ORANGE),
           Scene("kharghar", VO["kharghar"], 20.0, s_kharghar, RED),
@@ -957,12 +1095,20 @@ def timeline(clips: dict) -> list[Scene]:
     if "wokwi" in have:
         box.overlays.append(("wokwi", WOKWI_BOX, 0.3, None))
     sc.append(box)
+    chapters = [ch for ch in WA if f"phone_{ch[0]}" in have]
+    if chapters:
+        sc.append(Scene("phone", VO["phone"], 9.0, s_phone_intro, WA_GREEN))
+        for i, (key, title, bullets, pose_name, vo) in enumerate(chapters, 1):
+            path, cw, ch_, cdur, meta = clips[f"phone_{key}"]
+            s_ = Scene(key, vo, cdur + 1.0, make_wa(i, len(chapters), title, bullets, pose_name, meta["speed"],
+                                                    meta.get("beats", [])), WA_GREEN)
+            s_.overlays.append((f"phone_{key}", WA_SCREEN, 0.4, None))
+            s_.extra_audio = ([(0.4, path, 1.0)] if meta["audio"] else []) + \
+                [(0.4 + c_["at"], c_["audio"], 0.9) for c_ in meta["calls"]]
+            sc.append(s_)
+    else:
+        sc.append(Scene("phone", VO["phone"], 16.0, make_phone(False), WA_GREEN))
     sc.append(Scene("aws", VO["aws"], 23.0, s_aws, AWS))
-    ph = Scene("phone", VO["phone"], 16.0 if "phone" not in have else min(32.0, clips["phone"][3] + 1.0),
-               make_phone("phone" in have), WA_GREEN)
-    if "phone" in have:
-        ph.overlays.append(("phone", SCREEN, 0.5, None))
-    sc.append(ph)
     sc.append(Scene("outro", VO["outro"], 10.0, s_outro, ORANGE))
     return sc
 
@@ -973,4 +1119,4 @@ def twin_overlay(scene: Scene) -> None:
     scene.overlays.append(("twin", TWIN_BOX, t0, None))
 
 
-__all__ = ["FPS", "Scene", "Cue", "timeline", "twin_overlay", "WOKWI_BOX", "TWIN_BOX", "SCREEN", "pose"]
+__all__ = ["FPS", "Scene", "Cue", "timeline", "twin_overlay", "WOKWI_BOX", "TWIN_BOX", "SCREEN", "WA", "pose"]

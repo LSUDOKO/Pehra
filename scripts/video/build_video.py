@@ -27,7 +27,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from kit import FPS, WHITE, H, W, card, ease_in_out, text, text_w, wrap  # noqa: E402
 from PIL import Image, ImageDraw  # noqa: E402
-from scenes import PEOPLE, Cue, Scene, timeline, twin_overlay  # noqa: E402
+from scenes import PEOPLE, WA, Cue, Scene, timeline, twin_overlay  # noqa: E402
 
 OUT = Path("out/video")
 VO_DIR = OUT / "vo"
@@ -35,7 +35,7 @@ VOICE = "Kajal"
 LEAD = {"default": 0.55, "person": 0.35}
 TAIL = {"default": 0.7, "person": 0.35}
 TR = 0.5            # wipe between scenes
-MAX_TOTAL = 178.0   # the submission limit is 3:00
+MAX_TOTAL = None    # no cap: the full WhatsApp walkthrough is part of the demo
 
 TL: list[Scene] = []
 STARTS: list[float] = []
@@ -244,7 +244,7 @@ def plan(clips: dict) -> list[dict]:
         s.cue = Cue([(w[0], w[1]) for w in words], lead, vdur)
         s.dur = max(s.min_dur, lead + vdur + tail)
         tracks.append({"mp3": mp3, "lead": lead, "words": words, "vdur": vdur})
-    over = sum(s.dur for s in TL) - MAX_TOTAL
+    over = sum(s.dur for s in TL) - MAX_TOTAL if MAX_TOTAL else 0
     if over > 0:  # trim the slack beyond each voice-over, proportionally
         slack = [max(0.0, s.dur - (s.cue.end + 0.3)) for s in TL]
         k = min(1.0, over / max(1e-6, sum(slack)))
@@ -288,22 +288,26 @@ def overlay_filters(clips: dict, t_off: float = 0.0) -> tuple[list[str], list[st
     inputs, graph, last, idx = [], [], "[0:v]", 1
     for s in TL:
         for key, (bx, by, bw, bh), a, b in s.overlays:
-            path, cw, ch, cdur = clips[key]
+            path, cw, ch, cdur = clips[key][:4]
             t0 = s.start + a - t_off
             t1 = s.start + (b if b is not None else s.dur) - t_off
+            crop = ""
+            if key == "wokwi":  # keep the circuit and OLED; the serial monitor prints the device token
+                ch = int(ch * 0.78) // 2 * 2
+                crop = f"crop={cw}:{ch}:0:0,"
             k = min(bw / cw, bh / ch)
             w, h = int(cw * k) // 2 * 2, int(ch * k) // 2 * 2
             x, y = bx + (bw - w) // 2, by + (bh - h) // 2
-            inputs += ["-stream_loop", "-1", "-i", str(path)] if key != "phone" else ["-i", str(path)]
+            inputs += ["-i", str(path)] if key.startswith("phone") else ["-stream_loop", "-1", "-i", str(path)]
             graph.append(f"[{idx}:v]trim=duration={t1 - t0:.3f},setpts=PTS-STARTPTS+{max(0, t0):.3f}/TB,"
-                         f"scale={w}:{h},fps={FPS}[c{idx}]")
+                         f"{crop}scale={w}:{h},fps={FPS}[c{idx}]")
             graph.append(f"{last}[c{idx}]overlay={x}:{y}:enable='between(t,{t0:.3f},{t1:.3f})':eof_action=pass"
                          f"[v{idx}]")
             last, idx = f"[v{idx}]", idx + 1
     return inputs, graph + ([f"{last}null[vout]"] if graph else [])
 
 
-def mix_audio(tracks: list[dict], dst: Path, with_music: bool, phone: tuple | None) -> None:
+def mix_audio(tracks: list[dict], dst: Path, with_music: bool, extra: list[tuple[float, Path, float]]) -> None:
     inputs, parts = [], []
     for i, tr in enumerate(tracks):
         inputs += ["-i", str(tr["mp3"])]
@@ -312,17 +316,20 @@ def mix_audio(tracks: list[dict], dst: Path, with_music: bool, phone: tuple | No
     n = len(tracks)
     labels = "".join(f"[a{i}]" for i in range(n))
     graph = parts + [f"{labels}amix=inputs={n}:normalize=0,apad,atrim=0:{TOTAL:.3f}[vo]"]
-    extra = n
-    if phone:
-        start, path = phone
-        inputs += ["-i", str(path)]
-        ms = int(start * 1000)
-        graph.append(f"[{extra}:a]aresample=44100,adelay={ms}|{ms},volume=0.9,apad,atrim=0:{TOTAL:.3f}[ph]")
-        graph.append("[vo][ph]amix=inputs=2:normalize=0[vo2]")
-        extra += 1
+    idx, vo = n, "[vo]"
+    if extra:  # phone voice notes and call audio, placed where they played
+        labels = []
+        for k, (start, path, vol) in enumerate(extra):
+            inputs += ["-i", str(path)]
+            ms = int(start * 1000)
+            graph.append(f"[{idx}:a]aresample=44100,aformat=channel_layouts=stereo,adelay={ms}|{ms},"
+                         f"volume={vol}[x{k}]")
+            labels.append(f"[x{k}]")
+            idx += 1
+        graph.append(f"{''.join(labels)}amix=inputs={len(labels)}:normalize=0,apad,atrim=0:{TOTAL:.3f}[xa]")
+        graph.append("[vo][xa]amix=inputs=2:normalize=0[vo2]")
         vo = "[vo2]"
-    else:
-        vo = "[vo]"
+    extra = idx
     wpath = OUT / "whoosh.wav"
     whooshes(wpath, STARTS[1:], TOTAL + 1)
     inputs += ["-i", str(wpath)]
@@ -346,7 +353,8 @@ def mix_audio(tracks: list[dict], dst: Path, with_music: bool, phone: tuple | No
 
 CHAPTERS = {"cold": "Invisible heat", "kharghar": "Kharghar, 16 April 2023", "audit": "The audit: 12 cities",
             "ramesh": "Meet the people", "sitebox": "Pehra Site Box (Wokwi + AWS IoT Core)",
-            "aws": "How AWS runs it", "phone": "Live on WhatsApp", "outro": "Stay cool, India"}
+            "aws": "How AWS runs it", "phone": "Live on WhatsApp (real phone)", "outro": "Stay cool, India"}
+CHAPTERS.update({key: f"WhatsApp: {title}" for key, title, *_ in WA})
 
 
 def extras() -> None:
@@ -369,11 +377,18 @@ def extras() -> None:
 
 def find_clips(args) -> dict:
     clips = {}
-    for key in ("wokwi", "twin", "phone"):
+    for key in ("wokwi", "twin"):
         p = Path(getattr(args, key) or OUT / f"{key}.mp4")
         if p.exists() and p.stat().st_size > 10_000:
             w, h, d = probe_video(p)
-            clips[key] = (p, w, h, d)
+            clips[key] = (p, w, h, d, {})
+    man = OUT / "phone" / "manifest.json"
+    if man.exists() and not args.no_phone:  # chapters cut by phone_cut.py from the real phone recording
+        for key, meta in json.loads(man.read_text()).items():
+            p = Path(meta["path"])
+            if p.exists():
+                w, h, d = probe_video(p)
+                clips[f"phone_{key}"] = (p, w, h, d, meta)
     return clips
 
 
@@ -387,7 +402,7 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--wokwi")
     ap.add_argument("--twin")
-    ap.add_argument("--phone")
+    ap.add_argument("--no-phone", action="store_true", help="ignore the cut phone chapters")
     ap.add_argument("--no-music", action="store_true")
     ap.add_argument("--stills", action="store_true")
     ap.add_argument("--only")
@@ -433,11 +448,8 @@ def main() -> None:
                         ";".join(graph), "-map", "[vout]", "-c:v", "libx264", "-preset", "medium", "-crf", "18",
                         "-pix_fmt", "yuv420p", "-t", f"{TOTAL:.3f}", str(vid)], check=True)
     aud = OUT / "_audio.m4a"
-    phone = None
-    if "phone" in clips and has_audio(clips["phone"][0]):
-        s = next(s for s in TL if s.key == "phone")
-        phone = (s.start + 0.5, clips["phone"][0])
-    mix_audio(tracks, aud, not args.no_music, phone)
+    extra = [(s.start + lt, path, vol) for s in TL for lt, path, vol in s.extra_audio]
+    mix_audio(tracks, aud, not args.no_music, extra)
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(vid), "-i", str(aud), "-map", "0:v", "-map",
                     "1:a", "-c:v", "copy", "-c:a", "copy", "-movflags", "+faststart", "-shortest", args.out],
                    check=True)
