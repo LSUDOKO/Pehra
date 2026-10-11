@@ -1,0 +1,102 @@
+"""Narration for the Remotion brand video: Amazon Polly (Kajal, neural) per scene, with word marks.
+
+    uv run python scripts/video/vo.py            # writes video/public/vo/<scene>.mp3 + manifest.json
+Every number in the script comes from docs/results/ and the live site. Scenes are told in order:
+the problem fully first, then Pehra, then the Site Box, then how it runs.
+"""
+
+import hashlib
+import json
+import subprocess
+from pathlib import Path
+
+import boto3
+
+OUT = Path("video/public/vo")
+VOICE, LANG = "Kajal", "en-IN"
+
+SCRIPT = {
+    # ---- act 1: the problem, told fully ----
+    "open": "Every summer, India measures heat with a thermometer. But a thermometer cannot feel what a body feels.",
+    "humidity": "The body cools itself by sweating. On a humid day, sweat does not dry, and the cooling stops. "
+                "So a humid 36 degree day can hurt a worker more than a dry 42 degree day.",
+    "wbgt": "Safety scientists measure this with W B G T: one number that combines temperature, humidity, sun and wind. "
+            "It is what the US and many armies use to decide when work must stop. India's public heat alerts still use temperature alone.",
+    "kharghar": "16 April 2023, Kharghar, near Mumbai. People died of heatstroke at an open-air event. "
+                "The maximum temperature that day was 38.8 degrees. Under the official rule, that is not a heatwave. No alert.",
+    "kharghar_wbgt": "We replayed that day with weather reanalysis data. W B G T in the sun crossed the safe limit for moderate work "
+                     "from ten in the morning to four in the afternoon, peaking at 30.8 degrees at noon. The danger was real. It was just invisible.",
+    "audit": "So we checked how often this happens. Twelve cities, five years, 2021 to 2025. "
+             "4,372 city-days crossed the W B G T work limit while no heatwave was declared. That is 97 percent of all such days. "
+             "2,327 of them fell outside March to June, when heatwave bulletins do not even run. These are published on the Pehra audit page, "
+             "with the method and every caveat.",
+    "water": "The same years held 90 days of heavy rain and 68 warm nights, when the body cannot recover at night. "
+             "Heat and water are one problem.",
+    # ---- act 2: Pehra ----
+    "intro": "Pehra means guard. It is a heat and water guard that lives on WhatsApp, in Hindi, with no app to install. "
+             "It turns the free weather forecast into W B G T, and W B G T into a plan for the day.",
+    "story_supervisor": "The first story. Ramesh runs a construction site in Kharghar. On a real phone, he registers the site "
+                        "and types his crew in plain Hindi: forty people, ten on heavy work, three new. "
+                        "Pehra reads it back, and he confirms.",
+    "story_supervisor_plan": "Every evening at seven, he gets tomorrow's plan: when to stop work, how many minutes of rest each hour, "
+                             "how much water to stock. It comes as text and as a Hindi voice note. He approves it with one tap, "
+                             "and the plan is saved to a tamper-proof record.",
+    "story_worker": "The second story. Gurpreet works on that site. He scans the site QR code. No app, no login. "
+                    "He logs his rest break. If he feels dizzy, he taps chakkar, and sees fixed first aid. "
+                    "At that moment Ramesh gets a WhatsApp alert, and his phone rings with a Hindi call.",
+    "story_ask": "Ramesh can also just ask. Can we pour concrete at two tomorrow? Pehra answers from the plan's own numbers: "
+                 "no, heavy work is stopped then. The AI explains, but it never does the maths, and it can never loosen a limit.",
+    "story_family": "The third story. Meena is expecting, and lives with her small son and her mother-in-law in Mumbai. "
+                    "She says hi, answers five button questions about her household, counts only, never names, "
+                    "and gets today's plan with stricter limits for the vulnerable. On dangerous days, Dadi gets a Hindi phone call.",
+    "story_vendor": "The fourth story. Lakshmi sells fruit on a Delhi street. She types paani, Connaught Place, "
+                    "and gets the nearest drinking water, 190 metres away, with a map link. Schools and delivery riders get their own plans too.",
+    # ---- act 3: the Site Box ----
+    "box_why": "Some sites have no smartphone at all. For them, Pehra is a box.",
+    "box_what": "The Pehra Site Box is about 600 rupees of parts around an E S P 32. A humidity sensor reads the air. "
+                "A probe inside a matt black globe reads the heat of the sun and the concrete. Together they give the real W B G T on that site, "
+                "every ten seconds. Two sonar sensors watch the drinking water tank and the drain.",
+    "box_does": "The box does not just measure. It acts. The ring shows the risk colour. A siren rings when it is time to rest. "
+               "A relay turns on a mist fan. Another refills the tank. And a red button calls for help.",
+    "box_sim": "Here it is running in the Wokwi simulator, with the real firmware. The readings go to AWS IoT Core over a secure certificate. "
+               "A rule hands them to a Lambda function, which computes W B G T, applies the plan, and publishes the command back to the box.",
+    "box_twin": "Every box gets a live 3D twin on the web. The twin shows what the box sees: the risk, the rest, the tank, the fan, the pump. "
+                "When the SOS button is pressed, the twin turns red, the supervisor gets a WhatsApp alert, and a Hindi call.",
+    # ---- act 4: how it runs ----
+    "arch": "Under the hood, Pehra is one serverless stack on AWS, in Mumbai. The forecast becomes W B G T once per city, "
+            "so a million sites cost the same as one. Step Functions waits for the supervisor's approval. "
+            "Amazon Bedrock explains the plan, Cedar policy makes sure the AI can never loosen it, Polly speaks Hindi, "
+            "and every day's record is locked in S3.",
+    "honest": "What Pehra does not claim: it does not save lives, and it is not medical advice. It is designed to reduce exposure, "
+              "and every number it sends comes from code, never from the model.",
+    "outro": "Pehra. A guard for the heat you cannot see. Built on AWS by Team Mavricks.",
+}
+
+
+def synth(key: str, text: str) -> dict:
+    OUT.mkdir(parents=True, exist_ok=True)
+    h = hashlib.sha1(f"{VOICE}|{LANG}|{text}".encode()).hexdigest()[:10]
+    mp3, marks = OUT / f"{key}.mp3", OUT / f"{key}.json"
+    stamp = OUT / f"{key}.{h}.ok"
+    if not stamp.exists():
+        p = boto3.client("polly", region_name="ap-south-1")
+        kw = dict(Text=text, VoiceId=VOICE, Engine="neural", LanguageCode=LANG)
+        mp3.write_bytes(p.synthesize_speech(OutputFormat="mp3", SampleRate="24000", **kw)["AudioStream"].read())
+        marks.write_bytes(p.synthesize_speech(OutputFormat="json", SpeechMarkTypes=["word"], **kw)["AudioStream"].read())
+        for old in OUT.glob(f"{key}.*.ok"):
+            old.unlink()
+        stamp.touch()
+    dur = float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(mp3)],
+                               capture_output=True, text=True).stdout.strip())
+    words = [{"t": j["time"] / 1000, "w": j["value"], "s": j["start"], "e": j["end"]}
+             for j in map(json.loads, marks.read_text().splitlines()) if j]
+    return {"file": f"vo/{key}.mp3", "dur": round(dur, 3), "text": text, "words": words}
+
+
+if __name__ == "__main__":
+    man = {k: synth(k, t) for k, t in SCRIPT.items()}
+    (OUT / "manifest.json").write_text(json.dumps(man, ensure_ascii=False))
+    total = sum(m["dur"] for m in man.values())
+    for k, m in man.items():
+        print(f"{k:24s} {m['dur']:6.1f}")
+    print(f"narration total {total / 60:.1f} min")

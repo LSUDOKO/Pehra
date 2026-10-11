@@ -1,0 +1,8 @@
+node_modules/
+stills/
+out/
+public/clips/
+public/phone/
+public/vo/*.mp3
+public/vo/*.json
+public/vo/*.ok
