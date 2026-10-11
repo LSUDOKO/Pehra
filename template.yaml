@@ -426,6 +426,7 @@ Resources:
         Images: { Type: HttpApi, Properties: { ApiId: !Ref HttpApi, Method: GET, Path: "/img/{name}" } }
         SiteStyle: { Type: HttpApi, Properties: { ApiId: !Ref HttpApi, Method: GET, Path: /site.css } }
         WebAssets: { Type: HttpApi, Properties: { ApiId: !Ref HttpApi, Method: GET, Path: "/assets/{name}" } }
+        WebMedia: { Type: HttpApi, Properties: { ApiId: !Ref HttpApi, Method: GET, Path: "/media/{name}" } }
 
   NightlyRecordFunction:
     Type: AWS::Serverless::Function
