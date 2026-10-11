@@ -20,6 +20,7 @@ HELP = (
     "/call_on +91... - khatre par Hindi phone call\n"
     "/test_call - test call\n"
     "/device - site sensor jodiye (ESP32 / simulator)\n"
+    "/device box - Pehra Site Box (AWS IoT, siren, pump, 3D view)\n"
     "/delete_my_data - sab data mitaiye\n"
     "Koi bhi sawaal likhiye, jaise: 'Kya hum 2 baje concrete daal sakte hain?'"
 )
@@ -73,3 +74,8 @@ DEVICE_ASK = ("Sensor jodiye:\n/device weather - taapmaan aur nami (DHT22)\n/dev
 DEVICE_CREATED = ("Sensor jud gaya ({kind}).\nToken (kisi ko na batayein): {token}\n\n"
                   "Web simulator: {sim}\nAsli ya Wokwi ESP32 ke liye: devices/wokwi/sketch.ino mein yeh token daaliye.")
 VOICE_UNCLEAR = "Awaaz saaf nahi aayi. Kripya likh kar poochhiye."
+BOX_CREATED = ("Pehra Site Box jud gaya: {box}\n"
+               "Device token (kisi ko na batayein): {token}\n"
+               "3D live site: {twin}\n"
+               "AWS IoT Core ke liye: scripts/iot_provision.py --box {box} (certificate banata hai). "
+               "Bina IoT: Wokwi sketch mein DEVICE_TOKEN daaliye.")

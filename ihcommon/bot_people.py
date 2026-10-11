@@ -50,10 +50,28 @@ def handle_location(d, chat_id: str, owner: str, lat: float, lon: float, assist)
         d.bot.send_text(chat_id, find_water(d.t, lat, lon))
 
 
+def cmd_box(d, owner: str, person: dict | None) -> str:
+    from ihcommon import boxes, config
+
+    site = repo.site_for_chat(d.t, owner)
+    if site:
+        okind, oid, lat, lon, enc, name = "site", site["site_id"], site["lat"], site["lon"], site["chat_enc"], site["name"]
+    elif person:
+        okind, oid, lat, lon, enc, name = "person", owner, person["lat"], person["lon"], person["chat_enc"], person.get("place", "Ghar")
+    else:
+        return texts.NOT_REGISTERED
+    b = boxes.register(d.t, okind, oid, float(lat), float(lon), enc, name, d.key)
+    metric("SiteBoxRegistered")
+    base = config.PUBLIC_BASE_URL.rstrip("/")
+    return texts.BOX_CREATED.format(box=b["box_id"], token=b["device_token"], twin=f"{base}/twin/{b['view_token']}")
+
+
 def cmd_device(d, chat_id: str, owner: str, arg: str, person: dict | None) -> str:
     from ihcommon import config, devices
 
     parts = arg.split()
+    if parts and parts[0] == "box":
+        return cmd_box(d, owner, person)
     if not parts or parts[0] not in devices.KINDS:
         return texts.DEVICE_ASK
     kind = parts[0]
