@@ -405,6 +405,7 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy: { TableName: !Ref Table }
         - S3CrudPolicy: { BucketName: !Ref HeatBucket }
+        - S3ReadPolicy: { BucketName: !Ref MediaBucket }
         - SQSSendMessagePolicy: { QueueName: !GetAtt OutQueue.QueueName }
         - Statement:
             - Effect: Allow
