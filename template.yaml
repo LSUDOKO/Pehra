@@ -453,6 +453,75 @@ Resources:
         - S3ReadPolicy: { BucketName: !Ref RecordsBucket }
         - S3CrudPolicy: { BucketName: !Ref MediaBucket }
 
+  # ---------------------------------------------------------------- Pehra Site Box (AWS IoT Core)
+  IotBoxFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Site Box - IoT Core telemetry in, commands out (MQTT); HTTPS fallback; 3D twin state
+      CodeUri: functions/iot_box/
+      Timeout: 20
+      Policies:
+        - DynamoDBCrudPolicy: { TableName: !Ref Table }
+        - S3CrudPolicy: { BucketName: !Ref HeatBucket }
+        - SQSSendMessagePolicy: { QueueName: !GetAtt OutQueue.QueueName }
+        - Statement:
+            - Effect: Allow
+              Action: iot:DescribeEndpoint
+              Resource: "*"
+            - Effect: Allow
+              Action: iot:Publish
+              Resource: !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/pehra/box/*/cmd"
+            - Effect: Allow
+              Action: ssm:GetParameter
+              Resource: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ParamPrefix}/*"
+            - Effect: Allow
+              Action: kms:Decrypt
+              Resource: "*"
+              Condition: { StringEquals: { "kms:ViaService": !Sub "ssm.${AWS::Region}.amazonaws.com" } }
+      Events:
+        BoxPost: { Type: HttpApi, Properties: { ApiId: !Ref HttpApi, Method: POST, Path: /api/box } }
+        BoxState: { Type: HttpApi, Properties: { ApiId: !Ref HttpApi, Method: GET, Path: "/api/box/{token}/state" } }
+        Twin: { Type: HttpApi, Properties: { ApiId: !Ref HttpApi, Method: GET, Path: "/twin/{token}" } }
+
+  SiteBoxIotPolicy:
+    Type: AWS::IoT::Policy
+    Properties:
+      PolicyName: !Sub "${AWS::StackName}-sitebox"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: iot:Connect
+            Resource: !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:client/${!iot:Connection.Thing.ThingName}"
+          - Effect: Allow
+            Action: iot:Publish
+            Resource: !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/pehra/box/${!iot:Connection.Thing.ThingName}/telemetry"
+          - Effect: Allow
+            Action: iot:Subscribe
+            Resource: !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topicfilter/pehra/box/${!iot:Connection.Thing.ThingName}/cmd"
+          - Effect: Allow
+            Action: iot:Receive
+            Resource: !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/pehra/box/${!iot:Connection.Thing.ThingName}/cmd"
+
+  SiteBoxTelemetryRule:
+    Type: AWS::IoT::TopicRule
+    Properties:
+      TopicRulePayload:
+        Description: Site Box telemetry to the Pehra Lambda (box_id = thing name from the topic)
+        Sql: "SELECT *, topic(3) AS box_id FROM 'pehra/box/+/telemetry'"
+        AwsIotSqlVersion: "2016-03-23"
+        RuleDisabled: false
+        Actions:
+          - Lambda: { FunctionArn: !GetAtt IotBoxFunction.Arn }
+
+  SiteBoxRulePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref IotBoxFunction
+      Principal: iot.amazonaws.com
+      SourceArn: !GetAtt SiteBoxTelemetryRule.Arn
+
   # ---------------------------------------------------------------- observability
   AlarmTopic:
     Type: AWS::SNS::Topic
@@ -539,6 +608,8 @@ Outputs:
     Value: !Ref IngestForecastFunction
   PersonalFanoutFunctionName:
     Value: !Ref PersonalFanoutFunction
+  SiteBoxIotPolicyName:
+    Value: !Ref SiteBoxIotPolicy
   RecheckFunctionName:
     Value: !Ref RecheckFunction
   NightlyRecordFunctionName:
