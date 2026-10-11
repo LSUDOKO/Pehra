@@ -17,7 +17,7 @@ MIN_GAP = 12
 MIN_WIDTH = 140
 EXPECTED = {"boondi": 4}
 # seams left by the neighbouring panel (left, right px)
-INSET = {"boondi_4": (48, 0), "dadi_2": (0, 30), "dadi_3": (30, 0), "lakshmi_3": (14, 0)}
+INSET = {"boondi_4": (48, 0), "dadi_2": (130, 85), "dadi_3": (30, 0), "lakshmi_2": (50, 60), "lakshmi_3": (14, 0)}
 
 
 def cut(path: Path) -> list[Image.Image]:
