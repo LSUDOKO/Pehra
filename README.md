@@ -37,7 +37,27 @@ India warns its people with a thermometer. The body cools by sweating; on a humi
 
 **The audit.** 12 cities, 2021 to 2025: **4,372 city-days** crossed the WBGT work limit in the shade while no heatwave was declared (97% of all such days). **2,327** of them fell outside March to June, when heatwave bulletins do not run. The same years held **90 heavy-rain days** and **68 warm nights**. These are minimums: ERA5 (~25 km) smooths humid extremes. Live page: [audit](https://yj61i9i7g0.execute-api.ap-south-1.amazonaws.com/audit) · data: [`docs/results/audit_summary.json`](docs/results/audit_summary.json).
 
-<p align="center"><img src="docs/img/audit.png" alt="The audit page: 4,372 invisible heat days by city" width="720"></p>
+### Where every number comes from
+
+Each number on the website is produced by a script in this repo from public reanalysis data, and the page states its source and caveats. The saffron boxes mark the number; the legend names the file it comes from.
+
+<p align="center"><img src="docs/img/data-sources-home.png" alt="The home page problem section, each number boxed with the file it comes from" width="100%"></p>
+
+<table><tr>
+<td width="52%"><img src="docs/img/data-sources-audit.png" alt="The live audit page, each part boxed with its source"></td>
+<td width="48%" valign="top">
+
+**The pipeline behind the audit**
+
+1. `scripts/run_audit.py` downloads hourly ERA5 reanalysis for 12 cities, 2021 to 2025, from the Open-Meteo archive (cached in `out/audit/`).
+2. `heatcore/wbgt.py` computes WBGT in sun and shade with the Liljegren method (thermofeel), checked against OSHA's calculator to 0.21 °C.
+3. `heatcore/imd_rule.py` recreates the IMD heatwave rule on the same grid cell, against a 1991 to 2020 ERA5 normal.
+4. `heatcore/audit.py` counts a city-day when shade WBGT, 06 to 19 IST, crosses the NIOSH REL (28.2 °C, moderate work) and the rule declares no heatwave. Rain and warm nights come from `heatcore/rain.py` and `heatcore/nights.py`.
+5. The result is `docs/results/audit_summary.json`; `scripts/build_pages.py` renders the audit page and the home page numbers from it, so the site can never drift from the data.
+
+The Kharghar numbers come from `scripts/kharghar_replay.py` → `docs/results/kharghar_replay.json` (ERA5 for 16 April 2023, grid cell 19.02 N 73.05 E).
+
+</td></tr></table>
 
 ---
 
@@ -128,13 +148,30 @@ Site WBGT = 0.7·Tnw + 0.2·Tg + 0.1·Ta (Stull wet bulb), compared with the for
 <p align="center"><img src="docs/img/gif/architecture.gif" alt="Pehra architecture drawing itself: forecast to WBGT, people, AI and policy, devices and records" width="100%"></p>
 <p align="center"><sub>Static version: <a href="docs/img/architecture.png">architecture.png</a> · Project report with every screenshot and AWS proof: <a href="docs/Pehra_report.pdf">docs/Pehra_report.pdf</a> · Pitch deck: see the submission links</sub></p>
 
-| Row | Services | What they do |
+### Every AWS service, and exactly what it does in Pehra
+
+One SAM stack (`template.yaml`, stack `invisible-heat`) in **ap-south-1 (Mumbai)**, so Indian users' data stays in India. Python 3.12 on **arm64 (Graviton)**, with a shared Lambda layer holding `heatcore/`, `ihcommon/`, `agent/`, the Cedar policies and the web pages.
+
+| Service | What Pehra uses it for | Where in the code |
 |---|---|---|
-| Forecast to WBGT | EventBridge Scheduler, Lambda (arm64), S3 | Open-Meteo in, WBGT per city/tile out, three times a day. A million sites cost the same as one. |
-| People | API Gateway (HTTP API), Lambda, Step Functions, SQS + DLQs, Polly, Transcribe | WhatsApp and Telegram webhooks; `waitForTaskToken` for Approve; rate-limited sends; Hindi voice notes, calls and voice input |
-| AI and policy | Amazon Bedrock (Nova Pro) with Strands Agents, Cedar (`cedarpy`) | The AI explains; tools do the maths; a number check blocks invented numbers; Cedar denies LoosenPlan to the AI |
-| Devices and records | AWS IoT Core, Lambda, DynamoDB, S3 Object Lock | Site Box over MQTT; single-table data; hash-chained nightly records |
-| Everything else | SSM Parameter Store, CloudWatch (EMF metrics, alarms), SNS, Budgets, SAM | Secrets, observability, cost guard, one-command deploy in ap-south-1 |
+| **AWS Lambda** (14 functions, arm64) | `IngestForecast` (forecast → WBGT), `DailyFanout` and `PlanWorker` (one plan per site), `PlanStep` (inside Step Functions), `Sender` (WhatsApp, Telegram, Twilio calls), `WhatsAppWebhook`, `TelegramWebhook`, `Assistant` (AI answers, voice input), `PersonalFanout` (07:00 family plans), `Recheck` (10:30 / 13:30), `NightlyRecord` (23:30), `ReportPdf` (monthly PDF), `PublicWeb` (site, worker QR page, poster, audit, media links), `IotBox` (Site Box state + commands) | `functions/*/app.py` |
+| **Amazon EventBridge Scheduler** | Forecast ingest 05:30, 09:30, 17:30 IST; family plans 07:00; site plans 19:00; re-checks 10:30 and 13:30; records 23:30 | `template.yaml` (`ScheduleV2` events) |
+| **AWS Step Functions** | One execution per site per day. The plan task uses `waitForTaskToken` and waits up to 12 hours for the supervisor's **Approve / Override** tap; retries and full history built in | `statemachine/daily_plan.asl.json` |
+| **Amazon API Gateway** (HTTP API) | WhatsApp and Telegram webhooks (signature-checked, fail closed), the worker QR page and check-ins, the poster, sensor and Site Box HTTPS, the audit page, the 3D twin, `/media` links | `template.yaml` `HttpApi`, `functions/public_web`, `functions/*_webhook` |
+| **Amazon SQS** + dead-letter queues | `PlanQueue` fans plans out per site; `OutQueue` rate-limits every outgoing message and call; permanent provider errors are not retried; a DLQ alarm fires on anything stuck | `ihcommon/outbox.py`, `functions/sender` |
+| **Amazon DynamoDB** (single table) | Sites, crews, people (household counts only), chat state, check-ins, alerts, Site Boxes (hashed device and view tokens), plan task tokens | `ihcommon/repo.py`, `ihcommon/boxes.py` |
+| **Amazon S3** (3 buckets) | **Heat store**: WBGT per city/tile per run (expires after 30 days). **Media**: Polly voice notes, call audio, incoming voice, website videos (presigned links). **Records**: nightly hash-chained records with **Object Lock** (GOVERNANCE, 90 days) | `ihcommon/heatstore.py`, `ihcommon/records.py`, `ihcommon/voice.py` |
+| **AWS IoT Core** | Each Site Box is a thing with its own X.509 certificate; the policy lets a thing publish only to `pehra/box/{its name}/telemetry`; a topic rule (`SELECT *, topic(3) AS box_id`) invokes `IotBox`, which publishes the command back on `.../cmd` | `template.yaml` `SiteBoxIotPolicy`, `SiteBoxTelemetryRule`; `scripts/iot_provision.py` |
+| **Amazon Bedrock** (Amazon Nova Pro) with **Strands Agents** | Explains plans and answers free questions in Hindi; tools compute every number (coolest window, rest bands, water); a number check (units too) blocks invented figures; fixed fallback text if anything fails | `agent/agent.py`, `agent/tools.py`, `agent/number_check.py` |
+| **Cedar** (open source, via `cedarpy`) | Authorization for actions: the AI can never loosen or override a plan; only the site's supervisor can, with a written reason; a device writes only to its own stream; raw worker data stays out of AI tools | `cedar/policies/*.cedar`, `ihcommon/authz.py` |
+| **Amazon Polly** (Kajal, neural, hi-IN) | Hindi voice notes for plans and the audio of every phone call (played by Twilio from a short-lived S3 link) | `ihcommon/voice.py`, `ihcommon/voicecall.py` |
+| **Amazon Transcribe** (hi-IN) | Crew counts and questions sent as voice notes; low-confidence audio is answered with "please type it" | `ihcommon/transcribe.py` |
+| **AWS Systems Manager Parameter Store** | All secrets as SecureString (WhatsApp, Telegram, Twilio, data key); nothing in git or in Lambda environment variables | `scripts/setup_secrets.sh`, `ihcommon/config.py` |
+| **Amazon CloudWatch** | Embedded-metric-format metrics (plans sent, calls, water finder, family opt-ins), logs, and alarms for a late forecast and for messages stuck in the DLQ | `ihcommon/log.py`, `template.yaml` alarms |
+| **Amazon SNS** + **AWS Budgets** | Alarm emails and an optional $5 budget alert | `template.yaml` `AlarmTopic` |
+| **AWS SAM / CloudFormation** | The whole stack in one template, deployed with `sam deploy` | `template.yaml`, `samconfig.toml` |
+
+**Why it costs almost nothing at scale.** WBGT is computed once per city or 0.25° tile, not once per user: a million sites in Mumbai read the same heat file. Everything else runs only when a message, a schedule or a device asks.
 
 **Proof from the account** (CLI output, rendered with [freeze](https://github.com/charmbracelet/freeze); the account id is masked):
 

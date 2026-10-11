@@ -1,30 +1,41 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&family=Noto+Sans+Devanagari:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Noto+Sans+Devanagari:wght@700&display=swap" rel="stylesheet">
 <style>
+  * { box-sizing:border-box; }
   body { margin:0; width:1600px; height:640px; background:#f5f1e8; font-family:Inter,sans-serif; color:#192839; position:relative; overflow:hidden; }
-  .art { position:absolute; right:0; top:0; width:860px; height:640px; object-fit:cover; object-position:40% 50%; }
-  .fade { position:absolute; left:620px; top:0; width:260px; height:640px; background:linear-gradient(90deg,#f5f1e8,rgba(245,241,232,0)); }
-  .copy { position:absolute; left:96px; top:120px; width:620px; }
+  .sun { position:absolute; left:1030px; top:40px; width:420px; height:420px; border-radius:50%; background:#d88b28; opacity:.95; box-shadow:inset 0 0 0 10px #192839; }
+  .ground { position:absolute; left:640px; right:0; bottom:0; height:120px; background:#ece7db; border-top:3px solid #192839; }
+  .copy { position:absolute; left:84px; top:96px; width:560px; z-index:3; }
   .logo { display:flex; align-items:center; gap:18px; }
-  .dot { width:46px; height:46px; border-radius:50%; background:#d88b28; box-shadow:inset 0 0 0 5px #192839; }
-  .word { font-size:84px; font-weight:800; letter-spacing:-3px; line-height:1; }
+  .dot { width:44px; height:44px; border-radius:50%; background:#d88b28; box-shadow:inset 0 0 0 5px #192839; }
+  .word { font-size:86px; font-weight:800; letter-spacing:-3px; line-height:1; }
   .deva { font-family:'Noto Sans Devanagari',sans-serif; font-size:64px; font-weight:700; color:#d88b28; }
-  h1 { font-size:46px; font-weight:800; letter-spacing:-1.5px; line-height:1.08; margin:40px 0 18px; }
-  p { font-size:22px; font-weight:500; color:#5f6b73; line-height:1.4; margin:0; max-width:560px; }
-  .tags { position:absolute; left:96px; bottom:64px; display:flex; gap:12px; }
-  .tags span { font-size:15px; font-weight:700; letter-spacing:1px; text-transform:uppercase; background:#192839; color:#fffdf8; padding:10px 16px; border-radius:999px; }
+  h1 { font-size:46px; font-weight:800; letter-spacing:-1.5px; line-height:1.06; margin:34px 0 16px; }
+  p { font-size:21px; font-weight:500; color:#5f6b73; line-height:1.42; margin:0; }
+  .tags { position:absolute; left:84px; bottom:56px; display:flex; gap:10px; z-index:3; }
+  .tags span { font-size:14px; font-weight:800; letter-spacing:1.2px; text-transform:uppercase; background:#192839; color:#fffdf8; padding:10px 15px; border-radius:999px; }
   .tags span.s { background:#d88b28; color:#1d1405; }
-  .boondi { position:absolute; right:40px; bottom:0; width:220px; }
+  .c { position:absolute; bottom:28px; filter:drop-shadow(0 14px 14px rgba(25,40,57,.18)); }
+  .bubble { position:absolute; z-index:4; font-size:17px; font-weight:700; padding:10px 14px; border-radius:16px; border:2px solid #192839; white-space:nowrap; }
+  .me { background:#d9fdd3; } .bot { background:#fffdf8; }
 </style></head>
 <body>
-  <img class="art" src="../../web/img/ill-humid-street.webp" alt="">
-  <div class="fade"></div>
+  <div class="sun"></div><div class="ground"></div>
   <div class="copy">
     <div class="logo"><div class="dot"></div><div class="word">Pehra</div><div class="deva">पहरा</div></div>
     <h1>A guard for the heat you cannot see.</h1>
-    <p>WBGT work-rest plans in Hindi on WhatsApp, a ₹600 Site Box on AWS IoT Core, and an audit of 4,372 invisible heat days.</p>
+    <p>WBGT work-rest plans in Hindi on WhatsApp for workers and families, a ₹600 Site Box on AWS IoT Core, and an audit of 4,372 invisible heat days.</p>
   </div>
-  <div class="tags"><span class="s">Built on AWS</span><span>WhatsApp</span><span>Track 02 Heat &amp; Water</span></div>
-  <img class="boondi" src="../../web/img/char-boondi-1.webp" alt="">
+  <img class="c" src="../../web/img/char-gurpreet-1.webp" style="left:660px;height:430px">
+  <img class="c" src="../../web/img/char-ramesh-2.webp" style="left:840px;height:470px">
+  <img class="c" src="../../web/img/char-meena-and-chotu-1.webp" style="left:1010px;height:440px">
+  <img class="c" src="../../web/img/char-lakshmi-2.webp" style="left:1200px;height:400px">
+  <img class="c" src="../../web/img/char-dadi-2.webp" style="left:1360px;height:450px">
+  <img class="c" src="../../web/img/char-boondi-2.webp" style="left:1478px;height:170px;bottom:22px">
+  <div class="bubble me" style="left:770px;top:70px">40 log, 10 bhaari kaam</div>
+  <div class="bubble bot" style="left:930px;top:122px">Kaam band: 9 se 5 baje</div>
+  <div class="bubble me" style="left:1180px;top:74px">paani Connaught Place</div>
+  <div class="bubble bot" style="left:1290px;top:126px">Peene ka paani: 190 m</div>
+  <div class="tags"><span class="s">Built on AWS</span><span>WhatsApp + Hindi calls</span><span>Track 02 Heat &amp; Water</span></div>
 </body></html>
