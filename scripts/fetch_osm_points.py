@@ -25,8 +25,8 @@ RADIUS_M = 15000
 OUT = Path("out/places")
 
 
-def query(lat: float, lon: float) -> str:
-    a = f"(around:{RADIUS_M},{lat},{lon})"
+def query(lat: float, lon: float, radius_m: int = RADIUS_M) -> str:
+    a = f"(around:{radius_m},{lat},{lon})"
     return (f"[out:json][timeout:60];("
             f"nwr{a}[amenity=drinking_water];nwr{a}[amenity=water_point];"
             f"nwr{a}[drinking_water=yes][amenity!=toilets];nwr{a}[amenity=shelter];"
@@ -41,12 +41,12 @@ def kind_of(tags: dict) -> str:
     return "drinking_water"
 
 
-def fetch(lat: float, lon: float) -> list[dict]:
+def fetch(lat: float, lon: float, radius_m: int = RADIUS_M) -> list[dict]:
     last = None
     for attempt in range(6):
         url = MIRRORS[attempt % len(MIRRORS)]
         try:
-            r = requests.post(url, data={"data": query(lat, lon)}, headers=HEADERS, timeout=90)
+            r = requests.post(url, data={"data": query(lat, lon, radius_m)}, headers=HEADERS, timeout=90)
             if r.status_code == 200 and r.headers.get("content-type", "").startswith("application/json"):
                 pts = []
                 for el in r.json()["elements"]:
@@ -69,16 +69,17 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--cities", default=",".join(CITIES))
     ap.add_argument("--upload")
+    ap.add_argument("--radius", type=int, default=RADIUS_M)
     a = ap.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
     for key in a.cities.split(","):
         c = CITIES[key]
         try:
-            pts = fetch(c.lat, c.lon)
+            pts = fetch(c.lat, c.lon, a.radius)
         except RuntimeError as e:  # keep going; rerun later for the cities that failed
             print(f"{c.name:24s} FAILED ({e})")
             continue
-        doc = {"city": key, "source": "OpenStreetMap contributors (ODbL)", "radius_m": RADIUS_M,
+        doc = {"city": key, "source": "OpenStreetMap contributors (ODbL)", "radius_m": a.radius,
                "fetched_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "points": pts}
         (OUT / f"{key}.json").write_text(json.dumps(doc))
         counts = {k: sum(p["kind"] == k for p in pts) for k in ("drinking_water", "water_point", "shelter")}
