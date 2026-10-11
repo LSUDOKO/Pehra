@@ -48,7 +48,7 @@ and no heatwave under the recreated rule — {share}% of all such days. {t['invi
 outside March–June, when heatwave bulletins do not run.</p>
 <h2>The water side</h2>
 <p>The same five years held <b>{t.get('heavy_rain_days', 0):,}</b> city-days of heavy rain (IMD "heavy", 64.5 mm or more in a day) and
-<b>{t.get('warm_nights', 0):,}</b> warm nights, when the body cannot cool down after a hot day. Invisible Heat adds both to its plans.</p>
+<b>{t.get('warm_nights', 0):,}</b> warm nights, when the body cannot cool down after a hot day. Pehra adds both to its plans.</p>
 <div class="caveat"><b>These numbers are a minimum.</b><ul>{caveats}</ul></div>
 <h2>By city</h2>
 <div class="table-scroll" role="region" aria-label="Audit results by city" tabindex="0"><table><thead><tr><th>City</th><th style="text-align:right">Invisible heat days</th><th class="vis"></th>
@@ -83,7 +83,7 @@ def model_card_page(md: str) -> str:
             out.append(f"<p>{html.escape(line)}</p>")
     if in_list:
         out.append("</ul>")
-    return page("Invisible Heat model card", "\n".join(out))
+    return page("Pehra model card", "\n".join(out))
 
 
 def home_page(s: dict) -> str:
