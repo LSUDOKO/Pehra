@@ -98,7 +98,8 @@ def home_page(s: dict) -> str:
 
 if __name__ == "__main__":
     summary = json.loads((ROOT / "docs/results/audit_summary.json").read_text())
-    (ROOT / "web/home/index.html").write_text(home_page(summary))
+    if (ROOT / "web/home/template.html").exists():  # the landing page may also be edited by hand
+        (ROOT / "web/home/index.html").write_text(home_page(summary))
     (ROOT / "web/audit/index.html").write_text(audit_page(summary))
     card = ROOT / "docs/MODEL_CARD.md"
     if card.exists():
