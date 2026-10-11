@@ -1,6 +1,6 @@
 # Invisible Heat
 
-**Heat and water safety for India's outdoor workers and their families: WBGT-based plans, rain, flood and warm-night alerts, a drinking-water finder and site sensors, in Hindi on Telegram or WhatsApp, with Hindi phone-call alerts.**
+**Heat and water safety for India's outdoor workers and their families: WBGT-based plans, rain, flood and warm-night alerts, a drinking-water finder and site sensors, in Hindi on WhatsApp (and Telegram), with Hindi phone-call alerts, and a ₹600 Site Box on AWS IoT Core with a live 3D twin.**
 
 Environmental Hacks (Bharat Builds Tour, Event 02) · WeMakeDevs × AWS · Track 02: Heat and Water · Team Mavricks
 
@@ -53,7 +53,26 @@ Track 02 is *"too much water, too little of it, and the heat in between"*. v2 ex
 | **More user types** | Schools, vendors, delivery riders | `/register`, then pick the type; each gets its own limits (schoolchildren against RAL) and fixed lines. |
 | **Site sensors (ESP32)** | Sites, households | `/device weather`, `/device tank 120` or `/device drain 100`. The DHT22 reading becomes a site-corrected WBGT ("site 12 °C hotter than forecast"); the HC-SR04 gives a low-tank or waterlogging alert, with a call for drains. Runs on real hardware, free in **Wokwi**, or in our web simulator. See [`devices/README.md`](devices/README.md). |
 
-![ESP32 in Wokwi posting to the live API](docs/img/wokwi-esp32.png)
+### Pehra Site Box: ESP32 + AWS IoT Core + live 3D twin
+
+For sites where nobody has a smartphone, one box per site does the job of the bot. It measures the heat workers actually feel and the site's water, and the server tells it what to do. It runs on real hardware (about ₹600 of parts) or free in the **Wokwi** simulator, with the same firmware: [`devices/sitebox/`](devices/sitebox/).
+
+| Part | What it does on site |
+|---|---|
+| DHT22 + DS18B20 in a matt-black ball (globe) | Air temperature, humidity and radiant heat → **measured site WBGT** = 0.7 Tnw + 0.2 Tg + 0.1 Ta, compared with the forecast ("site 3 °C hotter than forecast" alert) |
+| 2 × HC-SR04 | Drinking-water tank level (pump refill, "tank low" alert with cans needed) and drain/road water level (waterlogging alert + call) |
+| SSD1306 OLED + 12-LED ring | Four Hindi status lines and the risk colour (kam → khatarnak) |
+| Buzzer | Rest siren at the start of each rest block, a stop-work siren during stop hours |
+| 2 relays | Mist fan on from *zyada*; tank pump with hysteresis (on below 20 %, off at 90 %) |
+| Red SOS button | Immediate report: WhatsApp alert and a Hindi phone call to the supervisor |
+
+**How it talks to AWS.** The box publishes telemetry over MQTT/TLS with its own X.509 certificate to **AWS IoT Core** (`pehra/box/{thing}/telemetry`; the IoT policy only lets a thing publish to its own topic). An IoT rule (`SELECT *, topic(3) AS box_id`) invokes the Site Box Lambda, which computes WBGT and the level (`heatcore/sitebox.py`) with the same 1 °C rest bands as the plans, sends rate-limited alerts, stores the state in DynamoDB and publishes the command back on `pehra/box/{thing}/cmd`. HTTPS `POST /api/box` with a device token is the fallback (used in Wokwi when TLS is not set up). `scripts/iot_provision.py` creates the thing, certificate and policy and writes a filled-in sketch. Contract: [`docs/SITEBOX_CONTRACT.md`](docs/SITEBOX_CONTRACT.md).
+
+**Live 3D twin.** Every box gets a private page, `/twin/{view_token}` (Three.js), that polls the box state every 3 s: the site, workers resting under the shade when `aaram_now`, the fan and pump running, the tank and drain levels and the risk colour. `?demo=1` cycles through the levels without a box.
+
+| Wokwi ESP32 (real firmware, live API) | Live 3D twin |
+|---|---|
+| ![Site Box in Wokwi](docs/img/wokwi-esp32.png) | ![3D twin](docs/img/twin.gif) |
 
 | Poster | Worker page | Audit |
 |---|---|---|
@@ -82,19 +101,25 @@ flowchart LR
   TG --> API[HTTP API] --> WH[Webhook λ] --> CED{{Cedar}}
   WH -->|SendTaskSuccess| SFN
   QR[Worker QR page] --> API
+  WA[WhatsApp Cloud API] --> API
+  SND --> WA
+  SND --> TW[Twilio Hindi call]
+  BOX[Site Box ESP32] -->|MQTT X.509| IOT[AWS IoT Core] --> BXL[Site Box λ] --> DDB[(DynamoDB)]
+  BXL -->|cmd topic| IOT
+  TWIN[3D twin page] --> API
   NR[23:30 record λ] --> OL[(S3 Object Lock)]
 ```
 
 **Outside AWS (demo tiers):** Telegram Bot API (free), WhatsApp Cloud API test number (free, up to 5 recipients), Twilio trial for voice calls.
 
-**AWS services:** Lambda (arm64/Graviton), API Gateway HTTP API, Step Functions, EventBridge Scheduler, SQS, DynamoDB, S3 (+ Object Lock), Amazon Bedrock, Amazon Polly, Amazon Transcribe, SSM Parameter Store, CloudWatch, SNS and Budgets.
+**AWS services:** Lambda (arm64/Graviton), API Gateway HTTP API, Step Functions, EventBridge Scheduler, SQS, DynamoDB, S3 (+ Object Lock), AWS IoT Core, Amazon Bedrock, Amazon Polly, Amazon Transcribe, SSM Parameter Store, CloudWatch, SNS and Budgets.
 **AWS open source:** Strands Agents SDK, Cedar (via `cedarpy`), SAM CLI.
 
 ## Run it
 
 ```bash
 uv sync --python 3.12          # Python 3.12, uv
-uv run pytest                  # 222 tests: science, Cedar, agent tools, webhook, check-ins, e2e
+uv run pytest                  # 245 tests: science, Cedar, agent tools, webhooks, Site Box, e2e
 uv run python scripts/kharghar_replay.py
 uv run python scripts/run_audit.py              # ~1 min with cache; writes docs/results/audit_summary.json
 uv run python scripts/seed_sample_month.py && uv run python scripts/verify_hash_chain.py --dir out/sample_records
@@ -127,7 +152,18 @@ Re-check demo (clearly labelled **SIMULATED** in the message): `aws lambda invok
 | v2 live smoke test (`scripts/smoke_v2.py`) | Personal forecast for Delhi and an on-demand Varanasi tile; water finder found 3 points within 350 m of Connaught Place; 07:00 fan-out Lambda sent 2; weather and drain sensors alerted through the live API |
 | ESP32 in Wokwi (`devices/wokwi/`) | Simulated DHT22 at 40 °C / 70% → site WBGT 36.3 °C vs forecast 24.2 °C → alert and red LED; HC-SR04 → tank 7% → alert |
 | Deployed smoke test (`scripts/smoke_deployed.py`) | Plan built by the live plan Lambda with AI intro and Polly voice note; worker page, poster and audit served; break logged; nightly record written in Object Lock (GOVERNANCE, 90 days); hash chain verified |
-| Audit 2021–2025, 10 cities | 3,459 invisible heat city-days (shade), 1,679 outside March–June (a minimum) |
+| Audit 2021–2025, 12 cities | 4,372 invisible heat city-days (shade), 2,327 outside March–June, 90 heavy-rain days, 68 warm nights (minimums) |
+| Site Box through AWS IoT Core (live) | MQTT publish → IoT rule → Site Box Lambda → state in DynamoDB → command published on the box's `cmd` topic; the twin page shows the same state |
+
+## Demo video
+
+A 3-minute video built from code: `scripts/video/build_video.py` renders animated scenes with the illustrated characters from `Pehra_Character_Sheets/` (cut out by `scripts/video/cut_characters.py`), real numbers from `docs/results/`, chat bubbles generated by the bot's own templates, an Amazon Polly voice-over with burned-in subtitles (and an `.srt`), the Wokwi and 3D-twin recordings, and a phone screen recording of WhatsApp and the Hindi call. Script: [`docs/VIDEO_SCRIPT.md`](docs/VIDEO_SCRIPT.md).
+
+```bash
+uv run python scripts/video/cut_characters.py
+uv run python scripts/video/build_video.py --stills     # check frames
+uv run python scripts/video/build_video.py              # out/video/pehra_demo.mp4 + .srt
+```
 
 ## Limits (read before quoting anything)
 
