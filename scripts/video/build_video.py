@@ -88,7 +88,10 @@ def chunks(words: list[tuple], text_: str, end: float) -> list[tuple[float, floa
         tail = raw[b:nxt_a].decode().strip()
         seg = raw[first[1]:b].decode() + tail
         last = i == len(words) - 1
-        if last or tail[:1] in (".", "?", "!") or (tail[:1] == "," and len(seg) > 28) or len(seg) > 54:
+        rest = raw[b:].decode()
+        to_end = min([i for i in (rest.find(". "), rest.find("? "), rest.find("! "), len(rest)) if i >= 0])
+        long_ = len(seg) > 54 and to_end > 16  # don't strand one or two words
+        if last or tail[:1] in (".", "?", "!") or (tail[:1] == "," and len(seg) > 28) or long_ or len(seg) > 70:
             t1 = words[i + 1][0] if not last else end
             out.append((first[0], t1, seg.strip().rstrip(",")))
             first = None
@@ -200,6 +203,30 @@ def music(path: Path, dur: float, sr: int = 44100) -> None:
         f.writeframes((out * 32767).astype(np.int16).tobytes())
 
 
+def whooshes(path: Path, times: list[float], dur: float, sr: int = 44100) -> None:
+    """Soft filtered-noise whooshes on the scene wipes."""
+    n = int(dur * sr)
+    out = np.zeros(n)
+    rng = np.random.default_rng(11)
+    ln = int(0.55 * sr)
+    tt = np.arange(ln) / ln
+    env = np.sin(np.pi * tt) ** 2
+    for t0 in times:
+        s0 = int(max(0.0, t0 - 0.1) * sr)
+        if s0 + ln >= n:
+            continue
+        noise = rng.standard_normal(ln)
+        k = int(12 + 60 * (1 - tt.mean()))
+        sm = np.convolve(noise, np.ones(k) / k, mode="same")  # low-pass
+        out[s0:s0 + ln] += sm * env * 0.35
+    out /= max(1e-6, np.abs(out).max()) / 0.5
+    with wave.open(str(path), "wb") as f:
+        f.setnchannels(1)
+        f.setsampwidth(2)
+        f.setframerate(sr)
+        f.writeframes((out * 32767).astype(np.int16).tobytes())
+
+
 # ---------- build ----------
 def fmt_srt(t: float) -> str:
     ms = int(round(t * 1000))
@@ -296,16 +323,22 @@ def mix_audio(tracks: list[dict], dst: Path, with_music: bool, phone: tuple | No
         vo = "[vo2]"
     else:
         vo = "[vo]"
+    wpath = OUT / "whoosh.wav"
+    whooshes(wpath, STARTS[1:], TOTAL + 1)
+    inputs += ["-i", str(wpath)]
+    graph.append(f"[{extra}:a]aresample=44100,atrim=0:{TOTAL:.3f},volume=0.22[wh]")
+    graph.append(f"{vo}[wh]amix=inputs=2:normalize=0[vow]")
+    vo, extra = "[vow]", extra + 1
     if with_music:
         mpath = OUT / "music.wav"
         music(mpath, TOTAL + 1)
         inputs += ["-i", str(mpath)]
         graph.append(f"{vo}asplit=2[vok][vosc]")
-        graph.append(f"[{extra}:a]atrim=0:{TOTAL:.3f},volume=0.33,afade=t=in:d=2,afade=t=out:st={TOTAL - 3:.3f}:d=3[m]")
+        graph.append(f"[{extra}:a]atrim=0:{TOTAL:.3f},volume=0.16,afade=t=in:d=2,afade=t=out:st={TOTAL - 3:.3f}:d=3[m]")
         graph.append("[m][vosc]sidechaincompress=threshold=0.03:ratio=6:attack=40:release=400[md]")
-        graph.append("[vok][md]amix=inputs=2:normalize=0,alimiter=limit=0.95[aout]")
+        graph.append("[vok][md]amix=inputs=2:normalize=0,loudnorm=I=-15:TP=-1.5:LRA=11,aresample=44100[aout]")
     else:
-        graph.append(f"{vo}alimiter=limit=0.95[aout]")
+        graph.append(f"{vo}loudnorm=I=-15:TP=-1.5:LRA=11,aresample=44100[aout]")
     cmd = ["ffmpeg", "-y", "-loglevel", "error", *inputs, "-filter_complex", ";".join(graph), "-map", "[aout]",
            "-c:a", "aac", "-b:a", "192k", str(dst)]
     subprocess.run(cmd, check=True)
