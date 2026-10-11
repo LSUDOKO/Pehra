@@ -16,3 +16,4 @@ out/
 layers/core/python/
 .aws/
 out/
+.aws
