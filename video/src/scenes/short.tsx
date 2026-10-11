@@ -56,8 +56,9 @@ export const AuditSite: React.FC<SceneProps> = ({ track }) => {
 };
 
 // ---------------- a character reads their WhatsApp chat ----------------
-export type Seg = { key: string; from: number; rate: number; len: number };
+export type Seg = { key: string; from: number; to: number; word?: string; n?: number };
 export type Msg = { word: string; n?: number; who: "me" | "bot" | "call"; title?: string; lines: string[] };
+export type Tail = { key: string; from: number; callFrom?: number; audio: string; secs: number; title: string; lines: string[]; call: boolean };
 
 const Bubble: React.FC<{ m: Msg; k: number; old: boolean }> = ({ m, k, old }) => {
   const me = m.who === "me";
@@ -66,7 +67,7 @@ const Bubble: React.FC<{ m: Msg; k: number; old: boolean }> = ({ m, k, old }) =>
     <div style={{
       alignSelf: me ? "flex-end" : "flex-start", maxWidth: 720, background: me ? "#d9fdd3" : call ? C.ink : C.surface,
       border: `1.5px solid ${me ? "#b8e6b0" : call ? C.ink : C.line}`, borderRadius: 22, padding: "20px 26px",
-      boxShadow: "0 18px 36px -24px rgba(25,40,57,0.5)", fontFamily: FONT, opacity: clamp01(k * 1.6) * (old ? 0.55 : 1),
+      boxShadow: "0 18px 36px -24px rgba(25,40,57,0.5)", fontFamily: FONT, opacity: clamp01(k * 1.6) * (old ? 0.6 : 1),
       transform: `translateY(${(1 - k) * 26}px) scale(${old ? 0.97 : 1})`, transformOrigin: me ? "right top" : "left top",
     }}>
       {m.title && <div style={{ fontSize: 30, fontWeight: 800, color: call ? C.saffron : C.ink, marginBottom: 8 }}>{m.title}</div>}
@@ -76,55 +77,86 @@ const Bubble: React.FC<{ m: Msg; k: number; old: boolean }> = ({ m, k, old }) =>
   );
 };
 
-export const CharStory: React.FC<SceneProps & {
-  name: string; role: string; poses: [string, string]; segs: Seg[]; msgs: Msg[]; call?: { file: string; word: string; secs: number };
-}> = ({ track, name, role, poses, segs, msgs, call }) => {
+/** A sound-wave meter that moves only while the voice note or call is actually playing. */
+const Wave: React.FC<{ t: number; on: boolean }> = ({ t, on }) => (
+  <div style={{ display: "flex", gap: 6, alignItems: "center", height: 44, marginTop: 12 }}>
+    {Array.from({ length: 22 }).map((_, i) => {
+      const h = on ? 10 + 30 * Math.abs(Math.sin(t * 9 + i * 1.3) * Math.sin(t * 3.1 + i)) : 6;
+      return <div key={i} style={{ width: 7, height: h, borderRadius: 4, background: C.saffron }} />;
+    })}
+  </div>
+);
+
+export const CharStory: React.FC<SceneProps & { name: string; role: string; poses: [string, string]; segs: Seg[]; msgs: Msg[]; tail?: Tail }> = ({
+  track, name, role, poses, segs, msgs, tail,
+}) => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
   const t = frame / fps;
   const kIn = sp(frame, fps, 0, SPRING_SOFT);
-  const swap = durationInFrames * 0.5;
   const bob = Math.sin(t * 2.2) * 6;
-  const tPhone = 0;
-  let start = tPhone;
-  const seq = segs.map((s) => { const st = start; start += fr(s.len, fps); return { ...s, st }; });
-  const timed = msgs.map((m) => ({ ...m, t: at(track, m.word, 2, m.n ?? 0) + 0.4 }));
+  const voEnd = 0.4 + (track?.dur ?? 10) + 0.35;          // narration plays from 0.4 s
+  const tailStart = tail ? voEnd : durationInFrames / fps;
+  // each phone clip starts on its narration cue and is stretched to fill the time until the next cue
+  const starts = segs.map((s, i) => (i === 0 ? 0 : at(track, s.word ?? "", 3 + i * 4, s.n ?? 0)));
+  const plan = segs.map((s, i) => {
+    const st = starts[i], en = i + 1 < segs.length ? starts[i + 1] : tailStart;
+    const len = Math.max(0.5, en - st);
+    return { ...s, st, len, rate: Math.min(4, Math.max(0.5, (s.to - s.from) / len)) };
+  });
+  const timed = msgs.map((m) => ({ ...m, t: at(track, m.word, 2, m.n ?? 0) + 0.3 }));
   const shown = timed.filter((m) => t >= m.t);
+  const tailOn = tail && t >= tailStart;
   const lastTap = shown.length ? shown[shown.length - 1].t : -9;
   const tap = Math.max(0, 1 - (t - lastTap) * 3) * Math.sin(Math.min(1, (t - lastTap) * 3) * Math.PI);
-  const callAt = call ? at(track, call.word, 10) + 1.2 : 0;
+  const swap = tail ? tailStart : durationInFrames / fps * 0.5;
+  const ringEnd = tail && tail.call ? tailStart + 2.6 : tailStart;
   return (
     <Frame act="Pehra on WhatsApp">
-      {/* name */}
       <div style={{ position: "absolute", left: MARGIN, top: 118, display: "flex", alignItems: "baseline", gap: 22 }}>
         <Label delay={2} bg={C.saffron} color={C.ink} size={28}>{name}</Label>
         <Body delay={6} size={30} color={C.muted} weight={600}>{role}</Body>
       </div>
-      {/* character */}
       <div style={{ position: "absolute", left: 40, bottom: 0, width: 560, height: 820, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
-        <Img src={staticFile(`chars/${frame < swap ? poses[0] : poses[1]}.png`)} style={{
+        <Img src={staticFile(`chars/${t < swap ? poses[0] : poses[1]}.png`)} style={{
           maxWidth: 540, maxHeight: 800, objectFit: "contain",
           transform: `translateX(${(1 - kIn) * -260}px) translateY(${bob - tap * 14}px) scale(${1 + tap * 0.02})`, opacity: clamp01(kIn * 1.4),
         }} />
       </div>
-      {/* phone with the real recording */}
-      {seq.map((s, i) => (
-        <Sequence key={s.key + i} from={s.st} durationInFrames={fr(s.len, fps)} layout="none">
+      {plan.map((s, i) => (
+        <Sequence key={s.key + i} from={fr(s.st, fps)} durationInFrames={Math.max(1, fr(s.len, fps))} layout="none">
           <Phone src={`phone/clips/${s.key}.mp4`} x={610} y={190} h={840} delay={i === 0 ? 0 : -30} from={s.from} rate={s.rate} muted />
         </Sequence>
       ))}
-      <div style={{ position: "absolute", left: 610, top: 1040, width: 430, textAlign: "center", fontFamily: FONT, fontSize: 18, color: C.muted, fontWeight: 600 }}>real phone recording · sped up</div>
-      {/* the chat, read aloud */}
-      <div style={{ position: "absolute", left: 1090, top: 200, width: 740, height: 800, display: "flex", flexDirection: "column", justifyContent: "flex-start", gap: 20 }}>
-        {shown.slice(-3).map((m, i, arr) => (
-          <Bubble key={m.word + m.lines[0]} m={m} k={sp(frame, fps, fr(m.t, fps))} old={i < arr.length - 1 && arr.length > 1 && m.who !== "me"} />
-        ))}
-      </div>
-      {call && (
-        <Sequence from={fr(callAt, fps)} layout="none">
-          <Audio src={staticFile(`phone/clips/${call.file}`)} endAt={fr(call.secs, fps)} volume={(f) => ease(f, 0, 6) * (1 - ease(f, fr(call.secs - 0.8, fps), fr(call.secs, fps)))} />
+      {tail && (
+        <Sequence from={fr(tailStart, fps)} layout="none">
+          <Audio src={staticFile(tail.audio)} volume={1} />
+          <Sequence durationInFrames={tail.callFrom !== undefined ? fr(2.6, fps) : undefined} layout="none">
+            <Phone src={`phone/clips/${tail.key}.mp4`} x={610} y={190} h={840} delay={-30} from={tail.from} rate={1} muted />
+          </Sequence>
+          {tail.callFrom !== undefined && (
+            <Sequence from={fr(2.6, fps)} layout="none">
+              <Phone src={`phone/clips/${tail.key}.mp4`} x={610} y={190} h={840} delay={-30} from={tail.callFrom} rate={1} muted />
+            </Sequence>
+          )}
         </Sequence>
       )}
+      <div style={{ position: "absolute", left: 610, top: 1040, width: 430, textAlign: "center", fontFamily: FONT, fontSize: 18, color: C.muted, fontWeight: 600 }}>real phone recording</div>
+      <div style={{ position: "absolute", left: 1090, top: 200, width: 740, height: 800, display: "flex", flexDirection: "column", gap: 20 }}>
+        {!tailOn && shown.slice(-3).map((m, i, arr) => (
+          <Bubble key={m.word + m.lines[0]} m={m} k={sp(frame, fps, fr(m.t, fps))} old={i < arr.length - 1 && m.who !== "me"} />
+        ))}
+        {tailOn && tail && (
+          <div style={{ background: tail.call ? C.ink : C.surface, border: `1.5px solid ${tail.call ? C.ink : C.line}`, borderRadius: 22, padding: "24px 28px", fontFamily: FONT, ...{ opacity: clamp01(sp(frame, fps, fr(tailStart, fps)) * 1.6) } }}>
+            <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase", color: C.saffron }}>
+              {tail.call ? (t < ringEnd ? "Incoming call · ringing" : "On the call · real audio") : "Voice note · real audio"}
+            </div>
+            <div style={{ fontSize: 32, fontWeight: 800, color: tail.call ? C.surface : C.ink, marginTop: 8 }}>{tail.title}</div>
+            <Wave t={t} on={t >= ringEnd} />
+            {tail.lines.map((l, i) => <div key={i} style={{ fontSize: 30, lineHeight: 1.34, fontWeight: 500, marginTop: i ? 0 : 12, color: tail.call ? C.surface : C.ink, opacity: t >= ringEnd ? 1 : 0.35 }}>{l}</div>)}
+          </div>
+        )}
+      </div>
     </Frame>
   );
 };

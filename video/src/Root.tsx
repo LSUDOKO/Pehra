@@ -95,7 +95,6 @@ export const RemotionRoot: React.FC = () => (
 );
 
 // ---------------- the 6 to 7 minute cut ----------------
-const SG = (key: string, from: number, rate: number, len: number): Sh.Seg => ({ key, from, rate, len });
 const M = (word: string, who: Sh.Msg["who"], lines: string[], title?: string, n = 0): Sh.Msg => ({ word, who, lines, title, n });
 
 const Short2: React.FC<{ b: (typeof BEATS2)[number]; vo: Manifest; clips: Clips }> = ({ b, vo, clips }) => {
@@ -107,40 +106,41 @@ const Short2: React.FC<{ b: (typeof BEATS2)[number]; vo: Manifest; clips: Clips 
     case "auditSite": return <Sh.AuditSite {...p} />;
     case "intro": return <S.Intro {...p} />;
     case "ramesh": return <Sh.CharStory {...p} name="Ramesh" role="site supervisor, Kharghar" poses={["ramesh_2", "ramesh_1"]}
-      segs={[SG("wa_crew", 0, 1.4, 12), SG("wa_plan", 6, 1.7, 28)]}
+      segs={[{ key: "wa_crew", from: 0, to: 15 }, { key: "wa_plan", from: 6, to: 25, word: "tomorrow's" }]}
       msgs={[M("types", "me", ["40 log, 10 bhaari kaam, 3 naye aaye"]),
         M("reads", "bot", ["40 log, 10 bhaari kaam, 3 naye. Sahi hai?", "Haan, sahi  ·  Crew save ho gaya."]),
-        M("tomorrow's", "bot", ["Kaam band: subah 9 se shaam 5 baje", "8 se 9 baje: har ghante 15 min aaram", "5 se 6 baje: har ghante 30 min aaram", "Naye mazdoor (3): sirf 20% kaam", "Paani: 7 bade can (20 litre)"], "Kal ka plan (Ramesh Tower)"),
-        M("voice", "bot", ["Hindi voice note · 0:16", "[ Approve ]   [ Override ]"]),
-        M("Approve", "me", ["Approve"]),
-        M("saved", "bot", ["Plan approve ho gaya. Record mein save hai."])]} />;
-    case "ask": return <Sh.CharStory {...p} name="Ramesh" role="asks a question" poses={["ramesh_3", "ramesh_3"]}
-      segs={[SG("wa_agent", 0, 1.4, 18)]}
-      msgs={[M("asks", "me", ["Kya hum kal dopahar 2 baje concrete daal sakte hain?"]),
+        M("tomorrow's", "bot", ["Kaam band: subah 9 se shaam 5 baje", "8 se 9 baje: har ghante 15 min aaram", "5 se 6 baje: har ghante 30 min aaram", "Naye mazdoor (3): sirf 20% kaam", "Paani: 7 bade can (20 litre)"], "Kal ka plan (Ramesh Tower)")]}
+      tail={{ key: "wa_plan", from: 26, audio: "audio/tail_voice.mp3", secs: 13, call: false, title: "Kal ka plan, in Hindi",
+        lines: ["Kal 9 se 5 baje tak kaam rokna hai.", "8 se 9 baje tak har ghante 15 minute aaram.", "5 se 6 baje tak har ghante 30 minute aaram.", "7 bade paani ke can mangwa lo."] }} />;
+    case "ask": return <Sh.CharStory {...p} name="Ramesh" role="approves, then asks" poses={["ramesh_3", "ramesh_3"]}
+      segs={[{ key: "wa_plan", from: 46, to: 54 }, { key: "wa_agent", from: 0, to: 22, word: "asks" }]}
+      msgs={[M("Approve", "me", ["Approve"]),
+        M("saved", "bot", ["Plan approve ho gaya. Record mein save hai."]),
+        M("asks", "me", ["Kya hum kal dopahar 2 baje concrete daal sakte hain?"]),
         M("answers", "bot", ["Dopahar ka kaam nahi kar sakte.", "Bhaari kaam ke liye rok lagaya gaya hai.", "Plan Open-Meteo forecast par based hai."])]} />;
-    case "gurpreet": return <Sh.CharStory {...p} name="Gurpreet" role="worker on Ramesh's site" poses={["gurpreet_1", "gurpreet_3"]}
-      segs={[SG("wa_worker", 0, 1.3, 29), SG("wa_call", 26, 1, 9)]}
+    case "gurpreet": return <Sh.CharStory {...p} name="Gurpreet" role="worker on Ramesh's site" poses={["gurpreet_1", "ramesh_1"]}
+      segs={[{ key: "wa_worker", from: 0, to: 15 }, { key: "wa_worker", from: 26, to: 33, word: "taps" }, { key: "wa_alert", from: 0, to: 11, word: "alert" }]}
       msgs={[M("scans", "bot", ["Ramesh Tower", "[ Aaram shuru ]   [ Chakkar aa raha hai ]"], "Worker page (QR)"),
         M("logs", "me", ["Aaram shuru"]),
         M("taps", "me", ["Chakkar aa raha hai"]),
         M("first", "bot", ["Turant kaam rokiye.", "Chhaon mein jaiye.", "Paani piyiye, dheere dheere."], "First aid"),
-        M("alert", "bot", ["Dhyan dein: 14:50 par ek mazdoor ne", "'chakkar aa raha hai' dabaya.", "Turant unke paas jaiye. Uljhan ho to 108."], "To Ramesh"),
-        M("rings", "call", ["Dhyan dein. Aapki site par ek mazdoor ne", "chakkar aane ki khabar di hai..."], "Hindi call, Amazon Polly")]}
-      call={{ file: "call_symptom.mp3", word: "rings", secs: 7 }} />;
+        M("alert", "bot", ["Dhyan dein: 14:50 par ek mazdoor ne", "'chakkar aa raha hai' dabaya.", "Turant unke paas jaiye. Uljhan ho to 108."], "To Ramesh")]}
+      tail={{ key: "wa_call", from: 15.5, callFrom: 24, audio: "audio/tail_call_symptom.mp3", secs: 13.1, call: true, title: "Pehra calls Ramesh, in Hindi",
+        lines: ["Dhyan dein. Aapki site par ek mazdoor ne", "chakkar aane ki khabar di hai.", "Turant unke paas jaiye..."] }} />;
     case "meena": return <Sh.CharStory {...p} name="Meena" role="expecting, with Chotu and Dadi, Mumbai" poses={["meena_and_chotu_1", "dadi_2"]}
-      segs={[SG("wa_hi", 14, 1.8, 5), SG("wa_profile", 0, 2.7, 10), SG("wa_today", 1, 1.2, 14), SG("wa_family", 39, 1, 11)]}
+      segs={[{ key: "wa_hi", from: 14, to: 24 }, { key: "wa_profile", from: 0, to: 28, word: "questions" }, { key: "wa_today", from: 1, to: 19, word: "reads" }]}
       msgs={[M("says", "me", ["hi  ·  Mere aur parivar ke liye"]),
         M("questions", "me", ["Mumbai  ·  buzurg 1  ·  bachche 1", "garbhvati: Haan  ·  bahar kaam: Haan"]),
-        M("reads", "bot", ["Aaj Mumbai: khatarnak", "Buzurg, bachche, garbhvati:", "bahar na jaiye 9 se 5 baje", "Behtar samay: 6 se 9 baje", "Bimar mehsoos ho to 108"], "Aaj ka garmi-plan"),
-        M("Dadi", "call", ["Aaj Mumbai mein bahut garmi aur nami hai.", "9 se 5 baje tak ghar ke andar rahiye."], "Hindi call to Dadi")]}
-      call={{ file: "call_family.mp3", word: "Dadi", secs: 7 }} />;
+        M("reads", "bot", ["Aaj Mumbai: khatarnak", "Buzurg, bachche, garbhvati:", "bahar na jaiye 9 se 5 baje", "Behtar samay: 6 se 9 baje", "Bimar mehsoos ho to 108"], "Aaj ka garmi-plan")]}
+      tail={{ key: "wa_family", from: 39.5, callFrom: 44, audio: "audio/tail_call_family.mp3", secs: 13.1, call: true, title: "Pehra calls Dadi, in Hindi",
+        lines: ["Aaj Mumbai mein bahut garmi aur nami hai.", "9 se 5 baje tak ghar ke andar rahiye.", "Thoda thoda paani peete rahiye..."] }} />;
     case "lakshmi": return <Sh.CharStory {...p} name="Lakshmi" role="fruit vendor, Delhi" poses={["lakshmi_2", "lakshmi_3"]}
-      segs={[SG("wa_paani", 0, 1.15, 22)]}
+      segs={[{ key: "wa_paani", from: 0, to: 6 }, { key: "wa_paani", from: 6, to: 25, word: "replies" }]}
       msgs={[M("types", "me", ["paani Connaught Place"]),
         M("replies", "bot", ["Peene ka paani: 190 m", "Pi-Lo Smart Water ATM: 220 m", "Peene ka paani: 250 m", "map links · OpenStreetMap"], "Connaught Place · sabse paas")]} />;
     case "box_what": return <B.BoxWhat {...p} />;
     case "box_sim": return <B.BoxSim {...p} />;
-    case "box_twin": return <B.BoxTwin {...p} sos={clips.wa_sos} twin={clips.wa_twin} />;
+    case "box_twin": return <B.BoxTwin {...p} sos={clips.wa_sos} twin={clips.wa_twin} tailAudio="audio/tail_call_sos.mp3" />;
     case "arch": return <A.Arch {...p} />;
     case "proof": return <Sh.Proof {...p} />;
     default: return <Sh.OutroShort {...p} />;

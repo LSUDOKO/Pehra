@@ -84,16 +84,16 @@ SCRIPT.update({
                 "Here is how four people use it.",
     "v2_ramesh": "Ramesh runs a construction site in Kharghar. He types his crew in Hindi: forty people, ten on heavy work, three new. "
                  "Pehra reads it back. Then it sends tomorrow's plan: stop work from nine to five, rest every hour around it, "
-                 "new workers at twenty percent, and seven big cans of water. The same plan comes as a Hindi voice note. "
-                 "He taps Approve, and it is saved to the record.",
-    "v2_ask": "He asks: can we pour concrete at two tomorrow? Pehra answers: no, heavy work is stopped in the afternoon. "
+                 "new workers at twenty percent, and seven big cans of water. And the same plan, as a Hindi voice note. Listen.",
+    "v2_ask": "He taps Approve, and the plan is saved to the record. Then he asks: can we pour concrete at two tomorrow? "
+              "Pehra answers: no, heavy work is stopped in the afternoon. "
               "The AI explains, but every number comes from code.",
     "v2_gurpreet": "Gurpreet works on that site. He scans the site QR code. No app, no login. He logs his rest. "
                    "When he feels dizzy, he taps chakkar, and sees first aid: stop work, go to the shade, drink water slowly. "
-                   "At that moment Ramesh gets this alert, and his phone rings in Hindi.",
+                   "At that moment Ramesh gets this alert. And his phone rings. Listen.",
     "v2_meena": "Meena is expecting, and lives with her son and her mother-in-law in Mumbai. She says hi, and answers five quick "
                 "questions. Her plan reads: today is khatarnak. The elderly, children and pregnant women should stay inside "
-                "from nine to five. And on a day like this, Dadi gets a phone call in Hindi.",
+                "from nine to five. And on a day like this, Dadi gets a phone call in Hindi. Listen.",
     "v2_lakshmi": "Lakshmi sells fruit in Delhi. She types: paani, Connaught Place. Pehra replies with drinking water 190 metres "
                   "away, and a water A T M at 220 metres, with map links.",
     "v2_box": "Some sites have no smartphone. For them, Pehra is a six hundred rupee box. A humidity sensor and a black globe "
@@ -102,7 +102,7 @@ SCRIPT.update({
     "v2_sim": "Here is the real firmware running in the Wokwi simulator. A hot day: W B G T 35.7, khatarnak, sixty minutes of "
               "rest every hour, work stopped.",
     "v2_twin": "Readings go to AWS IoT Core, and every box gets a live 3D twin. When a worker presses SOS, the twin turns red, "
-               "Ramesh gets a WhatsApp alert, and a Hindi call.",
+               "Ramesh gets a WhatsApp alert, and this Hindi call.",
     "v2_arch": "Under the hood it is one serverless stack on AWS in Mumbai. The forecast becomes W B G T once per city. "
                "Step Functions waits for Approve. Bedrock explains, Cedar makes sure the AI can never loosen a limit, "
                "Polly speaks Hindi, and every record is locked in S3.",

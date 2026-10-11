@@ -147,7 +147,7 @@ export const BoxSim: React.FC<SceneProps> = ({ track }) => {
   );
 };
 
-export const BoxTwin: React.FC<SceneProps & { sos: ClipMeta; twin: ClipMeta }> = ({ track, sos }) => {
+export const BoxTwin: React.FC<SceneProps & { sos: ClipMeta; twin: ClipMeta; tailAudio?: string }> = ({ track, sos, tailAudio }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const tSos = Math.round(at(track, "SOS", 9.0) * fps);
@@ -162,12 +162,24 @@ export const BoxTwin: React.FC<SceneProps & { sos: ClipMeta; twin: ClipMeta }> =
         <Headline delay={2} size={46}>Every box gets a live 3D twin</Headline>
         <Body delay={14} size={24} color={C.muted} style={{ marginTop: 14 }}>Risk, rest, tank, drain, fan, pump, SOS: the same state the box shows, on the web.</Body>
       </div>
-      <Sequence from={tSos} layout="none">
-        <Phone src={`phone/clips/wa_sos.mp4`} x={1380} y={430} h={560} delay={0} from={0} muted />
-        <Sequence from={Math.round(sos.calls[0]?.at ?? 18.5) * fps} layout="none">
-          <AudioCall file={sos.calls[0]?.audio} />
+      {tailAudio ? (
+        <>
+          <Sequence from={tSos} durationInFrames={Math.max(1, Math.round((0.75 + (track?.dur ?? 10)) * fps) - tSos)} layout="none">
+            <Phone src={`phone/clips/wa_sos.mp4`} x={1380} y={430} h={560} delay={0} from={0} muted />
+          </Sequence>
+          <Sequence from={Math.round((0.75 + (track?.dur ?? 10)) * fps)} layout="none">
+            <Phone src={`phone/clips/wa_sos.mp4`} x={1380} y={430} h={560} delay={-30} from={15.5} muted />
+            <Audio src={staticFile(tailAudio)} volume={1} />
+          </Sequence>
+        </>
+      ) : (
+        <Sequence from={tSos} layout="none">
+          <Phone src={`phone/clips/wa_sos.mp4`} x={1380} y={430} h={560} delay={0} from={0} muted />
+          <Sequence from={Math.round(sos.calls[0]?.at ?? 18.5) * fps} layout="none">
+            <AudioCall file={sos.calls[0]?.audio} />
+          </Sequence>
         </Sequence>
-      </Sequence>
+      )}
       {frame > tSos && <div style={{ position: "absolute", left: 1380 + 300, top: 440 }}><Label delay={tSos} bg={C.red} size={18}>SOS, on the phone</Label></div>}
       <Source delay={30}>Twin and SOS clip recorded live on 11 Oct 2026 · readings published to IoT Core from a laptop script for the demo</Source>
     </Frame>
