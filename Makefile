@@ -1,4 +1,4 @@
-# Invisible Heat build helpers
+# Pehra build helpers
 LAYER := layers/core/python
 PY := 3.12
 

@@ -1,7 +1,7 @@
 """Fixed bot texts (Hindi, Roman script). No numbers here except from code."""
 
 PRIVACY = (
-    "Namaste! Main Invisible Heat hoon. Main kal ka garmi-plan bhejta hoon: kab kaam rokna hai, "
+    "Namaste! Main Pehra hoon. Main kal ka garmi-plan bhejta hoon: kab kaam rokna hai, "
     "har ghante kitna aaram, aur kitna paani.\n\n"
     "Hum kya rakhte hain: site ka naam, shahar, mazdooron ki ginti (naam nahi), aur aapka chat ID "
     "(encrypted). Mazdooron ke naam, phone ya ID kabhi nahi.\n"

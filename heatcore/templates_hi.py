@@ -162,7 +162,7 @@ def render_voice_hi(plan: dict) -> str:
 CALL_SYMPTOM_HI = ("Dhyan dein. Aapki site par ek mazdoor ne chakkar aane ki khabar di hai. "
                    "Turant unke paas jaiye. Chhaon mein le jaiye, paani dijiye, aaram karaiye. "
                    "Behoshi ya uljhan ho to 108 par call kariye.")
-CALL_TEST_HI = ("Namaste. Yeh Invisible Heat ki test call hai. Khatre wale din par hum aapko "
+CALL_TEST_HI = ("Namaste. Yeh Pehra ki test call hai. Khatre wale din par hum aapko "
                 "isi tarah phone karke batayenge.")
 
 

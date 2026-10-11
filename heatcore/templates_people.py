@@ -83,7 +83,7 @@ def personal_message(place: str, f: dict, cond: dict, forecast_line: str) -> str
 
 def family_call_text(place: str, f: dict) -> str:
     strict = f["groups"].get("vulnerable") or f["groups"]["adults"]
-    t = f"Namaste. Yeh Invisible Heat ka sandesh hai. Aaj {place} mein bahut garmi aur nami hai. "
+    t = f"Namaste. Yeh Pehra ka sandesh hai. Aaj {place} mein bahut garmi aur nami hai. "
     if strict["avoid"]:
         t += f"{span(strict['avoid'][0])} tak ghar ke andar rahiye. "
     return t + "Thoda thoda paani peete rahiye. Chakkar, uljhan ya behoshi ho to turant 108 par call kariye."

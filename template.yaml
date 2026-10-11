@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  Invisible Heat - WBGT work-rest plans for India's outdoor workers.
+  Pehra - WBGT work-rest plans for India's outdoor workers.
   Serverless, ap-south-1, AWS Free Tier friendly. Deploy: make layer && sam build && sam deploy
 
 Parameters:
@@ -424,6 +424,8 @@ Resources:
         DevicePage: { Type: HttpApi, Properties: { ApiId: !Ref HttpApi, Method: GET, Path: "/device/{token}" } }
         Home: { Type: HttpApi, Properties: { ApiId: !Ref HttpApi, Method: GET, Path: / } }
         Images: { Type: HttpApi, Properties: { ApiId: !Ref HttpApi, Method: GET, Path: "/img/{name}" } }
+        SiteStyle: { Type: HttpApi, Properties: { ApiId: !Ref HttpApi, Method: GET, Path: /site.css } }
+        WebAssets: { Type: HttpApi, Properties: { ApiId: !Ref HttpApi, Method: GET, Path: "/assets/{name}" } }
 
   NightlyRecordFunction:
     Type: AWS::Serverless::Function
