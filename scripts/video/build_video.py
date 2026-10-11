@@ -344,6 +344,29 @@ def mix_audio(tracks: list[dict], dst: Path, with_music: bool, phone: tuple | No
     subprocess.run(cmd, check=True)
 
 
+CHAPTERS = {"cold": "Invisible heat", "kharghar": "Kharghar, 16 April 2023", "audit": "The audit: 12 cities",
+            "ramesh": "Meet the people", "sitebox": "Pehra Site Box (Wokwi + AWS IoT Core)",
+            "aws": "How AWS runs it", "phone": "Live on WhatsApp", "outro": "Stay cool, India"}
+
+
+def extras() -> None:
+    """YouTube thumbnail and chapter list from the timeline."""
+    from kit import INK, ORANGE, PEACH, RED, glow, gradient, paste, pill, sprite
+    img = gradient((255, 186, 120), PEACH).copy()
+    g = glow(620, (255, 150, 40), 190)
+    paste(img, g, 1450 - g.width / 2, 300 - g.height / 2)
+    text(img, "INVISIBLE", 80, 70, 210, "Black", WHITE, stroke=6, stroke_color=INK)
+    text(img, "HEAT", 80, 330, 250, "Black", RED)
+    sprite(img, "garmi_1", 1500, 860, 700)
+    sprite(img, "boondi_1", 1010, 900, 420)
+    text(img, "PEHRA", 86, 640, 110, "Black", INK)
+    text(img, "पहरा", 86 + text_w("PEHRA", 110, "Black") + 24, 636, 92, "Bold", ORANGE, script="Devanagari")
+    pill(img, "4,372 dangerous days. No heatwave alert.", 80, 880, 46, INK, WHITE)
+    img.convert("RGB").resize((1280, 720), Image.LANCZOS).save(OUT / "thumbnail.jpg", quality=92)
+    lines = [f"{int(s.start // 60)}:{int(s.start % 60):02d} {CHAPTERS[s.key]}" for s in TL if s.key in CHAPTERS]
+    (OUT / "chapters.txt").write_text("\n".join(lines) + "\n")
+
+
 def find_clips(args) -> dict:
     clips = {}
     for key in ("wokwi", "twin", "phone"):
@@ -374,6 +397,7 @@ def main() -> None:
     clips = find_clips(args)
     tracks = plan(clips)
     print(f"{len(TL)} scenes, {TOTAL:.1f} s, footage: {sorted(clips) or 'none'}")
+    extras()
     for s in TL:
         print(f"  {s.key:10s} {s.start:6.1f}  {s.dur:5.1f} s  (vo {s.cue.vo_dur:4.1f})")
     if args.stills:
