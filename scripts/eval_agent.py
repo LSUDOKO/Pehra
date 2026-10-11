@@ -44,10 +44,10 @@ def fact_forms(fact: str, ctx: dict) -> set[str]:
     forms = {fact.format(**ctx)}
     forms |= SCRIPT_EQUIVALENTS.get(fact, set())
     if fact == "{heavy_from}":
-        forms |= {str(ctx["heavy_from"]), clock(ctx["heavy_from"])}
+        forms |= {str(ctx["heavy_from"]), clock(ctx["heavy_from"]), f"{ctx['heavy_from']:02d}:00"}
     for k in ("stop_from", "stop_to", "window_start"):
         if fact in ("{" + k + "}", "{" + k + "_12h}"):
-            forms |= {str(ctx[k]), str(ctx[k + "_12h"])}
+            forms |= {str(ctx[k]), str(ctx[k + "_12h"]), f"{ctx[k]:02d}:00"}
     return forms
 
 
