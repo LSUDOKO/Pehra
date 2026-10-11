@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Pehra: project report</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@700&display=swap" rel="stylesheet">
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  body { font-family: Inter, Arial, sans-serif; color: #192839; margin: 0; font-size: 11.5pt; line-height: 1.5; }
+  h1 { font-size: 34pt; font-weight: 800; letter-spacing: -1px; margin: 0 0 6pt; }
+  h2 { font-size: 20pt; font-weight: 800; letter-spacing: -.5px; margin: 0 0 10pt; padding-top: 6pt; border-top: 3px solid #d88b28; page-break-after: avoid; }
+  h3 { font-size: 13pt; font-weight: 700; margin: 14pt 0 4pt; }
+  p, li { color: #2e3b47; }
+  .muted { color: #5f6b73; font-size: 10pt; }
+  .page { page-break-before: always; }
+  img { max-width: 100%; display: block; border-radius: 8px; }
+  .row { display: flex; gap: 12pt; align-items: flex-start; }
+  .row > * { flex: 1; min-width: 0; }
+  .phone { width: 150px; flex: none; border: 3px solid #192839; border-radius: 14px; }
+  table { border-collapse: collapse; width: 100%; font-size: 10.5pt; }
+  th, td { text-align: left; padding: 5pt 7pt; border-bottom: 1px solid #ded8cb; vertical-align: top; }
+  th { background: #f5f1e8; }
+  .big { font-size: 40pt; font-weight: 800; color: #356f58; letter-spacing: -2px; line-height: 1; }
+  .cover { text-align: center; padding-top: 40pt; }
+  .pill { display: inline-block; background: #192839; color: #fffdf8; padding: 3pt 10pt; border-radius: 999px; font-size: 9.5pt; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin: 2pt; }
+  figure { margin: 8pt 0; } figcaption { font-size: 9.5pt; color: #5f6b73; margin-top: 3pt; }
+  a { color: #356f58; }
+</style></head>
+<body>
+<div class="cover">
+  <img src="brand/banner.png" alt="Pehra banner">
+  <h1 style="margin-top:24pt">Pehra <span style="font-family:'Noto Sans Devanagari';color:#d88b28">पहरा</span></h1>
+  <p style="font-size:15pt;font-weight:600">A guard for the heat you cannot see.</p>
+  <p class="muted">Project report · Environmental Hacks 2026 (WeMakeDevs × AWS) · Track 02 Heat and Water · Team Mavricks: Arpit Singh, Pradyuman Sharma · 11 October 2026</p>
+  <p><span class="pill">Built on AWS</span><span class="pill">WhatsApp</span><span class="pill">IoT Core</span><span class="pill">Bedrock + Cedar</span></p>
+  <p class="muted">Website: https://yj61i9i7g0.execute-api.ap-south-1.amazonaws.com · GitHub: github.com/LSUDOKO/Pehra · WhatsApp: +1 555 648 9580 (test number) · Live 3D twin: /twin/view_SvbNnihTsWfcju52eyfKZA?demo=1</p>
+</div>
+
+<div class="page">
+<h2>1. The problem</h2>
+<div class="row">
+<div>
+<p>India warns its people with a thermometer. The body cools by sweating; on a humid day sweat does not dry and the cooling stops, so a humid 36 °C day can hurt a worker more than a dry 42 °C day. Safety scientists measure this with <b>WBGT</b> (Wet Bulb Globe Temperature: temperature, humidity, sun and wind in one number); NIOSH, OSHA and many armies use it to decide when work must stop. India's public heat alerts still use temperature alone, by district, against a seasonal normal.</p>
+<p><b>Kharghar, Navi Mumbai, 16 April 2023.</b> People died of heatstroke at an open-air event. The maximum temperature was 38.8 °C: under the official rule, not a heatwave, so no alert. Our replay on ERA5 reanalysis shows WBGT in the sun above the 28.2 °C work limit from 10:00 to 16:00, peaking at 30.8 °C at noon. Real, and invisible.</p>
+</div>
+<img src="../web/img/ill-open-ground.webp" alt="" style="width:260px">
+</div>
+<h3>The audit: 12 cities, 2021 to 2025</h3>
+<div class="row">
+<div><div class="big">4,372</div><p>city-days over the WBGT work limit in the shade with no heatwave declared (97% of all such days)</p></div>
+<div><div class="big">2,327</div><p>of them outside March to June, when heatwave bulletins do not run</p></div>
+<div><div class="big">90 / 68</div><p>heavy-rain days / warm nights in the same years</p></div>
+</div>
+<p class="muted">ERA5 via Open-Meteo (CC BY 4.0), shade WBGT 06 to 19 IST, IMD rule recreated per city. These are minimums: ERA5 (~25 km) smooths humid extremes.</p>
+<figure><img src="img/audit.png" alt="The audit page" style="max-height:620px;object-fit:contain;object-position:top;border:1px solid #ded8cb"><figcaption>The live audit page.</figcaption></figure>
+</div>
+
+<div class="page">
+<h2>2. Pehra on WhatsApp, as four stories</h2>
+<p>Recorded on a real phone (moto g34, Android 15) on 11 October 2026 with the WhatsApp Cloud API test number and a Twilio trial call. The people are illustrated; the messages are real.</p>
+<div class="row"><img class="phone" src="../web/img/wa-site-plan.webp" alt=""><div><h3>Ramesh, site supervisor</h3><p>Registers his site in Kharghar and types the crew in plain Hindi: <i>40 log, 10 bhaari kaam, 3 naye aaye</i>. Pehra reads it back. At 7 pm he gets tomorrow's plan: stop work 9 to 5, rest bands around it, heavy work stopped, new workers at 20%, 7 water cans, as text and a Hindi voice note. One tap on Approve saves it to a tamper-proof record. He can ask anything and the AI answers from the plan's own tools; only he can loosen a plan, with a written reason, and Cedar enforces that.</p></div></div>
+<div class="row"><img class="phone" src="../web/img/wa-worker-page.webp" alt=""><div><h3>Gurpreet, worker</h3><p>Scans the site QR. No app, no login. Logs a rest break. If he feels dizzy he taps <b>Chakkar aa raha hai</b> and sees fixed first aid. At that moment Ramesh gets a WhatsApp alert and his phone rings with a Hindi call.</p></div><img class="phone" src="../web/img/wa-alert-call.webp" alt=""></div>
+<div class="row"><img class="phone" src="../web/img/wa-family-plan.webp" alt=""><div><h3>Meena, expecting, with Chotu and Dadi</h3><p>Says hi, taps <i>Mere aur parivar ke liye</i>, answers five button questions about the household (counts only, never names) and gets today's plan with stricter limits for the elderly, children, pregnancy and illness. On dangerous days Dadi gets one Hindi phone call.</p></div></div>
+<div class="row"><img class="phone" src="../web/img/wa-paani.webp" alt=""><div><h3>Lakshmi, street vendor</h3><p>Types <i>paani Connaught Place</i> and gets the nearest drinking water and shade, 190 m away with a map link, from OpenStreetMap and community reports. Schools, shops and delivery riders get their own limits and lines.</p></div><img class="phone" src="../web/img/wa-agent.webp" alt=""></div>
+</div>
+
+<div class="page">
+<h2>3. The Pehra Site Box</h2>
+<div class="row">
+<div><p>Some sites have no smartphone at all. For them, Pehra is a box: about ₹600 of parts around an ESP32. A DHT22 reads air temperature and humidity; a DS18B20 inside a matt-black globe reads radiant heat; together they give the real WBGT on the site every 10 seconds (0.7·Tnw + 0.2·Tg + 0.1·Ta). Two sonar sensors watch the drinking-water tank and the drain. The box acts: a 12-LED ring shows the risk colour, a siren rings at rest time, one relay runs a mist fan, another refills the tank, and a red SOS button calls the supervisor.</p>
+<p>It publishes over MQTT/TLS with its own X.509 certificate to AWS IoT Core (a thing may publish only to its own topic). A rule invokes a Lambda that computes WBGT, applies the plan's rest bands, sends rate-limited alerts, stores the state in DynamoDB and publishes the command back. Every box gets a live 3D twin page.</p></div>
+<img src="../web/img/ill-sitebox.webp" alt="" style="width:280px">
+</div>
+<div class="row"><figure><img src="../out/video/wokwi_still.png" alt=""><figcaption>Running in the Wokwi simulator with the real firmware.</figcaption></figure><figure><img src="img/twin.png" alt=""><figcaption>The live 3D twin.</figcaption></figure></div>
+<div class="row"><img class="phone" src="../web/img/wa-sos.webp" alt=""><div><h3>What happened on 11 October</h3><p>A box was registered from WhatsApp with <code>/device box</code>. Readings published to IoT Core (WBGT 34.2 °C, khatarnak, tank 17%) started the pump and sent two WhatsApp alerts. The SOS button turned the twin red, sent a WhatsApp alert and rang the supervisor's phone in Hindi.</p></div></div>
+</div>
+
+<div class="page">
+<h2>4. How it runs on AWS</h2>
+<img src="img/architecture.png" alt="Architecture" style="border:1px solid #ded8cb">
+<table style="margin-top:10pt"><tr><th>Row</th><th>Services</th><th>What they do</th></tr>
+<tr><td>Forecast to WBGT</td><td>EventBridge Scheduler, Lambda (arm64), S3</td><td>Open-Meteo in, WBGT per city/tile out, three times a day</td></tr>
+<tr><td>People</td><td>API Gateway, Lambda, Step Functions, SQS + DLQs, Polly, Transcribe</td><td>WhatsApp and Telegram webhooks; waitForTaskToken for Approve; rate-limited sends; Hindi voice</td></tr>
+<tr><td>AI and policy</td><td>Bedrock (Nova Pro) with Strands Agents, Cedar</td><td>The AI explains; tools do the maths; a number check blocks invented numbers; Cedar denies LoosenPlan to the AI</td></tr>
+<tr><td>Devices and records</td><td>IoT Core, Lambda, DynamoDB, S3 Object Lock</td><td>Site Box over MQTT; single-table data; hash-chained nightly records</td></tr></table>
+</div>
+
+<div class="page">
+<h2>5. Proof from the AWS account</h2>
+<p class="muted">CLI output rendered with freeze; the account id is masked.</p>
+<figure><img src="img/aws/stack.png" alt=""><figcaption>Stack resources.</figcaption></figure>
+<figure><img src="img/aws/iot.png" alt=""><figcaption>IoT Core: the provisioned Site Box thing, the telemetry rule, the endpoint.</figcaption></figure>
+</div>
+<div class="page">
+<figure><img src="img/aws/sfn.png" alt=""><figcaption>Step Functions executions.</figcaption></figure>
+<figure><img src="img/aws/lock.png" alt=""><figcaption>S3 Object Lock on the records bucket.</figcaption></figure>
+<figure><img src="img/aws/lambda.png" alt=""><figcaption>Lambda on arm64 with Bedrock; DynamoDB.</figcaption></figure>
+<figure><img src="img/aws/calls.png" alt=""><figcaption>Twilio log: six completed Hindi calls on 11 October 2026.</figcaption></figure>
+</div>
+
+<div class="page">
+<h2>6. Results, limits, what's next</h2>
+<table><tr><th>Check</th><th>Result</th></tr>
+<tr><td>WBGT vs OSHA calculator, 15 hours</td><td>Mean absolute difference 0.21 °C, max 0.49 °C</td></tr>
+<tr><td>Cedar decisions</td><td>All required cases pass; the AI is denied LoosenPlan and OverridePlan</td></tr>
+<tr><td>Agent test set, 40 questions</td><td>Facts correct 38/40, invented numbers shipped 0, refusals 9/9</td></tr>
+<tr><td>Real phone, end to end</td><td>Every feature above, with the Hindi calls answered</td></tr>
+<tr><td>Tests</td><td>246 passing</td></tr></table>
+<h3>Limits</h3>
+<ul><li>The weather grid is 11 to 25 km wide; the Site Box exists because real sites are hotter.</li><li>No claim of lives saved; not medical advice; not an official weather warning. The IMD rule is recreated, not IMD's record.</li><li>WhatsApp uses Meta's test number; calls use a Twilio trial. Box readings in the recording were published from a laptop script; the firmware is shown in Wokwi.</li></ul>
+<h3>What's next</h3>
+<p>Pilots with worker groups and a labour department; WhatsApp scheduled templates and an Indian caller id; Tamil, Bengali and Odia voices; ECMWF ensembles; insurance and welfare triggers on the locked records.</p>
+<figure><img src="img/site-hero.png" alt="" style="border:1px solid #ded8cb"><figcaption>The live website.</figcaption></figure>
+</div>
+</body></html>

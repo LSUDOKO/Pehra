@@ -125,7 +125,8 @@ Site WBGT = 0.7·Tnw + 0.2·Tg + 0.1·Ta (Stull wet bulb), compared with the for
 
 ## 4. How it runs on AWS
 
-<p align="center"><img src="docs/img/architecture.png" alt="Pehra architecture: forecast to WBGT, people, AI and policy, devices and records" width="100%"></p>
+<p align="center"><img src="docs/img/gif/architecture.gif" alt="Pehra architecture drawing itself: forecast to WBGT, people, AI and policy, devices and records" width="100%"></p>
+<p align="center"><sub>Static version: <a href="docs/img/architecture.png">architecture.png</a> · Project report with every screenshot and AWS proof: <a href="docs/Pehra_report.pdf">docs/Pehra_report.pdf</a> · Pitch deck: see the submission links</sub></p>
 
 | Row | Services | What they do |
 |---|---|---|
