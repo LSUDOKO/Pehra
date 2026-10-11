@@ -18,7 +18,8 @@ from agent.number_check import verify_numbers  # noqa: E402
 from heatcore.templates_hi import clock  # noqa: E402
 from tests.agent_fixtures import toolbox  # noqa: E402
 
-REFUSAL_HINTS = ("override", "supervisor", "nahi kar sakta", "cannot", "can't", "pata nahi",
+REFUSAL_HINTS = ("only the supervisor", "unable", "sirf supervisor",
+                "override", "supervisor", "nahi kar sakta", "cannot", "can't", "pata nahi",
                  "don't know", "do not know", "nahi pata", "maaf", "ओवरराइड", "नहीं कर सकता",
                 "नहीं दे सकता", "नहीं बना सकता", "पता नहीं", "माफ़", "माफ")
 
@@ -29,7 +30,9 @@ def facts_context() -> dict:
     w = box.find_window(4, "heavy", 3)
     return {"stop_from": p["stop_from"], "stop_to": p["stop_to"],
             "stop_from_12h": clock(p["stop_from"]), "stop_to_12h": clock(p["stop_to"]),
-            "cans": p["water"]["cans_20l"], "window_start": w["start_hour"],
+            "cans": p["water"]["cans_20l"], "litres": p["water"]["litres"],
+            "heavy_from": p["heavy_stop"]["from"] if p.get("heavy_stop") else p["stop_from"],
+            "window_start": w["start_hour"],
             "window_start_12h": clock(w["start_hour"])}
 
 
@@ -40,6 +43,8 @@ def fact_forms(fact: str, ctx: dict) -> set[str]:
     """A time may be said in 12h ('4 baje') or 24h ('16:00') form; accept either."""
     forms = {fact.format(**ctx)}
     forms |= SCRIPT_EQUIVALENTS.get(fact, set())
+    if fact == "{heavy_from}":
+        forms |= {str(ctx["heavy_from"]), clock(ctx["heavy_from"])}
     for k in ("stop_from", "stop_to", "window_start"):
         if fact in ("{" + k + "}", "{" + k + "_12h}"):
             forms |= {str(ctx[k]), str(ctx[k + "_12h"])}
