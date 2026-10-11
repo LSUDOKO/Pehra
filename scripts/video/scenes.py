@@ -198,7 +198,7 @@ def s_cold(t: float, d: float, cue: Cue) -> Image.Image:
     paste(c, g, 1500 - g.width / 2, 250 - g.height / 2)
     paste(c, rrect(W, 300, 0, (246, 196, 158)), 0, 800)
     t_thermo = cue.at("thermometer", 1.6)
-    t_inv = cue.at("invisible", 4.2)
+    t_inv = cue.at("heat", 4.6) - 0.1
     t_meet = cue.at("meet", 6.5)
     # Garmi strolls in
     k = ease_out(prog(t, 0.2, 1.8))
