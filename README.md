@@ -12,6 +12,8 @@
 
 <p align="center">Environmental Hacks (Bharat Builds Tour, Event 02) · WeMakeDevs × AWS · Track 02: Heat and Water · Team Mavricks</p>
 
+<p align="center"><a href="https://yj61i9i7g0.execute-api.ap-south-1.amazonaws.com/"><img src="docs/img/site-hero.png" alt="The live Pehra website" width="100%"></a><br><sub>The live website, with the 3D twin playing inline. <a href="docs/img/site-full.png">Full page</a>.</sub></p>
+
 **Pehra** (पहरा, "guard") turns the free weather forecast into WBGT work-rest plans for India's outdoor workers and families, in Hindi, on WhatsApp, with Hindi phone calls for alerts. For sites with no smartphone there is a ₹600 **Site Box** on AWS IoT Core with a live 3D twin. Everything runs as one serverless stack in Mumbai, and every number comes from code, never from the model.
 
 > Demo video: `video/` (Remotion, about 12 minutes). Script: [`docs/VIDEO_SCRIPT.md`](docs/VIDEO_SCRIPT.md). The WhatsApp part is a real phone recording from 11 October 2026.
@@ -142,6 +144,10 @@ Site WBGT = 0.7·Tnw + 0.2·Tg + 0.1·Ta (Stull wet bulb), compared with the for
 | Step Functions executions | S3 Object Lock on the records bucket | Lambda on arm64 with Bedrock, DynamoDB |
 |---|---|---|
 | ![Step Functions](docs/img/aws/sfn.png) | ![Object Lock](docs/img/aws/lock.png) | ![Lambda and DynamoDB](docs/img/aws/lambda.png) |
+
+**The Hindi calls, from the Twilio log** (11 Oct 2026, numbers masked): six completed calls to the supervisor's phone, 13 to 42 s each, matching the Polly audio lengths.
+
+![Twilio call log](docs/img/aws/calls.png)
 
 ### How the AI is kept honest
 1. **Numbers come from code, never from the model.** `heatcore/` is pure Python with no AWS imports; every user-facing number comes from it.
