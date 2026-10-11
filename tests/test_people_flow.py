@@ -66,3 +66,31 @@ def test_person_can_delete_data(env):  # noqa: F811
     msg(app, "/delete_my_data")
     tap(app, "del_yes")
     assert repo.get_person(d.t, owner_of(d)) is None
+
+
+def test_family_questions_and_voice_go_to_assistant(env):  # noqa: F811
+    app, d = env
+    tap(app, "mode:me")
+    location(app, 28.61, 77.21)
+    msg(app, "Kya Dadi shaam ko park ja sakti hain?")
+    assert d.lam.calls[-1]["kind"] == "personal_question" and "Dadi" in d.lam.calls[-1]["text"]
+    body = {"message": {"chat": {"id": 111}, "voice": {"file_id": "F1"}}}
+    app.handler({"headers": {"X-Telegram-Bot-Api-Secret-Token": "s3cret"}, "body": json.dumps(body)}, None)
+    assert d.lam.calls[-1] == {"kind": "personal_question", "owner": owner_of(d), "file_id": "F1"}
+
+
+def test_personal_answer_falls_back_without_model():
+    from datetime import datetime, timedelta
+
+    from agent.agent import answer_personal
+    from agent.people_tools import PersonalToolBox
+    from heatcore.heat import heat_to_json
+    from heatcore.personal import Household
+    from heatcore.plan import HourHeat
+
+    hours = [HourHeat(datetime(2026, 5, 1) + timedelta(hours=h), 30, 27) for h in range(24)]
+    box = PersonalToolBox("Delhi", Household(elderly=1), {"hours": heat_to_json(hours), "model": "m",
+                          "issued_at": "2026-05-01T00:00:00+00:00"}, 1.0, {}, datetime(2026, 5, 1, 8))
+    assert answer_personal("chakkar aa raha hai", box, "x", "ap-south-1")["source"] == "fixed"
+    assert answer_personal("kab bahar jaun?", box, "no-such-model", "ap-south-1")["text"] is None
+    assert box.get_family_forecast("2026-05-01")["household"]["elderly"] == 1
