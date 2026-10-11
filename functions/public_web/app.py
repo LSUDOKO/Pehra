@@ -9,6 +9,8 @@ import html as html_lib
 import json
 from datetime import datetime, timedelta
 
+import boto3
+
 from heatcore.heat import IST
 from heatcore.templates_hi import CALL_SYMPTOM_HI, FIRST_AID_HI, render_symptom_alert_hi
 from ihcommon import authz, config, crypto, outbox, planning, repo
@@ -151,31 +153,75 @@ def page_device(t, token: str) -> dict:
     return resp(200, tpl, "text/html; charset=utf-8")
 
 
-IMAGES = {"poster.png", "worker-page.png", "wokwi-esp32.png"}
+IMAGE_TYPES = {".webp": "image/webp", ".png": "image/png", ".gif": "image/gif", ".jpg": "image/jpeg"}
+MEDIA = {"twin.mp4", "wokwi.mp4", "pehra_brand.mp4", "box_sos.mp4"}  # large files live in the media bucket
+ASSETS = {
+    "home.css": "assets/home.css",
+    "home.js": "assets/home.js",
+    "favicon.svg": "assets/favicon.svg",
+    "gsap.min.js": "vendor/gsap-3.13.0.min.js",
+    "ScrollTrigger.min.js": "vendor/ScrollTrigger-3.13.0.min.js",
+}
+STATIC_TYPES = {
+    ".css": "text/css; charset=utf-8",
+    ".js": "text/javascript; charset=utf-8",
+    ".svg": "image/svg+xml",
+}
 
 
 def image(name: str) -> dict:
     import base64
+    import re
 
-    if name not in IMAGES or not (WEB / "img" / name).exists():
+    path = WEB / "img" / name
+    if not re.fullmatch(r"[a-z0-9][a-z0-9._-]{0,80}", name) or path.suffix not in IMAGE_TYPES or not path.exists():
         return resp(404, "not found", "text/plain")
     return {"statusCode": 200, "isBase64Encoded": True,
-            "headers": {"content-type": "image/png", "cache-control": "max-age=86400"},
-            "body": base64.b64encode((WEB / "img" / name).read_bytes()).decode()}
+            "headers": {"content-type": IMAGE_TYPES[path.suffix], "cache-control": "max-age=86400",
+                        "x-content-type-options": "nosniff"},
+            "body": base64.b64encode(path.read_bytes()).decode()}
+
+
+def media(name: str) -> dict:
+    """Videos are too big for a Lambda response: redirect to a short-lived S3 link in the media bucket."""
+    if name not in MEDIA or not config.MEDIA_BUCKET:
+        return resp(404, "not found", "text/plain")
+    url = boto3.client("s3", region_name=config.REGION).generate_presigned_url(
+        "get_object", Params={"Bucket": config.MEDIA_BUCKET, "Key": f"web/{name}"}, ExpiresIn=3600)
+    return {"statusCode": 302, "headers": {"location": url, "cache-control": "max-age=600"}, "body": ""}
 
 
 def static(name: str) -> dict:
     path = WEB / name
-    return html_resp(path.read_text()) if path.exists() else resp(404, "not found", "text/plain")
+    if not path.exists():
+        return resp(404, "not found", "text/plain")
+    if path.suffix in STATIC_TYPES:
+        return resp(200, path.read_text(), STATIC_TYPES[path.suffix], "max-age=3600")
+    return html_resp(path.read_text())
 
 
 def handler(event, _ctx):
     config.learn_base_url(event)
-    t = repo.table()
     method = event.get("requestContext", {}).get("http", {}).get("method", "GET")
     path = event.get("rawPath", "/")
     ip = event.get("requestContext", {}).get("http", {}).get("sourceIp", "")
     parts = [p for p in path.split("/") if p]
+    # Public pages and allowlisted assets do not need a database connection.
+    if method == "GET":
+        pages = {"/": "home/index.html", "/site.css": "india.css",
+                 "/audit": "audit/index.html", "/audit/": "audit/index.html",
+                 "/model-card": "model_card/index.html", "/model-card/": "model_card/index.html"}
+        if path in pages:
+            return static(pages[path])
+        if parts and parts[0] == "img":
+            return image(parts[1]) if len(parts) == 2 else resp(404, "not found", "text/plain")
+        if parts and parts[0] == "media":
+            return media(parts[1]) if len(parts) == 2 else resp(404, "not found", "text/plain")
+        if parts and parts[0] == "assets":
+            if len(parts) == 2 and parts[1] in ASSETS:
+                return static(ASSETS[parts[1]])
+            return resp(404, "not found", "text/plain")
+    t = repo.table()
     try:
         if method == "POST" and path == "/api/sensor":
             return sensor(t, json.loads(event.get("body") or "{}"), ip)
@@ -187,14 +233,6 @@ def handler(event, _ctx):
             return page_worker(t, parts[1])
         if method == "GET" and len(parts) == 2 and parts[0] == "p":
             return page_poster(t, parts[1])
-        if method == "GET" and path == "/":
-            return static("home/index.html")
-        if method == "GET" and len(parts) == 2 and parts[0] == "img":
-            return image(parts[1])
-        if method == "GET" and path in ("/audit", "/audit/"):
-            return static("audit/index.html")
-        if method == "GET" and path in ("/model-card", "/model-card/"):
-            return static("model_card/index.html")
     except json.JSONDecodeError:
         return resp(400, {"error": "bad json"})
     return resp(404, {"error": "not found"})

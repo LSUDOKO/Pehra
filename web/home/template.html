@@ -1,424 +1,163 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Pehra · Invisible Heat</title>
-<meta name="description" content="Heat and water safety for India's outdoor workers and their families. WBGT-based plans in Hindi on Telegram and WhatsApp.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Anton&family=Roboto+Flex:opsz,wght@8..144,400;8..144,600;8..144,800&display=swap" rel="stylesheet">
-<style>
-:root{
-  --peach:#FFE1CF; --peach-2:#FFC9AE; --sun:#FF8A1F; --sun-deep:#F2542D; --red:#E8282B;
-  --water:#33C3F0; --water-deep:#1F8FD1; --neem:#12805C; --ink:#141414; --cream:#FFF6EE; --lilac:#A266B0;
-  --line:4px solid var(--ink);
-}
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;background:var(--peach);color:var(--ink);font:18px/1.5 "Roboto Flex",system-ui,sans-serif;overflow-x:hidden}
-a{color:inherit}
-img{max-width:100%;display:block}
-.wrap{max-width:1360px;margin:0 auto;padding:0 24px}
-.display{font-family:"Bowlby One",system-ui,sans-serif;line-height:.86;letter-spacing:-.01em;text-transform:uppercase;margin:0}
-.cond{font-family:Anton,Impact,sans-serif;text-transform:uppercase;letter-spacing:.01em;line-height:.95;margin:0}
-.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-
-/* ---------- top bar ---------- */
-.top{position:absolute;inset:0 0 auto;display:flex;justify-content:center;align-items:center;gap:28px;padding:34px 24px;z-index:5;font:800 22px/1 "Roboto Flex",sans-serif}
-.top .x{font-size:26px}
-.badge{display:inline-flex;align-items:center;gap:8px}
-.badge svg{width:34px;height:34px}
-
-/* ---------- hero ---------- */
-.hero{position:relative;min-height:100vh;display:grid;place-items:center;overflow:hidden;padding:120px 0 60px}
-.hero h1{font-size:clamp(64px,15.5vw,250px);text-align:center;position:relative;z-index:2;white-space:nowrap;margin-top:-6vh}
-.hero h1 span{display:block}
-.hero h1 .l2{color:var(--sun-deep);-webkit-text-stroke:5px var(--ink);paint-order:stroke fill;margin-top:-.04em}
-.hero-mascot{position:absolute;z-index:3;left:50%;top:69%;width:min(30vw,400px);transform:translate(-50%,-18%);animation:bob 3.2s ease-in-out infinite}
-.hero-drop{position:absolute;z-index:4;width:min(17vw,210px);right:12%;bottom:6%;animation:bob 2.6s ease-in-out infinite reverse}
-.sunbadge{position:absolute;left:5%;top:7%;width:150px;z-index:3;animation:spin 18s linear infinite}
-.cloud{position:absolute;fill:#fff;z-index:1}
-.c1{width:420px;left:-80px;top:22%;animation:drift 26s linear infinite}
-.c2{width:360px;right:-60px;top:12%;animation:drift 32s linear infinite reverse}
-.c3{width:520px;right:8%;bottom:-40px;animation:drift 40s linear infinite}
-.hero-sub{position:absolute;left:24px;bottom:34px;z-index:5;max-width:380px;font-weight:600}
-.hero-sub b{font-weight:800}
-
-/* sticky CTA */
-.cta{position:fixed;right:28px;bottom:28px;z-index:50;text-decoration:none;display:block}
-.cta .stack{position:relative;width:230px}
-.cta .face{position:relative;z-index:2;display:block;text-align:center;font:800 26px/1 "Roboto Flex",sans-serif;background:var(--sun);border:var(--line);border-radius:10px;padding:18px 10px;transition:transform .15s}
-.cta .shadow{position:absolute;inset:14px 6px -12px;border:var(--line);border-radius:10px;background:var(--water);background-image:var(--blob);background-size:90px}
-.cta:hover .face,.cta:focus-visible .face{transform:translate(0,6px)}
-.cta small{display:block;text-align:center;font:700 13px/1.2 "Roboto Flex";margin-bottom:8px;text-transform:uppercase}
-.cta:focus-visible{outline:none}
-.cta:focus-visible .face{outline:4px solid var(--water-deep);outline-offset:4px}
-
-/* ---------- marquee ---------- */
-.marquee{border-block:var(--line);background:var(--lilac);overflow:hidden;white-space:nowrap}
-.marquee .track{display:inline-flex;gap:46px;padding:16px 0;animation:marquee 30s linear infinite;font:800 clamp(18px,2vw,28px)/1 "Roboto Flex";text-transform:uppercase}
-.marquee .track span{display:inline-flex;align-items:center;gap:46px}
-.marquee svg{width:34px;height:34px;flex:none}
-
-/* blob pattern band */
-.band{height:30px;border:var(--line);border-radius:6px;background:var(--water) var(--blob);background-size:110px;margin:48px 0}
-.patch{border:var(--line);background:var(--water) var(--blob);background-size:120px;display:block}
-
-/* ---------- the gap ---------- */
-.gap{padding:110px 0 60px}
-.gap-title{font-size:clamp(46px,9vw,150px);display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center}
-.gap-title .row2{grid-column:1/-1;display:flex;align-items:center;gap:24px}
-.gap-title .patch{height:.8em;flex:1;border-radius:4px}
-.gap-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:56px;align-items:center;margin-top:56px}
-.thermo{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-.gauge{border:var(--line);border-radius:18px;padding:22px;background:var(--cream);position:relative;box-shadow:8px 8px 0 var(--ink)}
-.gauge h3{font:800 15px/1.2 "Roboto Flex";text-transform:uppercase;margin:0 0 10px}
-.gauge .num{font-family:"Bowlby One";font-size:clamp(46px,5vw,76px);line-height:1}
-.gauge.ok{transform:rotate(-2deg)}
-.gauge.bad{background:var(--sun);transform:rotate(2deg)}
-.gauge p{margin:8px 0 0;font-weight:600}
-.story{font-size:20px}
-.story p{margin:0 0 16px;max-width:52ch}
-.story .kicker{font:800 15px/1 "Roboto Flex";text-transform:uppercase;background:var(--ink);color:var(--cream);display:inline-block;padding:8px 12px;border-radius:999px;margin-bottom:16px}
-
-/* ---------- features (sticker grid) ---------- */
-.feats{padding:40px 0 90px}
-.feats h2{font-size:clamp(46px,8vw,128px);text-align:center}
-.feats h2 em{font-style:normal;color:var(--water);-webkit-text-stroke:4px var(--ink);paint-order:stroke fill}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:44px 36px;margin-top:64px}
-.card{position:relative;text-align:center}
-.card .art{position:relative;margin:0 auto 18px;width:min(100%,300px);aspect-ratio:1;display:grid;place-items:center}
-.card .art::before{content:"";position:absolute;inset:8% 4% 2% 10%;border-radius:38% 46% 40% 44%;background:var(--c,var(--water));border:var(--line);transform:rotate(-6deg);transition:transform .3s}
-.card .art svg{position:relative;width:78%;height:78%;transition:transform .3s}
-.card:hover .art svg{transform:rotate(-4deg) scale(1.05)}
-.card:hover .art::before{transform:rotate(4deg)}
-.card h3{font-family:Anton,Impact,sans-serif;font-size:30px;text-transform:uppercase;margin:0;letter-spacing:.01em}
-.card p{margin:8px auto 16px;max-width:34ch}
-.btn{display:inline-block;font:800 17px/1 "Roboto Flex";text-transform:uppercase;text-decoration:none;border:3px solid var(--ink);border-radius:8px;padding:13px 22px;background:var(--cream);box-shadow:5px 5px 0 var(--ink);transition:transform .12s,box-shadow .12s}
-.btn:hover,.btn:focus-visible{transform:translate(3px,3px);box-shadow:2px 2px 0 var(--ink);outline:none}
-.btn:focus-visible{outline:3px solid var(--water-deep);outline-offset:3px}
-.card:nth-child(3n+2){margin-top:70px}
-
-/* ---------- numbers ---------- */
-.numbers{background:var(--sun);border-block:var(--line);padding:90px 0;position:relative;overflow:hidden}
-.numbers .big{font-size:clamp(90px,19vw,300px);color:var(--cream);-webkit-text-stroke:6px var(--ink);paint-order:stroke fill;text-align:center}
-.numbers .lead{text-align:center;font:800 clamp(22px,2.6vw,36px)/1.15 "Roboto Flex";max-width:28ch;margin:10px auto 54px}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:22px}
-.stat{background:var(--cream);border:var(--line);border-radius:16px;padding:22px;box-shadow:7px 7px 0 var(--ink)}
-.stat:nth-child(even){transform:rotate(1.5deg)}
-.stat:nth-child(odd){transform:rotate(-1.5deg)}
-.stat b{display:block;font-family:"Bowlby One";font-size:clamp(36px,4vw,58px);line-height:1}
-.stat span{font-weight:600}
-.caveat{text-align:center;margin:44px auto 0;font-weight:600;max-width:70ch}
-.caveat a{font-weight:800}
-
-/* ---------- photos ---------- */
-.photos{padding:100px 0 60px;position:relative}
-.photos h2{font-size:clamp(46px,8vw,128px);text-align:center;color:var(--lilac);-webkit-text-stroke:4px var(--ink);paint-order:stroke fill}
-.frames{display:grid;grid-template-columns:repeat(3,1fr);gap:40px;margin-top:60px;align-items:start}
-figure{margin:0;background:#fff;border:var(--line);padding:12px 12px 16px;box-shadow:10px 10px 0 var(--ink)}
-figure:nth-child(1){transform:rotate(-4deg)}
-figure:nth-child(2){transform:rotate(2deg) translateY(50px)}
-figure:nth-child(3){transform:rotate(-1.5deg)}
-figure img{border:2px solid var(--ink);aspect-ratio:4/3;object-fit:contain;background:#f3efe9;width:100%;height:auto}
-figcaption{font:800 16px/1.2 "Roboto Flex";text-transform:uppercase;margin-top:12px;text-align:center}
-
-/* ---------- how ---------- */
-.how{padding:120px 0 80px}
-.how h2{font-size:clamp(40px,6.5vw,104px);text-align:center}
-.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-top:56px;counter-reset:s}
-.step{border:var(--line);border-radius:22px;padding:28px;background:var(--cream);position:relative}
-.step::before{counter-increment:s;content:counter(s);position:absolute;top:-30px;left:24px;width:60px;height:60px;border-radius:50%;background:var(--water);border:var(--line);display:grid;place-items:center;font:28px/1 "Bowlby One"}
-.step h3{font:30px/1 Anton,Impact,sans-serif;text-transform:uppercase;margin:16px 0 10px}
-.step p{margin:0}
-.aws{margin-top:56px;text-align:center;font-weight:600;max-width:80ch;margin-inline:auto}
-.aws b{font-weight:800}
-
-/* ---------- footer ---------- */
-footer{background:var(--neem);color:var(--cream);border-top:var(--line);padding:90px 0 120px;position:relative;overflow:hidden}
-footer h2{font-size:clamp(54px,11vw,180px);text-align:center;color:var(--sun);-webkit-text-stroke:5px var(--ink);paint-order:stroke fill}
-.foot-row{display:flex;justify-content:center;gap:18px;flex-wrap:wrap;margin-top:40px}
-.foot-row .btn{background:var(--sun);color:var(--ink)}
-.small{text-align:center;margin-top:44px;font-size:15px;opacity:.95}
-.small a{font-weight:700}
-.foot-drops{display:flex;justify-content:center;gap:40px;margin-top:30px}
-.foot-drops svg{width:120px;animation:bob 2.8s ease-in-out infinite}
-.foot-drops svg:nth-child(2){animation-delay:-1.4s}
-
-/* reveal */
-.rv{opacity:0;transform:translateY(40px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.8,.2,1)}
-.rv.in{opacity:1;transform:none}
-
-@keyframes bob{0%,100%{translate:0 0}50%{translate:0 -14px}}
-@keyframes spin{to{rotate:360deg}}
-@keyframes drift{0%{translate:0 0}50%{translate:60px 0}100%{translate:0 0}}
-@keyframes marquee{to{transform:translateX(-50%)}}
-@keyframes wiggle{0%,100%{rotate:0deg}50%{rotate:-8deg}}
-.wave{transform-origin:20% 90%;animation:wiggle 1.4s ease-in-out infinite}
-
-@media (max-width:980px){
-  .grid{grid-template-columns:repeat(2,1fr)}
-  .card:nth-child(3n+2){margin-top:0}
-  .card:nth-child(even){margin-top:50px}
-  .stats{grid-template-columns:repeat(2,1fr)}
-  .gap-grid,.frames,.steps{grid-template-columns:1fr}
-  figure:nth-child(2){transform:rotate(2deg)}
-  .steps{gap:48px}
-  .hero-sub{position:relative;left:auto;bottom:auto;margin:420px 24px 0;z-index:5}
-}
-@media (max-width:600px){
-  body{font-size:16px}
-  .top{font-size:16px;gap:14px;padding:22px 16px}
-  .wrap{padding:0 16px}
-  .grid{grid-template-columns:1fr}
-  .card:nth-child(even){margin-top:0}
-  .hero{min-height:auto;padding:96px 0 40px;display:block}
-  .hero h1{font-size:15vw;margin-top:0}
-  .hero-mascot{position:relative;left:auto;top:auto;transform:none;display:block;width:68vw;margin:-6vw auto 0}
-  .hero-drop{width:26vw;right:5%;bottom:auto;top:auto;margin-top:-30vw;position:absolute}
-  .sunbadge{display:none}
-  .hero-sub{position:relative;left:auto;bottom:auto;margin:22px 16px 0;max-width:none}
-  .cta{right:16px;bottom:16px}
-  .cta .stack{width:170px}
-  .cta .face{font-size:20px;padding:14px 8px}
-  .cta small{display:none}
-  .thermo{grid-template-columns:1fr}
-  .stats{grid-template-columns:1fr}
-}
-@media (prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation:none!important;transition:none!important}
-  .rv{opacity:1;transform:none}
-}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f5f1e8">
+  <title>Pehra: a guard for the heat you cannot see</title>
+  <meta name="description" content="Pehra turns the free weather forecast into WBGT work-rest plans for India's outdoor workers and families, in Hindi, on WhatsApp. A ₹600 Site Box on AWS IoT Core for sites without phones.">
+  <meta property="og:title" content="Pehra: a guard for the heat you cannot see">
+  <meta property="og:description" content="WBGT plans in Hindi on WhatsApp, a Site Box on AWS IoT Core, and an audit of {{N_INVISIBLE}} invisible heat days.">
+  <meta property="og:image" content="/img/ill-humid-street.webp">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/home.css">
+  <script defer src="/assets/home.js"></script>
 </head>
 <body>
-
-<!-- ======= SVG sprite: our own mascots and patterns ======= -->
-<svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <defs>
-    <!-- Garmi: the smug sun in sunglasses (the villain) -->
-    <symbol id="garmi" viewBox="0 0 400 400">
-      <polygon fill="#F2542D" stroke="#141414" stroke-width="10" stroke-linejoin="round"
-        points="200,10 228,72 290,38 286,108 356,104 318,160 384,190 322,224 366,284 296,284 300,354 240,322 200,388 162,322 102,354 106,284 36,284 80,224 16,190 82,160 44,104 114,108 110,38 172,72"/>
-      <circle cx="200" cy="200" r="120" fill="#FF8A1F" stroke="#141414" stroke-width="10"/>
-      <ellipse cx="200" cy="215" rx="98" ry="88" fill="#FFB347" opacity=".55"/>
-      <!-- sunglasses -->
-      <path d="M92 168 Q200 150 308 168 L300 214 Q262 236 226 210 Q212 196 200 196 Q188 196 174 210 Q138 236 100 214 Z" fill="#141414"/>
-      <path d="M118 176 L150 176 L132 204 Z M248 176 L280 176 L262 204 Z" fill="#33C3F0"/>
-      <!-- smirk with teeth -->
-      <path d="M140 262 Q200 312 262 254" fill="#fff" stroke="#141414" stroke-width="9" stroke-linecap="round"/>
-      <path d="M160 272 L164 288 M184 280 L186 296 M210 282 L210 298 M234 274 L232 290" stroke="#141414" stroke-width="5"/>
-      <circle cx="128" cy="246" r="16" fill="#E8282B" opacity=".55"/>
-      <circle cx="276" cy="240" r="16" fill="#E8282B" opacity=".55"/>
-      <!-- sweat drop (even the sun is sweating) -->
-      <path d="M318 140 Q332 166 318 178 Q304 166 318 140 Z" fill="#33C3F0" stroke="#141414" stroke-width="5"/>
-    </symbol>
-
-    <!-- Boondi: water-drop hero with a cup -->
-    <symbol id="boondi" viewBox="0 0 300 360">
-      <ellipse cx="150" cy="344" rx="86" ry="12" fill="#141414" opacity=".85"/>
-      <!-- legs and sneakers -->
-      <path d="M118 290 L110 330 M182 290 L190 330" stroke="#141414" stroke-width="12" stroke-linecap="round"/>
-      <path d="M78 334 Q84 314 112 318 Q130 322 128 340 L80 342 Z" fill="#E8282B" stroke="#141414" stroke-width="7" stroke-linejoin="round"/>
-      <path d="M172 340 Q170 322 188 318 Q216 314 222 334 L220 342 Z" fill="#E8282B" stroke="#141414" stroke-width="7" stroke-linejoin="round"/>
-      <!-- body -->
-      <path d="M150 20 C150 20 54 150 54 210 A96 96 0 0 0 246 210 C246 150 150 20 150 20 Z" fill="#33C3F0" stroke="#141414" stroke-width="10" stroke-linejoin="round"/>
-      <path d="M100 160 Q92 196 104 228" stroke="#fff" stroke-width="12" stroke-linecap="round" fill="none" opacity=".8"/>
-      <!-- face -->
-      <ellipse cx="124" cy="196" rx="15" ry="20" fill="#fff" stroke="#141414" stroke-width="6"/>
-      <ellipse cx="178" cy="196" rx="15" ry="20" fill="#fff" stroke="#141414" stroke-width="6"/>
-      <circle cx="128" cy="200" r="7" fill="#141414"/><circle cx="174" cy="200" r="7" fill="#141414"/>
-      <path d="M118 240 Q150 274 186 240 Q150 256 118 240 Z" fill="#E8282B" stroke="#141414" stroke-width="7" stroke-linejoin="round"/>
-      <!-- arm + cup -->
-      <path d="M240 214 Q272 200 270 166" stroke="#141414" stroke-width="10" fill="none" stroke-linecap="round"/>
-      <path d="M248 124 L292 124 L284 172 L256 172 Z" fill="#fff" stroke="#141414" stroke-width="7" stroke-linejoin="round"/>
-      <path d="M252 140 L288 140 L285 160 L255 160 Z" fill="#1F8FD1"/>
-      <circle cx="268" cy="176" r="14" fill="#fff" stroke="#141414" stroke-width="6"/>
-      <!-- waving arm -->
-      <g class="wave"><path d="M60 214 Q24 196 30 150" stroke="#141414" stroke-width="10" fill="none" stroke-linecap="round"/>
-      <circle cx="30" cy="140" r="17" fill="#fff" stroke="#141414" stroke-width="6"/></g>
-    </symbol>
-
-    <!-- Helmet worker sticker -->
-    <symbol id="worker" viewBox="0 0 300 300">
-      <circle cx="150" cy="170" r="92" fill="#FFC9AE" stroke="#141414" stroke-width="9"/>
-      <path d="M56 140 Q60 58 150 54 Q240 58 244 140 Z" fill="#FFC20E" stroke="#141414" stroke-width="9" stroke-linejoin="round"/>
-      <rect x="40" y="132" width="220" height="22" rx="10" fill="#FFC20E" stroke="#141414" stroke-width="9"/>
-      <path d="M150 58 L150 132" stroke="#141414" stroke-width="7"/>
-      <circle cx="118" cy="182" r="9" fill="#141414"/><circle cx="182" cy="182" r="9" fill="#141414"/>
-      <path d="M118 222 Q150 246 182 222" fill="none" stroke="#141414" stroke-width="8" stroke-linecap="round"/>
-      <path d="M232 170 Q244 196 232 206 Q220 196 232 170 Z" fill="#33C3F0" stroke="#141414" stroke-width="5"/>
-    </symbol>
-
-    <!-- small icons -->
-    <symbol id="ico-sun" viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="#FF8A1F" stroke="#141414" stroke-width="3"/><path d="M11 17h18l-2 6h-5l-2-3-2 3h-5z" fill="#141414"/><path d="M13 27q7 5 14 0" stroke="#141414" stroke-width="3" fill="none" stroke-linecap="round"/></symbol>
-    <symbol id="ico-drop" viewBox="0 0 40 40"><path d="M20 3C20 3 7 19 7 26a13 13 0 0 0 26 0C33 19 20 3 20 3z" fill="#33C3F0" stroke="#141414" stroke-width="3"/><circle cx="15" cy="25" r="2.6" fill="#141414"/><circle cx="25" cy="25" r="2.6" fill="#141414"/><path d="M15 31q5 3 10 0" stroke="#141414" stroke-width="2.6" fill="none" stroke-linecap="round"/></symbol>
-    <symbol id="cloud" viewBox="0 0 400 160"><path d="M30 150 Q0 150 10 120 Q20 92 60 98 Q70 40 130 50 Q160 0 220 26 Q270 4 300 54 Q360 44 370 98 Q400 104 392 132 Q386 150 360 150 Z" stroke="#141414" stroke-width="0"/></symbol>
-    <pattern id="blobp" width="60" height="60" patternUnits="userSpaceOnUse"><rect width="60" height="60" fill="#33C3F0"/><path d="M8 12q8-6 14 2t-4 10q-12-2-10-12zM36 6q10 0 8 10t-12 4q-4-10 4-14zM16 40q10-4 14 6t-10 10q-8-6-4-16zM44 34q10 2 10 12t-12 6q-4-10 2-18z" fill="#141414"/></pattern>
-  </defs>
-</svg>
-
-<header class="top">
-  <span class="badge"><svg aria-hidden="true"><use href="#ico-drop"/></svg>PEHRA</span>
-  <span class="x" aria-hidden="true">×</span>
-  <span class="badge">BUILT ON AWS</span>
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="nav-wrap">
+  <nav class="nav container" aria-label="Main">
+    <a class="brand" href="/" aria-label="Pehra home"><span class="brand-dot" aria-hidden="true"></span>Pehra<span class="brand-deva" lang="hi">पहरा</span></a>
+    <button class="menu-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="menu"><span></span><span></span></button>
+    <div class="nav-links" id="menu">
+      <a href="#problem">The problem</a><a href="#stories">Stories</a><a href="#sitebox">Site Box</a><a href="#stack">How it runs</a><a href="/audit">Audit</a>
+      <a class="button button-primary" href="https://wa.me/15556489580?text=hi">Open on WhatsApp</a>
+    </div>
+  </nav>
 </header>
 
-<main>
-<!-- ======= HERO ======= -->
-<section class="hero" aria-labelledby="hero-title">
-  <svg class="cloud c1" aria-hidden="true"><use href="#cloud"/></svg>
-  <svg class="cloud c2" aria-hidden="true"><use href="#cloud"/></svg>
-  <svg class="cloud c3" aria-hidden="true"><use href="#cloud"/></svg>
-  <svg class="sunbadge" viewBox="0 0 400 400" aria-hidden="true"><use href="#garmi"/></svg>
-  <h1 class="display" id="hero-title"><span>Invisible</span><span class="l2">Heat</span></h1>
-  <svg class="hero-mascot" viewBox="0 0 400 400" role="img" aria-label="Garmi, a smug cartoon sun in sunglasses"><use href="#garmi"/></svg>
-  <svg class="hero-drop" viewBox="0 0 300 360" role="img" aria-label="Boondi, a cartoon water drop holding a cup of water"><use href="#boondi"/></svg>
-  <p class="hero-sub">India warns with a thermometer. Bodies break from <b>heat and humidity together</b>. Pehra turns the forecast into an hour-by-hour plan, in Hindi, on WhatsApp and Telegram.</p>
-</section>
-
-<!-- ======= MARQUEE ======= -->
-<div class="marquee" aria-hidden="true">
-  <div class="track">
-    <span>WBGT, not a thermometer <svg><use href="#ico-sun"/></svg> Hindi voice notes <svg><use href="#ico-drop"/></svg> No app needed <svg><use href="#ico-sun"/></svg> Paani kahan? <svg><use href="#ico-drop"/></svg> {{N_INVISIBLE}} invisible heat days <svg><use href="#ico-sun"/></svg></span>
-    <span>WBGT, not a thermometer <svg><use href="#ico-sun"/></svg> Hindi voice notes <svg><use href="#ico-drop"/></svg> No app needed <svg><use href="#ico-sun"/></svg> Paani kahan? <svg><use href="#ico-drop"/></svg> {{N_INVISIBLE}} invisible heat days <svg><use href="#ico-sun"/></svg></span>
-  </div>
-</div>
-
-<!-- ======= THE GAP ======= -->
-<section class="gap wrap" aria-labelledby="gap-title">
-  <h2 class="cond gap-title rv" id="gap-title">
-    <span>Thermometer:</span><span class="patch" style="height:.7em;border-radius:4px" aria-hidden="true"></span>
-    <span class="row2"><span class="patch" aria-hidden="true"></span>"all fine."</span>
-  </h2>
-  <div class="gap-grid">
-    <div class="thermo rv">
-      <div class="gauge ok"><h3>Kharghar · 16 Apr 2023 · max temp</h3><div class="num">{{K_TMAX}}°C</div><p>IMD rule: <b>no heatwave</b>.</p></div>
-      <div class="gauge bad"><h3>Same day · WBGT in sun, noon</h3><div class="num">{{K_WBGT}}°C</div><p>Above the {{LIMIT}}°C NIOSH limit for moderate work.</p></div>
+<main id="main">
+  <section class="hero container" aria-labelledby="hero-title">
+    <div class="hero-copy">
+      <h1 id="hero-title">A guard for the heat you cannot see.</h1>
+      <p>Pehra turns the free forecast into WBGT work-rest plans in Hindi, on WhatsApp. No app to install.</p>
+      <div class="hero-actions">
+        <a class="button button-primary" href="https://wa.me/15556489580?text=hi">Open on WhatsApp</a>
+        <a class="button button-ghost" href="#video">Watch the demo</a>
+      </div>
     </div>
-    <div class="story rv">
-      <span class="kicker">Why we built this</span>
-      <p>On 16 April 2023, people died of heatstroke at an open-air event in Kharghar, Navi Mumbai. There was no official heatwave warning that day.</p>
-      <p>India's alerts that trigger action use temperature. Humidity, sun and wind don't count. WBGT, the measure used by OSHA, NIOSH and many armies, counts all four.</p>
+    <div class="hero-art">
+      <picture>
+        <source media="(max-width:700px)" srcset="/img/ill-humid-street-small.webp">
+        <img src="/img/ill-humid-street.webp" width="1400" height="788" alt="Illustration of an Indian city street at noon in humid haze" fetchpriority="high">
+      </picture>
+      <img class="hero-phone" src="/img/wa-family-plan.webp" width="540" height="1110" alt="A real Pehra WhatsApp message: today's family plan for Mumbai, marked khatarnak" loading="eager">
+      <img class="hero-char" src="/img/char-boondi-1.webp" width="520" height="584" alt="" aria-hidden="true">
     </div>
-  </div>
-  <div class="band" aria-hidden="true"></div>
-</section>
+  </section>
 
-<!-- ======= FEATURES ======= -->
-<section class="feats wrap" aria-labelledby="feat-title">
-  <h2 class="display rv" id="feat-title">One bot. <em>Every</em> body.</h2>
-  <div class="grid">
-    <article class="card rv" style="--c:var(--sun)">
-      <div class="art"><svg viewBox="0 0 300 300" aria-hidden="true"><use href="#worker"/></svg></div>
-      <h3>Site plan · 7 pm</h3>
-      <p>Stop-work window, rest minutes each hour, water cans and a lighter schedule for new workers. Hindi text plus voice note. Approve or override with a reason.</p>
-      <a class="btn" href="https://t.me/Pehra_AWS_bot?start=site">Try it</a>
-    </article>
-    <article class="card rv" style="--c:var(--water)">
-      <div class="art"><svg viewBox="0 0 300 360" aria-hidden="true"><use href="#boondi"/></svg></div>
-      <h3>Garmi Saathi</h3>
-      <p>For any family, anywhere in India. Stricter limits for grandparents, babies and pregnant women. The best hours to step out, every morning.</p>
-      <a class="btn" href="https://t.me/Pehra_AWS_bot?start=me">Try it</a>
-    </article>
-    <article class="card rv" style="--c:var(--peach-2)">
-      <div class="art"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="62" r="40" fill="#fff" stroke="#141414" stroke-width="5"/><path d="M60 26C60 26 40 52 40 64a20 20 0 0 0 40 0C80 52 60 26 60 26z" fill="#33C3F0" stroke="#141414" stroke-width="5"/><path d="M84 88l18 18" stroke="#141414" stroke-width="9" stroke-linecap="round"/><circle cx="54" cy="64" r="3.5" fill="#141414"/><circle cx="66" cy="64" r="3.5" fill="#141414"/></svg></div>
-      <h3>Paani aur chhaon</h3>
-      <p>Share your location and get the nearest drinking water and shade, from OpenStreetMap plus points people add.</p>
-      <a class="btn" href="https://t.me/Pehra_AWS_bot?start=paani">Find water</a>
-    </article>
-    <article class="card rv" style="--c:var(--lilac)">
-      <div class="art"><svg viewBox="0 0 120 120" aria-hidden="true"><path d="M22 70 Q10 70 14 56 Q18 44 32 48 Q36 26 58 30 Q70 12 90 26 Q110 26 108 52 Q116 56 112 66 Q110 70 102 70 Z" fill="#fff" stroke="#141414" stroke-width="5"/><path d="M38 82l-6 14M58 82l-6 14M78 82l-6 14M98 82l-6 14" stroke="#33C3F0" stroke-width="7" stroke-linecap="round"/><path d="M8 110 Q30 100 52 110 T96 110 T120 108" stroke="#1F8FD1" stroke-width="6" fill="none"/></svg></div>
-      <h3>Rain, flood &amp; hot nights</h3>
-      <p>Heavy rain (IMD categories), river-flood signals for the Brahmaputra and the Ganga, and warm nights when the body can't recover.</p>
-      <a class="btn" href="/audit">See the data</a>
-    </article>
-    <article class="card rv" style="--c:var(--red)">
-      <div class="art"><svg viewBox="0 0 120 120" aria-hidden="true"><rect x="34" y="14" width="52" height="92" rx="12" fill="#fff" stroke="#141414" stroke-width="5"/><rect x="42" y="26" width="36" height="56" rx="4" fill="#33C3F0" stroke="#141414" stroke-width="4"/><circle cx="60" cy="94" r="5" fill="#141414"/><path d="M96 34q10 14 0 28M104 26q16 22 0 44" stroke="#141414" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M50 46h20M50 56h14" stroke="#141414" stroke-width="4"/></svg></div>
-      <h3>Dadi ko call</h3>
-      <p>On the most dangerous days, the phone rings in Hindi: stay inside until 3, sip water, call 108 for confusion or fainting.</p>
-      <a class="btn" href="https://t.me/Pehra_AWS_bot?start=family">Set it up</a>
-    </article>
-    <article class="card rv" style="--c:var(--neem)">
-      <div class="art"><svg viewBox="0 0 120 120" aria-hidden="true"><rect x="20" y="30" width="80" height="60" rx="8" fill="#141414"/><rect x="28" y="38" width="64" height="44" rx="4" fill="#12805C"/><circle cx="44" cy="60" r="10" fill="#fff" stroke="#141414" stroke-width="3"/><circle cx="76" cy="60" r="10" fill="#fff" stroke="#141414" stroke-width="3"/><circle cx="44" cy="60" r="4" fill="#141414"/><circle cx="76" cy="60" r="4" fill="#141414"/><path d="M30 100v10M50 100v10M70 100v10M90 100v10" stroke="#141414" stroke-width="5"/><circle cx="96" cy="24" r="8" fill="#E8282B" stroke="#141414" stroke-width="3"/></svg></div>
-      <h3>₹600 site sensor</h3>
-      <p>An ESP32 with temperature and water-level sensors fixes the 25 km forecast grid at the site. It runs in the free Wokwi simulator too.</p>
-      <a class="btn" href="https://github.com/LSUDOKO/Pehra/tree/main/devices">Build one</a>
-    </article>
-  </div>
-</section>
-
-<!-- ======= NUMBERS ======= -->
-<section class="numbers" aria-labelledby="num-title">
-  <div class="wrap">
-    <h2 class="display big rv" id="num-title">{{N_INVISIBLE}}</h2>
-    <p class="lead rv">days in five years when heat and humidity crossed the work limit, with no heatwave declared.</p>
-    <div class="stats">
-      <div class="stat rv"><b>{{N_OUTSIDE}}</b><span>of them outside March–June, when heatwave bulletins don't run</span></div>
-      <div class="stat rv"><b>{{N_CITIES}}</b><span>cities audited, 2021–2025, on ERA5 reanalysis</span></div>
-      <div class="stat rv"><b>{{N_RAIN}}</b><span>heavy-rain days (≥ 64.5 mm) in the same cities</span></div>
-      <div class="stat rv"><b>{{N_NIGHTS}}</b><span>warm nights, when the body can't cool down</span></div>
+  <section class="band" id="problem" aria-labelledby="problem-title">
+    <div class="container">
+      <h2 id="problem-title">India warns with a thermometer. Bodies break from heat and humidity together.</h2>
+      <div class="facts">
+        <div class="fact reveal"><strong data-count="{{N_INVISIBLE_RAW}}">{{N_INVISIBLE}}</strong><span>city-days over the WBGT work limit with no heatwave declared, in {{N_CITIES}} cities, 2021 to 2025</span></div>
+        <div class="fact reveal"><strong data-count="{{N_OUTSIDE_RAW}}">{{N_OUTSIDE}}</strong><span>of them outside March to June, when heatwave bulletins do not run</span></div>
+        <div class="fact reveal"><strong>{{K_TMAX}} °C</strong><span>Kharghar, 16 April 2023: no heatwave under the rule, yet WBGT in the sun reached {{K_WBGT}} °C against a {{LIMIT}} °C limit</span></div>
+      </div>
+      <p class="fact-note">ERA5 reanalysis via Open-Meteo. The IMD rule is recreated, not IMD's record. Counts are minimums. <a href="/audit">Read the audit</a> and the <a href="/model-card">model card</a>.</p>
     </div>
-    <p class="caveat rv">These counts are a minimum: ERA5 smooths extremes, and the IMD rule is recreated on one grid cell per city. <a href="/audit">Method and city table</a> · <a href="/model-card">Model card</a></p>
-  </div>
-</section>
+  </section>
 
-<!-- ======= PHOTOS ======= -->
-<section class="photos wrap" aria-labelledby="photo-title">
-  <h2 class="display rv" id="photo-title">No app. Really.</h2>
-  <div class="frames">
-    <figure class="rv"><img src="/img/poster.png" alt="Printable picture poster: each hour is a column, green for rest and red for stop-work" loading="lazy" width="1200" height="800"><figcaption>Picture poster for the site</figcaption></figure>
-    <figure class="rv"><img src="/img/worker-page.png" alt="Worker page with a large Aaram shuru button and a red Chakkar aa raha hai button" loading="lazy" width="360" height="740"><figcaption>Workers tap the QR: rest or help</figcaption></figure>
-    <figure class="rv"><img src="/img/wokwi-esp32.png" alt="ESP32 in the Wokwi simulator posting sensor readings to the live API" loading="lazy" width="1400" height="900"><figcaption>ESP32 sensor in Wokwi</figcaption></figure>
-  </div>
-</section>
+  <section class="section" id="stories" aria-labelledby="stories-title">
+    <div class="container stories-head">
+      <h2 id="stories-title">Four people, one guard. Recorded on a real phone.</h2>
+      <div class="rail-nav"><button type="button" class="rail-btn" data-dir="-1" aria-label="Previous story">&#8592;</button><button type="button" class="rail-btn" data-dir="1" aria-label="Next story">&#8594;</button></div>
+    </div>
+    <div class="rail" tabindex="0" aria-label="Stories">
+      <article class="story reveal">
+        <img class="story-char" src="/img/char-ramesh-1.webp" width="520" height="1035" alt="" aria-hidden="true">
+        <img class="story-phone" src="/img/wa-site-plan.webp" width="540" height="1110" alt="Ramesh's WhatsApp: tomorrow's plan with stop-work hours, rest minutes, water cans, a Hindi voice note and Approve/Override buttons" loading="lazy">
+        <div class="story-copy"><h3>Ramesh, site supervisor</h3><p>Types his crew in Hindi. At 7 pm gets tomorrow's plan: stop 9 to 5, rest bands, 7 water cans, as text and a voice note. Approve saves it to the record.</p></div>
+      </article>
+      <article class="story reveal">
+        <img class="story-char" src="/img/char-gurpreet-3.webp" width="520" height="684" alt="" aria-hidden="true">
+        <img class="story-phone" src="/img/wa-worker-page.webp" width="540" height="1110" alt="The worker page: two large buttons, Aaram shuru and Chakkar aa raha hai, with fixed first aid" loading="lazy">
+        <div class="story-copy"><h3>Gurpreet, worker</h3><p>Scans the site QR. No app, no login. Logs a rest break. Taps chakkar if dizzy: fixed first aid for him, a WhatsApp alert and a Hindi call for Ramesh.</p></div>
+      </article>
+      <article class="story reveal">
+        <img class="story-char" src="/img/char-meena-and-chotu-2.webp" width="520" height="690" alt="" aria-hidden="true">
+        <img class="story-phone" src="/img/wa-family-plan.webp" width="540" height="1110" alt="Meena's WhatsApp: today's Mumbai plan, khatarnak, with stricter hours for the elderly, children and pregnancy" loading="lazy">
+        <div class="story-copy"><h3>Meena, expecting</h3><p>Five button questions about the household, counts only. Today's plan uses stricter limits for the vulnerable. On dangerous days Dadi gets a Hindi phone call.</p></div>
+      </article>
+      <article class="story reveal">
+        <img class="story-char" src="/img/char-lakshmi-3.webp" width="520" height="706" alt="" aria-hidden="true">
+        <img class="story-phone" src="/img/wa-paani.webp" width="540" height="1110" alt="Lakshmi's WhatsApp: paani Connaught Place, nearest drinking water 190 m with map links" loading="lazy">
+        <div class="story-copy"><h3>Lakshmi, vendor</h3><p>Types paani, Connaught Place. The nearest drinking water is 190 m away, with a map link, from OpenStreetMap and community reports.</p></div>
+      </article>
+    </div>
+    <p class="container rail-note">WhatsApp test number and a Twilio trial call, recorded on 11 October 2026. The people are illustrated; the messages are real.</p>
+  </section>
 
-<!-- ======= HOW ======= -->
-<section class="how wrap" aria-labelledby="how-title">
-  <h2 class="cond rv" id="how-title">Tools do the maths. The AI just talks.</h2>
-  <div class="steps">
-    <div class="step rv"><h3>Compute once</h3><p>Three times a day the forecast becomes WBGT for every city and 0.25° tile, cached on S3. Every user is a lookup, so a million sites cost the same as one.</p></div>
-    <div class="step rv"><h3>Plan honestly</h3><p>NIOSH limits, project rest bands and a +1 °C margin. Every number comes from code. The AI writes one sentence, and a number check blocks anything it invents.</p></div>
-    <div class="step rv"><h3>Never loosen</h3><p>Cedar policies, not prompts: the AI can make a plan stricter, never looser. Only the supervisor can loosen it, with a written reason. Each day's record is hash-chained in S3 Object Lock.</p></div>
-  </div>
-  <p class="aws rv"><b>On AWS:</b> Lambda · Step Functions · EventBridge Scheduler · API Gateway · DynamoDB · S3 Object Lock · SQS · Bedrock (Strands Agents) · Polly · Transcribe · CloudWatch · SAM. <b>Open source:</b> Strands, Cedar, SAM.</p>
-</section>
+  <section class="section sitebox" id="sitebox" aria-labelledby="box-title">
+    <div class="container">
+      <div class="box-head"><h2 id="box-title">For sites with no smartphone, Pehra is a box.</h2><p>About ₹600 of parts around an ESP32. It measures the real WBGT on the site, acts on it, and talks to AWS IoT Core. Every box gets a live 3D twin.</p></div>
+      <div class="box-grid">
+        <figure class="twin reveal">
+          <video id="twin-video" muted loop playsinline autoplay preload="none" poster="/img/twin-poster.webp" width="1920" height="1080" aria-label="The live 3D twin of a site: risk colour, rest, tank, drain, fan and pump">
+            <source src="/media/twin.mp4" type="video/mp4">
+          </video>
+          <figcaption>The live 3D twin, polling the box state every 3 seconds.</figcaption>
+        </figure>
+        <figure class="box-art reveal">
+          <img src="/img/ill-sitebox.webp" width="1400" height="788" alt="Illustration of the Pehra Site Box on a pole: black globe sensor, screen, button, siren and a cable to the water tank" loading="lazy">
+          <figcaption>Runs on real hardware or, for free, in the Wokwi simulator with the same firmware.</figcaption>
+        </figure>
+      </div>
+      <div class="parts">
+        <div class="part reveal"><h3>DHT22</h3><p>Air temperature and humidity: the wet-bulb part of WBGT.</p></div>
+        <div class="part reveal"><h3>Black globe probe</h3><p>Radiant heat from the sun, tin roofs and concrete: the globe part.</p></div>
+        <div class="part reveal"><h3>Two sonar sensors</h3><p>Drinking-water tank level and drain level: refill, and waterlogging alerts.</p></div>
+        <div class="part reveal"><h3>Ring, siren, relays, SOS</h3><p>Risk colour, a rest bell every hour, a mist fan, a tank pump, and a red button that calls the supervisor.</p></div>
+      </div>
+      <div class="box-shot reveal">
+        <img src="/img/wa-sos.webp" width="540" height="1110" alt="The twin on a phone after SOS: SOS ACTIVE, tank refilling, pump on, with a WhatsApp alert on top" loading="lazy">
+        <div><h3>What happened on 11 October</h3><p>Readings published to IoT Core: WBGT 34.2 °C, khatarnak, tank 17%. The pump started, WhatsApp got two alerts, the twin went red on SOS, and the phone rang in Hindi.</p><a class="text-link" href="https://github.com/LSUDOKO/Pehra/tree/main/devices/sitebox">Firmware and wiring</a></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section video-section" id="video" aria-labelledby="video-title">
+    <div class="container">
+      <h2 id="video-title">The twelve-minute demo</h2>
+      <div class="player reveal">
+        <video id="demo-video" controls preload="none" poster="/img/ill-open-ground.webp" width="1920" height="1080">
+          <source src="/media/pehra_brand.mp4" type="video/mp4">
+        </video>
+      </div>
+    </div>
+  </section>
+
+  <section class="section stack" id="stack" aria-labelledby="stack-title">
+    <div class="container">
+      <h2 id="stack-title">How it runs</h2>
+      <ol class="flow">
+        <li class="reveal"><b>Forecast to WBGT, once per city.</b> EventBridge runs a Lambda three times a day; Open-Meteo in, WBGT out to S3. A million sites cost the same as one.</li>
+        <li class="reveal"><b>Plan, approve, send.</b> WhatsApp hits API Gateway and a Lambda; Step Functions waits up to 12 hours for the supervisor's Approve; SQS rate-limits the sends; Polly speaks the Hindi.</li>
+        <li class="reveal"><b>AI explains, policy guards.</b> Amazon Bedrock with Strands Agents writes the explanation; every number comes from tools; Cedar makes sure the AI can never loosen a limit.</li>
+        <li class="reveal"><b>Devices and records.</b> IoT Core takes the Site Box readings over X.509 MQTT; DynamoDB holds sites, people and boxes; each day's record is hash-chained in S3 Object Lock.</li>
+      </ol>
+      <p class="stack-note">One SAM stack in ap-south-1 (Mumbai). <a href="https://github.com/LSUDOKO/Pehra">Source on GitHub</a>, 246 tests.</p>
+    </div>
+  </section>
+
+  <section class="section honest" aria-labelledby="honest-title">
+    <div class="container honest-grid">
+      <div><h2 id="honest-title">What Pehra does not claim</h2><p>It does not save lives and it is not medical advice. It is designed to reduce exposure. Every number it sends comes from code, never from the model.</p></div>
+      <img src="/img/char-garmi-1.webp" width="520" height="671" alt="" aria-hidden="true" class="honest-char">
+    </div>
+  </section>
 </main>
 
-<!-- ======= FOOTER ======= -->
-<footer aria-labelledby="foot-title">
-  <div class="wrap">
-    <h2 class="display rv" id="foot-title">Stay cool, India</h2>
-    <div class="foot-row">
-      <a class="btn" href="https://t.me/Pehra_AWS_bot">Open on Telegram</a>
-      <a class="btn" href="/audit">Invisible heat audit</a>
-      <a class="btn" href="https://github.com/LSUDOKO/Pehra">Code on GitHub</a>
-    </div>
-    <div class="foot-drops" aria-hidden="true">
-      <svg viewBox="0 0 300 360"><use href="#boondi"/></svg>
-      <svg viewBox="0 0 300 360"><use href="#boondi"/></svg>
-    </div>
-    <p class="small">Designed to reduce exposure; not medical advice. Personal risk levels are our own planning rule on NIOSH limits. Data: Open-Meteo, ERA5 (CC BY 4.0), GloFAS, © OpenStreetMap contributors. Team Mavricks · Environmental Hacks 2026 · <a href="/model-card">Limits and method</a></p>
+<footer class="footer">
+  <div class="container footer-grid">
+    <div class="brand brand-lg"><span class="brand-dot" aria-hidden="true"></span>Pehra<span class="brand-deva" lang="hi">पहरा</span></div>
+    <p>Built on AWS by Team Mavricks for Environmental Hacks 2026, Track 02: Heat and Water.</p>
+    <nav aria-label="Footer"><a href="/audit">Audit</a><a href="/model-card">Model card</a><a href="https://github.com/LSUDOKO/Pehra">GitHub</a><a href="https://wa.me/15556489580?text=hi">WhatsApp</a></nav>
+    <p class="credits">Data: Open-Meteo, ERA5, GloFAS, © OpenStreetMap contributors. Illustrations generated for Pehra; the characters are not real people.</p>
   </div>
 </footer>
-
-<a class="cta" href="https://t.me/Pehra_AWS_bot" aria-label="Open the Pehra bot on Telegram">
-  <span class="stack"><small>Free · Hindi · no app</small><span class="face">OPEN THE BOT</span><span class="shadow" aria-hidden="true"></span></span>
-</a>
-
-<script>
-(function(){
-  // blob pattern for CSS backgrounds, built from the inline SVG pattern
-  var blob = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Crect width='60' height='60' fill='%2333C3F0'/%3E%3Cpath d='M8 12q8-6 14 2t-4 10q-12-2-10-12zM36 6q10 0 8 10t-12 4q-4-10 4-14zM16 40q10-4 14 6t-10 10q-8-6-4-16zM44 34q10 2 10 12t-12 6q-4-10 2-18z' fill='%23141414'/%3E%3C/svg%3E\")";
-  document.documentElement.style.setProperty("--blob", blob);
-  var els = document.querySelectorAll(".rv");
-  if (!("IntersectionObserver" in window)) { els.forEach(function(e){ e.classList.add("in"); }); return; }
-  var io = new IntersectionObserver(function(entries){
-    entries.forEach(function(en){ if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); } });
-  }, {threshold: .15});
-  els.forEach(function(e){ io.observe(e); });
-})();
-</script>
 </body>
 </html>
