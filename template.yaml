@@ -244,6 +244,7 @@ Resources:
       Timeout: 120
       Policies:
         - S3CrudPolicy: { BucketName: !Ref MediaBucket }
+        - DynamoDBCrudPolicy: { TableName: !Ref Table }
         - Statement:
             - Effect: Allow
               Action: polly:SynthesizeSpeech

@@ -76,6 +76,18 @@ def to_updates(payload: dict) -> list[dict]:
     return out
 
 
+def flush_pending(d, chat_id: str) -> None:
+    """The user just messaged us, so the 24 h window is open: deliver anything we held back."""
+    from ihcommon import crypto, outbox
+
+    held = repo.take_pending(d.t, crypto.keyed_hash(chat_id, d.key))
+    for msg in held:
+        outbox.enqueue(msg["chat_enc"], msg["kind"], text=msg.get("text", ""), buttons=msg.get("buttons"),
+                       voice_key=msg.get("voice_key", ""))
+    if held:
+        metric("WhatsAppPendingDelivered", len(held))
+
+
 def handler(event, _ctx):
     config.learn_base_url(event)
     method = event.get("requestContext", {}).get("http", {}).get("method", "POST")
@@ -97,7 +109,11 @@ def handler(event, _ctx):
         metric("WebhookRejected", channel="whatsapp")
         return resp(401, "unauthorized")
     d = deps()
-    for update in to_updates(json.loads(body or b"{}")):
+    updates = to_updates(json.loads(body or b"{}"))
+    for chat in {(u.get("message") or u.get("callback_query", {}).get("message", {})).get("chat", {}).get("id")
+                 for u in updates} - {None}:
+        flush_pending(d, chat)
+    for update in updates:
         try:
             if "callback_query" in update:
                 bot.on_callback(d, update["callback_query"])

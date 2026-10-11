@@ -71,6 +71,11 @@ class WhatsApp:
             "action": {"buttons": [{"type": "reply", "reply": {"id": data[:256], "title": label[:MAX_BUTTON_TITLE]}}
                                    for label, data in flat]}}})
 
+    def send_template(self, chat_id: str, name: str, lang: str = "en_US") -> dict:
+        """Pre-approved template: the only message type allowed outside the 24 h window."""
+        return self._send({"to": strip(chat_id), "type": "template",
+                           "template": {"name": name, "language": {"code": lang}}})
+
     def upload_media(self, data: bytes, mime: str, filename: str) -> str:
         r = self._s.post(f"{self._base}/media", headers=self._headers(), timeout=TIMEOUT_S,
                          data={"messaging_product": "whatsapp", "type": mime},

@@ -5,6 +5,7 @@ after repeated failures SQS moves it to the dead-letter queue.
 """
 
 import json
+import os
 import time
 
 import boto3
@@ -39,6 +40,29 @@ def deliver(msg: dict, s3=None) -> str:
     return chat_id
 
 
+REOPEN_TEMPLATE = os.environ.get("WHATSAPP_REOPEN_TEMPLATE", "hello_world")
+REOPEN_LANG = os.environ.get("WHATSAPP_REOPEN_LANG", "en_US")
+REOPEN_EVERY_S = 12 * 3600
+
+
+def hold_and_nudge(msg: dict) -> None:
+    from ihcommon import repo
+    from ihcommon.crypto import keyed_hash
+
+    key = config.param("data-key")
+    chat_id = decrypt(msg["chat_enc"], key)
+    owner = keyed_hash(chat_id, key)
+    t = repo.table()
+    repo.add_pending(t, owner, msg)
+    metric("WhatsAppHeldForWindow")
+    if repo.claim_once(t, f"reopen#{owner}", REOPEN_EVERY_S):
+        try:
+            channels.client_for(chat_id).send_template(chat_id, REOPEN_TEMPLATE, REOPEN_LANG)
+            metric("WhatsAppReopenTemplateSent")
+        except Exception as e:
+            log("reopen_template_failed", error=type(e).__name__, detail=str(e)[:200])
+
+
 def handler(event, _ctx):
     failures, last_sent = [], {}
     for rec in event.get("Records", []):
@@ -54,9 +78,8 @@ def handler(event, _ctx):
             metric("MessageSent", kind=msg["kind"])
             time.sleep(MIN_GAP_S)
         except OutsideWindow:
-            # Expected on the free WhatsApp setup: drop it, the plan is still saved and on the poster.
-            log("whatsapp_outside_window")
-            metric("WhatsAppOutsideWindow")
+            # WhatsApp 24 h rule: hold the message, nudge with an approved template, deliver on reply.
+            hold_and_nudge(msg)
         except PermanentError as e:
             log("send_permanent_failure", detail=str(e)[:200])
             metric("MessagePermanentFailure")

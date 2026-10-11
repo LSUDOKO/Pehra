@@ -280,3 +280,33 @@ def community_points(t, area: str, min_reports: int = 2) -> list[dict]:
     return [{"lat": float(i["lat"]), "lon": float(i["lon"]), "kind": "community_water", "name": "",
              "reports": len(i["reporters"])}
             for i in r["Items"] if len(i.get("reporters", [])) >= min_reports]
+
+
+# ---- WhatsApp pending messages (held until the user reopens the 24 h window) ------
+
+def add_pending(t, owner_hash: str, body: dict, ttl_days: int = 2) -> None:
+    t.put_item(Item={"PK": f"PENDING#{owner_hash}", "SK": f"{time.time():.6f}",
+                     "body": json.dumps(body), "ttl": ttl_in(ttl_days)})
+
+
+def take_pending(t, owner_hash: str) -> list[dict]:
+    r = t.query(KeyConditionExpression=Key("PK").eq(f"PENDING#{owner_hash}"))
+    items = r["Items"]
+    with t.batch_writer() as b:
+        for i in items:
+            b.delete_item(Key={"PK": i["PK"], "SK": i["SK"]})
+    return [json.loads(i["body"]) for i in sorted(items, key=lambda i: i["SK"])]
+
+
+def claim_once(t, key: str, ttl_s: int) -> bool:
+    """True if `key` was not claimed in the last ttl_s seconds (e.g. one re-open template per 12 h)."""
+    now = int(time.time())
+    try:
+        t.put_item(Item={"PK": f"ONCE#{key}", "SK": "X", "ttl": now + ttl_s, "at": now},
+                   ConditionExpression="attribute_not_exists(PK) OR #t < :now",
+                   ExpressionAttributeNames={"#t": "ttl"}, ExpressionAttributeValues={":now": now})
+        return True
+    except ClientError as e:
+        if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
+            return False
+        raise
