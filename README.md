@@ -16,7 +16,7 @@
 
 **Pehra** (पहरा, "guard") turns the free weather forecast into WBGT work-rest plans for India's outdoor workers and families, in Hindi, on WhatsApp, with Hindi phone calls for alerts. For sites with no smartphone there is a ₹600 **Site Box** on AWS IoT Core with a live 3D twin. Everything runs as one serverless stack in Mumbai, and every number comes from code, never from the model.
 
-> Demo video: `video/` (Remotion, about 12 minutes). Script: [`docs/VIDEO_SCRIPT.md`](docs/VIDEO_SCRIPT.md). The WhatsApp part is a real phone recording from 11 October 2026.
+> Demo video: `video/` (Remotion, about 5 minutes). Script: [`docs/VIDEO_SCRIPT.md`](docs/VIDEO_SCRIPT.md). The WhatsApp part is a real phone recording from 11 October 2026.
 
 ---
 
