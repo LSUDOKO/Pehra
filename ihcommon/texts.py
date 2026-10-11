@@ -60,7 +60,9 @@ PEOPLE_HELP = (
     "/device tank 120 - ghar ki tanki ka sensor\n"
     "/delete_my_data - sab data mitaiye"
 )
-ASK_LOCATION_PAANI = "📍 Apni location bhejiye (Attach → Location). Main sabse paas paani aur chhaon bataunga."
+ASK_LOCATION_PAANI = ("📍 Apni location bhejiye (Attach → Location), ya jagah ka naam likhiye "
+                      "(jaise: Connaught Place). Main sabse paas paani aur chhaon bataunga.")
+PAANI_PLACE_NOT_FOUND = "Yeh jagah nahi mili. 📍 location bhejiye, ya paas ki badi jagah ka naam likhiye."
 ASK_LOCATION_ADD = "📍 Jahan paani milta hai, wahan ki location bhejiye."
 POINT_ADDED = "Shukriya! Yeh jagah {n} logon ne batayi hai. 2 log batayenge to sabko dikhegi."
 FAMILY_ASK = "Aise bhejiye: /family_call +91XXXXXXXXXX (unki anumati lekar). Khatre ke din subah unhe Hindi call jayegi."

@@ -106,3 +106,23 @@ def test_whatsapp_style_words_and_questions(env):  # noqa: F811
     assert d.lam.calls[-1]["kind"] == "personal_question"
     tap(app, "menu:aaj")
     assert d.lam.calls[-1]["kind"] == "personal_today"
+
+
+def test_water_finder_by_place_name(env, monkeypatch):  # noqa: F811
+    app, d = env
+    monkeypatch.setattr(people, "_places_for", lambda area: [
+        {"lat": 28.6316, "lon": 77.2168, "kind": "drinking_water", "name": "Pyau"}])
+    monkeypatch.setattr(bot_people, "geocode", lambda name: {"name": "Connaught Place", "lat": 28.6315,
+                                                             "lon": 77.2167} if "connaught" in name.lower() else None)
+    tap(app, "mode:me")
+    location(app, 28.61, 77.21)
+    msg(app, "paani Connaught Place")
+    assert "Connaught Place" in d.bot.sent[-1][1] and "Pyau" in d.bot.sent[-1][1]
+    msg(app, "paani")
+    msg(app, "Connaught Place")
+    assert "Pyau" in d.bot.sent[-1][1] and repo.get_chat_state(d.t, owner_of(d)) == {}
+    msg(app, "paani")
+    msg(app, "Atlantis")
+    assert "nahi mili" in d.bot.sent[-1][1]
+    msg(app, "paani kitna peena chahiye?")
+    assert d.lam.calls[-1]["kind"] == "personal_question"

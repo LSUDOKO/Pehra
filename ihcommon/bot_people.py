@@ -36,6 +36,17 @@ def create_person(d, chat_id: str, owner: str, place: str, lat: float, lon: floa
     ask_step(d, chat_id, 0)
 
 
+def water_near_place(d, chat_id: str, owner: str, place: str) -> None:
+    """'paani Connaught Place': the water finder for a typed landmark, for people who can't share a pin."""
+    hit = geocode(place[:80])
+    if not hit:
+        d.bot.send_text(chat_id, texts.PAANI_PLACE_NOT_FOUND)
+        return
+    repo.set_chat_state(d.t, owner, None)
+    metric("WaterFinderUsed")
+    d.bot.send_text(chat_id, f"📍 {hit['name']}\n" + find_water(d.t, hit["lat"], hit["lon"]))
+
+
 def handle_location(d, chat_id: str, owner: str, lat: float, lon: float, assist) -> None:
     state = repo.get_chat_state(d.t, owner).get("awaiting")
     if state == "place":
@@ -46,6 +57,8 @@ def handle_location(d, chat_id: str, owner: str, lat: float, lon: float, assist)
         metric("WaterPointReported")
         d.bot.send_text(chat_id, texts.POINT_ADDED.format(n=n))
     else:
+        if state == "paani":
+            repo.set_chat_state(d.t, owner, None)
         metric("WaterFinderUsed")
         d.bot.send_text(chat_id, find_water(d.t, lat, lon))
 
@@ -105,8 +118,14 @@ def handle_message(d, chat_id: str, owner: str, text: str, cmd: str, arg: str, a
         d.bot.send_text(chat_id, texts.ASK_PLACE)
         return True
     if cmd == "/paani":
-        repo.set_chat_state(d.t, owner, {"awaiting": "paani"})
-        d.bot.send_text(chat_id, texts.ASK_LOCATION_PAANI)
+        if arg.strip():
+            water_near_place(d, chat_id, owner, arg)
+        else:
+            repo.set_chat_state(d.t, owner, {"awaiting": "paani"})
+            d.bot.send_text(chat_id, texts.ASK_LOCATION_PAANI)
+        return True
+    if state == "paani" and text and not text.startswith("/") and "?" not in text:
+        water_near_place(d, chat_id, owner, text)
         return True
     if cmd == "/add_paani":
         repo.set_chat_state(d.t, owner, {"awaiting": "add_paani"})

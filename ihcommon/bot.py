@@ -133,7 +133,7 @@ ALIASES = {"start": "/start", "hi": "/start", "hello": "/start", "namaste": "/st
            "crew": "/crew", "call": "/test_call", "aaj": "/aaj", "today": "/aaj", "paani": "/paani",
            "water": "/paani", "ghar": "/ghar", "family": "/family_call", "device": "/device",
            "register": "/register", "mitao": "/delete_my_data", "delete": "/delete_my_data"}
-ARG_ALIASES = {"register", "crew", "family", "device"}  # these words take arguments
+ARG_ALIASES = {"register", "crew", "family", "device", "paani", "water"}  # these words take arguments
 MENU_PERSON = [[("Aaj ka plan", "menu:aaj"), ("Paani kahan", "menu:paani"), ("Madad", "menu:help")]]
 MENU_SITE = [[("Abhi plan", "menu:plan"), ("Links/QR", "menu:links"), ("Madad", "menu:help")]]
 
