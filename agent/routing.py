@@ -20,6 +20,8 @@ def is_symptom(text: str) -> bool:
 LOOSEN_WORDS = (
     "skip", "less strict", "loosen", "remove the break", "no break", "work through", "hata do", "hatao",
     "kam karo", "dheela", "chhod do", "mat do", "nahi chahiye break", "break band",
+    "remove the stop", "ignore the plan", "without rest", "without any rest", "no rest", "less rest",
+    "work through", "stop window hata", "aaram kam", "bina aaram", "break hata",
 )
 
 LOOSEN_REPLY = (

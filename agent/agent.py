@@ -91,15 +91,26 @@ def _strands_tools(box: ToolBox) -> list:
             find_window, audit_lookup, search_guidance, first_aid]
 
 
+META_LEAK = ("tool result", "i need to", "i will call", "function call", "<thinking", "as an ai")
+
+
+def _problems(text: str, outputs) -> list[str]:
+    """Unmatched numbers, plus 'meta' if the model leaked its reasoning instead of answering."""
+    bad = verify_numbers(text, outputs)
+    if not text or any(m in text.lower() for m in META_LEAK):
+        bad = bad + ["meta"]
+    return bad
+
+
 def _checked(run, outputs_fn, kind: str) -> tuple[str | None, list[str]]:
     """Run, check numbers, retry once with the unmatched list. None means use the template."""
     text = run(None)
-    bad = verify_numbers(text, outputs_fn())
+    bad = _problems(text, outputs_fn())
     if bad:
         metric("NumberCheckFailed", kind=kind)
         log("number_check_failed", kind=kind, unmatched=bad, attempt=1)
-        text = run(bad)
-        bad = verify_numbers(text, outputs_fn())
+        text = run([b for b in bad if b != "meta"] or ["(answer the question directly, no reasoning)"])
+        bad = _problems(text, outputs_fn())
         if bad:
             metric("NumberCheckFallback", kind=kind)
             log("number_check_failed", kind=kind, unmatched=bad, attempt=2)
@@ -142,7 +153,9 @@ def fallback_answer(box: ToolBox) -> str:
         plan = box._plan(day)
     except ValueError:
         return "Maaf kijiye, abhi jawab nahi de sakta. Kripya /plan_now bhejiye."
-    return "Abhi AI jawab nahi de pa raha. Aaj ka tay plan:\n\n" + render_plan_hi(plan)
+    return ("Maaf kijiye, abhi AI jawab nahi de pa raha. "
+            "Main sirf garmi aur kaam ke plan mein madad karta hoon. Aaj ka tay plan:\n\n"
+            + render_plan_hi(plan))
 
 
 def plan_intro(plan: dict, model_id: str, region: str) -> str | None:

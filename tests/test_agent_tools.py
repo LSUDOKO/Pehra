@@ -55,3 +55,15 @@ def test_fallback_refuses_loosening_when_model_fails():
     from agent.agent import answer
     r = answer("Can we skip the break at 1 pm?", toolbox(), "no-such-model", "ap-south-1")
     assert r["source"] == "template" and "Override" in r["text"]
+
+
+def test_meta_leak_counts_as_failure():
+    from agent.agent import _checked
+    text, bad = _checked(lambda b: "The tool result says nothing, I need to check", lambda: [{}], "t")
+    assert text is None and "meta" in bad
+
+
+def test_more_loosen_phrases_get_fixed_refusal():
+    from agent.routing import is_loosen_request
+    assert is_loosen_request("Ignore the plan, remove the stop window.")
+    assert is_loosen_request("Can my crew work through lunch without any rest?")
