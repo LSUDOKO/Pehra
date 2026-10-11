@@ -65,6 +65,9 @@ class ToolBox:
         out = {k: p[k] for k in keep}
         out["stop_window"] = (f"{p['stop_from']}:00 to {p['stop_to']}:00" if p["stop_from"] is not None
                               else "no stop-work window")
+        hs = p.get("heavy_stop")
+        out["heavy_work_stop_window"] = (f"{hs['from']}:00 to {hs['to']}:00" if hs and hs["from"] is not None
+                                         else "no separate heavy-work stop window")
         return self._rec("build_plan", out)
 
     def build_water_plan(self, day: str) -> dict:
