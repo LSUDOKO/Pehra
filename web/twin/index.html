@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>{{SITE_NAME}} · Pehra Twin</title>
+<meta name="description" content="Live 3D digital twin of a Pehra construction site: heat risk, rest, water tank, drain and SOS from the Site Box.">
+<meta name="pehra-state-url" content="{{STATE_URL}}">
+<meta name="pehra-site-name" content="{{SITE_NAME}}">
+<meta name="theme-color" content="#FFE1CF">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='13' fill='%23FF8A1F' stroke='%23141414' stroke-width='3'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Roboto+Flex:opsz,wght@8..144,400;8..144,600;8..144,800&display=swap" rel="stylesheet">
+<style>
+:root{--peach:#FFE1CF;--peach2:#FFF3EA;--sun:#FF8A1F;--red:#E8282B;--water:#33C3F0;--neem:#12805C;--ink:#141414;--paper:#FFFBF7;--muted:#5d524b;--lvl:#FF8A1F}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden}
+body{background:linear-gradient(180deg,#FFD3B8 0%,var(--peach) 45%,var(--peach2) 100%);color:var(--ink);font-family:"Roboto Flex",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+#scene{position:fixed;inset:0;display:block;touch-action:none}
+#labels{position:fixed;inset:0;pointer-events:none}
+.tag{font:800 11px/1 "Roboto Flex",sans-serif;letter-spacing:.06em;background:var(--paper);color:var(--ink);border:2px solid var(--ink);border-radius:99px;padding:5px 9px;white-space:nowrap;box-shadow:2px 2px 0 var(--ink);text-transform:uppercase}
+.tag b{font-family:"Bowlby One",sans-serif;font-weight:400;letter-spacing:.02em}
+.tag.water{background:var(--water)}.tag.alert{background:var(--red);color:#fff}
+#hud{position:fixed;top:16px;left:16px;width:316px;background:var(--paper);border:2.5px solid var(--ink);border-radius:18px;box-shadow:5px 5px 0 var(--ink);padding:16px 16px 14px;z-index:5}
+.hud-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.brand{font:400 13px "Bowlby One",sans-serif;letter-spacing:.04em;color:var(--neem)}
+.mode{font:800 10px/1 "Roboto Flex",sans-serif;letter-spacing:.08em;text-transform:uppercase;border:2px solid var(--ink);border-radius:99px;padding:5px 8px;display:inline-flex;align-items:center;gap:6px;background:#fff}
+.mode i{width:8px;height:8px;border-radius:50%;background:var(--neem);box-shadow:0 0 0 0 #12805C88;animation:ping 1.6s infinite}
+.mode.demo i{background:var(--sun)}.mode.off i{background:#999;animation:none}
+@keyframes ping{0%{box-shadow:0 0 0 0 #12805C88}80%,100%{box-shadow:0 0 0 7px #12805C00}}
+h1{font:400 22px/1.1 "Bowlby One",sans-serif;margin:10px 0 2px;letter-spacing:.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sub{font-size:12px;color:var(--muted);margin:0}
+.wbgt{display:flex;align-items:flex-end;gap:12px;margin:12px 0 10px}
+.wbgt .num{font:400 58px/0.9 "Bowlby One",sans-serif;letter-spacing:-.02em}
+.wbgt .num small{font-size:22px;letter-spacing:0}
+.wbgt .meta{font-size:11px;font-weight:600;color:var(--muted);line-height:1.35;padding-bottom:3px}
+.level{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.lvl{font:400 15px/1 "Bowlby One",sans-serif;letter-spacing:.03em;background:var(--lvl);color:#fff;border:2px solid var(--ink);border-radius:10px;padding:7px 10px;text-shadow:0 1px 0 #0004;transition:background .5s}
+.lvl.dark{color:var(--ink);text-shadow:none}
+.aaram{font:400 13px/1 "Bowlby One",sans-serif;background:var(--red);color:#fff;border:2px solid var(--ink);border-radius:10px;padding:7px 10px;animation:blink 1s steps(2) infinite;display:none}
+.aaram.on{display:inline-block}
+@keyframes blink{50%{background:var(--ink)}}
+.rest{margin:10px 0 12px;font-size:13px;font-weight:600}.rest b{font:400 17px "Bowlby One",sans-serif}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cell{border:2px solid var(--ink);border-radius:12px;padding:8px 10px;background:#fff}
+.cell span{display:block;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.cell b{font:400 20px/1.2 "Bowlby One",sans-serif}
+.bar{height:6px;border-radius:6px;background:#eadfd6;margin-top:5px;overflow:hidden}.bar i{display:block;height:100%;background:var(--water);transition:width .8s}
+.pills{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.pill{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;border:2px solid var(--ink);border-radius:99px;padding:5px 9px;background:#eee;color:#777}
+.pill.on{background:var(--water);color:var(--ink)}.pill.pump.on{background:var(--neem);color:#fff}.pill.sos.on{background:var(--red);color:#fff}
+.foot{display:flex;justify-content:space-between;margin-top:10px;font-size:11px;color:var(--muted);font-weight:600}
+#conn{color:var(--red);font-weight:800;display:none}#conn.on{display:inline}
+#vignette{position:fixed;inset:0;pointer-events:none;opacity:0;transition:opacity .4s;box-shadow:inset 0 0 120px 30px #E8282Bcc;z-index:4}
+#vignette.on{opacity:1;animation:vig 1.1s ease-in-out infinite}
+@keyframes vig{50%{box-shadow:inset 0 0 60px 10px #E8282B88}}
+#sosbar{position:fixed;top:16px;right:16px;z-index:6;font:400 14px "Bowlby One",sans-serif;background:var(--red);color:#fff;border:2.5px solid var(--ink);box-shadow:4px 4px 0 var(--ink);border-radius:12px;padding:9px 13px;display:none}
+#sosbar.on{display:block}
+#hint{position:fixed;right:16px;bottom:14px;font-size:11px;font-weight:700;color:var(--ink);background:#FFFBF7cc;border:2px solid var(--ink);border-radius:99px;padding:5px 10px;z-index:3}
+@media (max-width:640px){
+ #hud{top:auto;bottom:0;left:0;right:0;width:auto;border-radius:20px 20px 0 0;border-width:2.5px 0 0;box-shadow:0 -4px 0 var(--ink);padding:12px 16px calc(12px + env(safe-area-inset-bottom))}
+ #hud::before{content:"";display:block;width:40px;height:4px;border-radius:4px;background:#d6c8bd;margin:-4px auto 8px}
+ h1{font-size:17px;margin-top:6px}.sub{display:none}
+ .wbgt{margin:6px 0 6px}.wbgt .num{font-size:44px}
+ .rest{margin:6px 0 8px}
+ .grid{grid-template-columns:repeat(2,1fr);gap:6px}.cell{padding:6px 9px}.cell b{font-size:17px}
+ .pills{margin-top:7px}.foot{margin-top:7px}
+ #hint{display:none}#sosbar{top:12px;right:12px;font-size:12px}
+ .tag{font-size:9px;padding:4px 7px}
+}
+@media (prefers-reduced-motion:reduce){.mode i,.aaram,#vignette.on{animation:none!important}}
+</style>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
+</script>
+</head>
+<body>
+<canvas id="scene" aria-label="3D digital twin of the construction site"></canvas>
+<div id="labels"></div>
+<div id="vignette"></div>
+<div id="sosbar" role="alert">SOS · madad chahiye</div>
+<section id="hud" aria-live="polite">
+  <div class="hud-top"><span class="brand">PEHRA TWIN</span><span class="mode" id="mode"><i></i><span id="modeText">LIVE · AWS IoT Core</span></span></div>
+  <h1 id="site">Site</h1>
+  <p class="sub" id="box">Site Box</p>
+  <div class="wbgt"><div class="num"><span id="wbgt">--</span><small>°C</small></div><div class="meta">WBGT now<br>limit <span id="limit">--</span>°C · next <span id="fc">--</span>°C</div></div>
+  <div class="level"><span class="lvl" id="lvl">--</span><span class="aaram" id="aaram">AARAM ABHI</span></div>
+  <div class="rest"><b id="rest">--</b> min aaram / ghanta</div>
+  <div class="grid">
+    <div class="cell"><span>Tank</span><b id="tank">--%</b><div class="bar"><i id="tankbar" style="width:0"></i></div></div>
+    <div class="cell"><span>Naali (drain)</span><b id="drain">-- cm</b><div class="bar"><i id="drainbar" style="width:0"></i></div></div>
+  </div>
+  <div class="pills"><span class="pill" id="pfan">Fan off</span><span class="pill pump" id="ppump">Pump off</span><span class="pill sos" id="psos">SOS clear</span></div>
+  <div class="foot"><span>Updated <span id="upd">--</span></span><span id="conn">Connecting…</span></div>
+</section>
+<div id="hint">Drag to orbit · pinch / scroll to zoom</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+/* ---------- config ---------- */
+const meta = n => (document.querySelector(`meta[name="${n}"]`)||{}).content || '';
+const STATE_URL = meta('pehra-state-url');
+const SITE_FALLBACK = meta('pehra-site-name');
+const params = new URLSearchParams(location.search);
+const DEMO = params.get('demo') === '1' || !STATE_URL || STATE_URL.includes('{{');
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const C = { peach:0xFFE1CF, sun:0xFF8A1F, red:0xE8282B, water:0x33C3F0, neem:0x12805C, ink:0x141414,
+  dust:0xE8C7A0, dust2:0xDDB78C, concrete:0xC9C3B8, brick:0xC4583A, bamboo:0xD9A84E, tin:0xA8BCC6, road:0x5E5853, skin:0x8D5A3B, hat:0xFFC20E };
+const LEVELS = [['kam','KAM','#2FB344'],['saavdhaan','SAAVDHAAN','#FFC20E'],['zyada','ZYADA','#FF8A1F'],['bahut_zyada','BAHUT ZYADA','#E8282B'],['khatarnak','KHATARNAK','#A266B0']];
+
+/* ---------- renderer / scene ---------- */
+const canvas = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+const labelRenderer = new CSS2DRenderer();
+labelRenderer.domElement.style.position = 'fixed'; labelRenderer.domElement.style.inset = '0'; labelRenderer.domElement.style.pointerEvents = 'none';
+document.getElementById('labels').appendChild(labelRenderer.domElement);
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(C.peach, 38, 90);
+const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 300);
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true; controls.dampingFactor = 0.07;
+controls.target.set(-1.5, 1.6, 0.5);
+controls.minDistance = 12; controls.maxDistance = 80;
+controls.maxPolarAngle = Math.PI * 0.46; controls.minPolarAngle = 0.25;
+controls.autoRotate = !REDUCED; controls.autoRotateSpeed = 0.45;
+controls.enablePan = false;
+
+/* toon gradient for flat stylised shading */
+const grad = new THREE.DataTexture(new Uint8Array([120,120,120,255, 200,200,200,255, 255,255,255,255]), 3, 1);
+grad.minFilter = grad.magFilter = THREE.NearestFilter; grad.needsUpdate = true;
+const mat = (color, o={}) => new THREE.MeshToonMaterial({ color, gradientMap:grad, ...o });
+const inkLine = new THREE.LineBasicMaterial({ color:C.ink, transparent:true, opacity:0.75 });
+const hullMat = new THREE.MeshBasicMaterial({ color:C.ink, side:THREE.BackSide });
+
+function mesh(geo, material, { cast=true, receive=true, edges=false, hull=0 }={}) {
+  const m = new THREE.Mesh(geo, material);
+  m.castShadow = cast; m.receiveShadow = receive;
+  if (edges) m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 25), inkLine));
+  if (hull) { const h = new THREE.Mesh(geo, hullMat); h.scale.setScalar(1 + hull); m.add(h); }
+  return m;
+}
+const box = (w,h,d,c,o) => mesh(new THREE.BoxGeometry(w,h,d), typeof c === 'number' ? mat(c) : c, { edges:true, ...o });
+const cyl = (rt,rb,h,c,seg=12,o) => mesh(new THREE.CylinderGeometry(rt,rb,h,seg), typeof c === 'number' ? mat(c) : c, o);
+function label(html, cls='') { const d = document.createElement('div'); d.className = 'tag ' + cls; d.innerHTML = html; return new CSS2DObject(d); }
+
+/* ---------- lights ---------- */
+const hemi = new THREE.HemisphereLight(0xFFF1E6, 0xC79A72, 1.1); scene.add(hemi);
+const sunLight = new THREE.DirectionalLight(0xFFE2C2, 2.2);
+sunLight.position.set(-16, 30, -4); sunLight.castShadow = true;
+sunLight.shadow.mapSize.setScalar(innerWidth < 640 ? 1024 : 2048);
+Object.assign(sunLight.shadow.camera, { left:-28, right:28, top:28, bottom:-28, near:1, far:90 });
+sunLight.shadow.bias = -0.0005; sunLight.shadow.normalBias = 0.03;
+scene.add(sunLight);
+
+/* sun disc + halo */
+function radialTex(inner, outer) {
+  const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d');
+  const r = g.createRadialGradient(64,64,0,64,64,64); r.addColorStop(0, inner); r.addColorStop(1, outer);
+  g.fillStyle = r; g.fillRect(0,0,128,128); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+const sunGroup = new THREE.Group(); sunGroup.position.set(-8, 17, -44); scene.add(sunGroup);
+const sunDisc = new THREE.Mesh(new THREE.CircleGeometry(4, 40), new THREE.MeshBasicMaterial({ color:C.sun, fog:false }));
+const sunRing = new THREE.Mesh(new THREE.RingGeometry(4, 4.5, 40), new THREE.MeshBasicMaterial({ color:C.ink, fog:false }));
+const sunHalo = new THREE.Sprite(new THREE.SpriteMaterial({ map:radialTex('rgba(255,170,80,.75)','rgba(255,170,80,0)'), fog:false, depthWrite:false, transparent:true }));
+sunHalo.scale.setScalar(26); sunGroup.add(sunHalo, sunDisc, sunRing);
+[sunHalo, sunDisc, sunRing].forEach((m, i) => { m.material.depthTest = false; m.material.transparent = true; m.renderOrder = 50 + i; });
+
+/* ---------- ground, road, drain ---------- */
+const DRAIN_Z = 9.2, DRAIN_W = 1.6, DRAIN_DEPTH = 1.0;
+const groundSite = mesh(new THREE.PlaneGeometry(160, 90), mat(C.dust), { cast:false });
+groundSite.rotation.x = -Math.PI/2; groundSite.position.set(0, 0, DRAIN_Z - DRAIN_W/2 - 45); scene.add(groundSite);
+const groundFar = mesh(new THREE.PlaneGeometry(160, 60), mat(C.dust2), { cast:false });
+groundFar.rotation.x = -Math.PI/2; groundFar.position.set(0, 0, DRAIN_Z + DRAIN_W/2 + 30); scene.add(groundFar);
+const road = mesh(new THREE.PlaneGeometry(160, 6), mat(C.road), { cast:false });
+road.rotation.x = -Math.PI/2; road.position.set(0, 0.01, DRAIN_Z + DRAIN_W/2 + 3.4); scene.add(road);
+for (let x = -60; x < 60; x += 5) { const s = box(2.4, 0.02, 0.18, 0xF2EDE4, { edges:false, cast:false }); s.position.set(x, 0.02, road.position.z); scene.add(s); }
+/* trench: floor + two walls + curbs */
+const trench = new THREE.Group(); trench.position.z = DRAIN_Z; scene.add(trench);
+const tFloor = box(160, 0.1, DRAIN_W, 0x6D655C, { edges:false, cast:false }); tFloor.position.y = -DRAIN_DEPTH; trench.add(tFloor);
+for (const s of [-1, 1]) {
+  const w = box(160, DRAIN_DEPTH, 0.12, 0x8E8679, { edges:false, cast:false }); w.position.set(0, -DRAIN_DEPTH/2, s*DRAIN_W/2); trench.add(w);
+  const curb = box(160, 0.16, 0.3, 0xBDB5A8, { edges:false }); curb.position.set(0, 0.08, s*(DRAIN_W/2 + 0.15)); trench.add(curb);
+}
+const waterMat = new THREE.MeshPhongMaterial({ color:C.water, emissive:0x0b5d78, emissiveIntensity:0.25, shininess:90, transparent:true, opacity:0.88 });
+const drainWater = new THREE.Mesh(new THREE.BoxGeometry(160, 1, DRAIN_W - 0.14), waterMat);
+drainWater.receiveShadow = true; trench.add(drainWater);
+const puddles = new THREE.Group(); scene.add(puddles);
+[[-6, 1.6, 4.4], [3, 2.6, 3.4], [11, 3.6, 2.6], [-16, 2.2, 3.6], [19, 3.0, 2.8]].forEach(([x, dz, r]) => {
+  const p = new THREE.Mesh(new THREE.CircleGeometry(r, 28), waterMat); p.rotation.x = -Math.PI/2;
+  p.position.set(x, 0.04, DRAIN_Z + dz); p.scale.setScalar(0.001); p.userData.r = r; p.receiveShadow = true; puddles.add(p);
+});
+const drainTag = label('NAALI <b>--</b>'); drainTag.position.set(-3, 0.9, DRAIN_Z); scene.add(drainTag);
+
+/* site boundary: tin hoarding at the back, bricks pile, sand heap */
+for (let x = -24; x <= 24; x += 4) { const h = box(4, 2.2, 0.12, x % 8 === 0 ? C.neem : 0x1A9A6E); h.position.set(x, 1.1, -15); scene.add(h); }
+const sand = mesh(new THREE.ConeGeometry(2.2, 1.4, 9), mat(0xE7B97E), { edges:false }); sand.position.set(-14, 0.7, -6); scene.add(sand);
+for (let i = 0; i < 4; i++) for (let j = 0; j < 3 - (i>1); j++) { const b = box(1.2, 0.36, 0.6, C.brick); b.position.set(3.5 + j*1.25, 0.18 + i*0.37, -9 + (i%2)*0.1); scene.add(b); }
+
+/* ---------- half-built building ---------- */
+const bld = new THREE.Group(); bld.position.set(-4.5, 0, -5.5); scene.add(bld);
+const FW = 9, FD = 6.5, FH = 3;
+for (let f = 0; f < 3; f++) {
+  const cols = f === 2 ? [[0,0],[1,0],[0,1],[2,0]] : [[0,0],[1,0],[2,0],[0,1],[1,1],[2,1]];
+  for (const [i, j] of cols) { const c = box(0.45, FH, 0.45, C.concrete); c.position.set(-FW/2 + i*FW/2, f*FH + FH/2, -FD/2 + j*FD); bld.add(c); }
+  if (f < 2) { const s = box(FW + 0.6, 0.32, FD + 0.6, 0xD8D2C7); s.position.y = (f+1)*FH; bld.add(s); }
+  if (f === 2) for (let k = 0; k < 7; k++) { const r = cyl(0.04, 0.04, 1.1, 0x7A4A2A, 5, { receive:false }); r.position.set(-FW/2 + (k%4)*FW/3, 2*FH + FH + 0.3 + (k>3?0:0.0), k > 3 ? FD/2 : -FD/2); if (k < 4 || k%2) bld.add(r); }
+}
+/* brick infill on ground floor (partly built) */
+const wallB = box(FW, 2.6, 0.3, C.brick); wallB.position.set(0, 1.3, -FD/2); bld.add(wallB);
+const wallL = box(0.3, 2.6, FD*0.6, C.brick); wallL.position.set(-FW/2, 1.3, -FD*0.2); bld.add(wallL);
+const wallF = box(FW*0.45, 1.4, 0.3, C.brick); wallF.position.set(-FW*0.27, 0.7, FD/2); bld.add(wallF);
+const wall2 = box(FW*0.6, 1.9, 0.3, 0xD06A49); wall2.position.set(-FW*0.2, FH + 1.1, -FD/2); bld.add(wall2);
+/* bamboo scaffolding on the front */
+const scaf = new THREE.Group(); scaf.position.set(0, 0, FD/2 + 1.1); bld.add(scaf);
+for (let i = 0; i <= 5; i++) for (const dz of [0, 0.9]) { const p = cyl(0.06, 0.07, 8.2, C.bamboo, 6); p.position.set(-FW/2 - 0.4 + i*(FW + 0.8)/5, 4.1, dz); scaf.add(p); }
+for (let y = 1.5; y < 8; y += 2) for (const dz of [0, 0.9]) { const p = cyl(0.05, 0.05, FW + 1, C.bamboo, 6); p.rotation.z = Math.PI/2; p.position.set(0, y, dz); scaf.add(p); }
+for (let y = 1.55; y < 7; y += 2) { const plank = box(FW + 0.6, 0.08, 0.85, 0xB98B53); plank.position.set(0, y + 0.08, 0.45); scaf.add(plank); }
+const net = new THREE.Mesh(new THREE.PlaneGeometry(FW*0.4, 5), new THREE.MeshToonMaterial({ color:C.neem, transparent:true, opacity:0.55, side:THREE.DoubleSide, gradientMap:grad }));
+net.position.set(FW*0.28, 5, 1.0); scaf.add(net);
+
+/* ---------- rest shed with tin roof and bench ---------- */
+const shed = new THREE.Group(); shed.position.set(9, 0, 1); scene.add(shed);
+for (const [x, z] of [[-3,-1.6],[3,-1.6],[-3,1.6],[3,1.6]]) { const p = cyl(0.09, 0.09, z < 0 ? 3.1 : 2.6, 0x6B6B6B, 8); p.position.set(x, z < 0 ? 1.55 : 1.3, z); shed.add(p); }
+const roof = new THREE.Group(); roof.position.set(0, 2.88, 0); roof.rotation.x = 0.16; shed.add(roof);
+const roofSlab = box(6.8, 0.08, 4.2, C.tin); roof.add(roofSlab);
+for (let x = -3.2; x <= 3.25; x += 0.4) { const rib = cyl(0.06, 0.06, 4.2, 0xC7D6DD, 6, { cast:false }); rib.rotation.x = Math.PI/2; rib.position.set(x, 0.06, 0); roof.add(rib); }
+const tarp = box(6, 2.2, 0.06, 0x2D6CB5); tarp.position.set(0, 1.5, -1.6); shed.add(tarp);
+const bench = box(4.6, 0.12, 0.6, 0x9B6A3C); bench.position.set(0, 0.55, -0.6); shed.add(bench);
+for (const x of [-2, 2]) { const l = box(0.12, 0.5, 0.5, 0x6E4A2A); l.position.set(x, 0.27, -0.6); shed.add(l); }
+const matka = mesh(new THREE.SphereGeometry(0.32, 14, 10), mat(0xB4562F), { hull:0.06 }); matka.position.set(2.6, 0.32, 0.9); shed.add(matka);
+const shedTag = label('AARAM GHAR'); shedTag.position.set(1.2, 4.3, 0); shed.add(shedTag);
+
+/* mist fan */
+const fan = new THREE.Group(); fan.position.set(13.2, 0, 2.2); fan.rotation.y = -Math.PI/2 - 0.35; scene.add(fan);
+const fanPole = cyl(0.07, 0.12, 2.0, 0x444444, 8); fanPole.position.y = 1.0; fan.add(fanPole);
+const fanBase = cyl(0.5, 0.55, 0.12, 0x333333, 16); fanBase.position.y = 0.06; fan.add(fanBase);
+const fanHead = new THREE.Group(); fanHead.position.set(0, 2.15, 0); fan.add(fanHead);
+const guard = mesh(new THREE.TorusGeometry(0.62, 0.05, 6, 28), mat(0x333333)); fanHead.add(guard);
+const rotor = new THREE.Group(); fanHead.add(rotor);
+for (let i = 0; i < 3; i++) { const b = box(0.22, 0.55, 0.03, 0x8BD8F5, { edges:true }); b.position.y = 0.3; const arm = new THREE.Group(); arm.rotation.z = i * Math.PI*2/3; b.rotation.y = 0.4; arm.add(b); rotor.add(arm); }
+rotor.add(mesh(new THREE.SphereGeometry(0.11, 10, 8), mat(C.ink)));
+const MIST_N = 160, mistPos = new Float32Array(MIST_N*3), mistLife = new Float32Array(MIST_N);
+const mistGeo = new THREE.BufferGeometry(); mistGeo.setAttribute('position', new THREE.BufferAttribute(mistPos, 3));
+const mist = new THREE.Points(mistGeo, new THREE.PointsMaterial({ color:0xA8E8FF, size:0.38, transparent:true, opacity:0.85, depthWrite:false, map:radialTex('rgba(255,255,255,1)','rgba(255,255,255,0)') }));
+mist.position.copy(fanHead.position); fan.add(mist);
+for (let i = 0; i < MIST_N; i++) mistLife[i] = Math.random();
+const fanTag = label('MIST FAN <b>OFF</b>'); fanTag.position.set(0, 3.0, 0); fan.add(fanTag);
+
+/* ---------- water tank + pump + pipe ---------- */
+const tank = new THREE.Group(); tank.position.set(-14, 0, 4); scene.add(tank);
+const TANK_H = 3, TANK_R = 1.5, STAND = 1.4;
+for (const [x, z] of [[-1,-1],[1,-1],[-1,1],[1,1]]) { const l = box(0.18, STAND, 0.18, 0x5E5E5E); l.position.set(x, STAND/2, z); tank.add(l); }
+const deck = box(2.6, 0.14, 2.6, 0x777777); deck.position.y = STAND; tank.add(deck);
+const shell = new THREE.Mesh(new THREE.CylinderGeometry(TANK_R, TANK_R, TANK_H, 32, 1, true),
+  new THREE.MeshPhysicalMaterial({ color:0xFFFFFF, transparent:true, opacity:0.22, roughness:0.15, side:THREE.DoubleSide, depthWrite:false }));
+shell.position.y = STAND + TANK_H/2; tank.add(shell);
+for (const y of [0, TANK_H*0.5, TANK_H]) { const r = mesh(new THREE.TorusGeometry(TANK_R + 0.02, 0.05, 6, 40), mat(C.ink), { cast:false }); r.rotation.x = Math.PI/2; r.position.y = STAND + y; tank.add(r); }
+const lid = cyl(TANK_R + 0.05, TANK_R + 0.05, 0.12, 0x2B2B2B, 32); lid.position.y = STAND + TANK_H + 0.06; tank.add(lid);
+const tankWater = new THREE.Mesh(new THREE.CylinderGeometry(TANK_R - 0.07, TANK_R - 0.07, 1, 32),
+  new THREE.MeshPhongMaterial({ color:C.water, emissive:0x0b5d78, emissiveIntensity:0.3, shininess:80, transparent:true, opacity:0.9 }));
+tankWater.position.y = STAND + 0.5; tank.add(tankWater);
+const tankTag = label('TANK <b>--%</b>', 'water'); tankTag.position.set(0, STAND + TANK_H + 0.8, 0); tank.add(tankTag);
+/* pump */
+const pump = new THREE.Group(); pump.position.set(-10.6, 0, 7.6); scene.add(pump);
+const pumpBody = box(1.1, 0.8, 0.8, C.neem); pumpBody.position.y = 0.4; pump.add(pumpBody);
+const impeller = new THREE.Group(); impeller.position.set(0, 0.45, 0.42); pump.add(impeller);
+impeller.add(mesh(new THREE.CircleGeometry(0.3, 20), new THREE.MeshBasicMaterial({ color:0x1d1d1d }), { cast:false }));
+for (let i = 0; i < 4; i++) { const v = box(0.08, 0.5, 0.04, 0xFFC20E, { edges:false, cast:false }); v.rotation.z = i * Math.PI/4; v.position.z = 0.03; impeller.add(v); }
+const pumpLed = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6), new THREE.MeshBasicMaterial({ color:0x444444 })); pumpLed.position.set(0.4, 0.86, 0.3); pump.add(pumpLed);
+const pipeCurve = new THREE.CatmullRomCurve3([
+  new THREE.Vector3(-10.6, 0.5, 7.2), new THREE.Vector3(-11.8, 0.25, 6.6), new THREE.Vector3(-13.2, 0.25, 5.8),
+  new THREE.Vector3(-13.6, 2.4, 5.3), new THREE.Vector3(-13.9, STAND + TANK_H + 0.4, 4.6), new THREE.Vector3(-14, STAND + TANK_H + 0.1, 4.0)]);
+const pipe = new THREE.Mesh(new THREE.TubeGeometry(pipeCurve, 64, 0.13, 10), new THREE.MeshPhysicalMaterial({ color:0xE8F6FF, transparent:true, opacity:0.4, roughness:0.2, depthWrite:false }));
+scene.add(pipe);
+const FLOW_N = 26, flow = new THREE.InstancedMesh(new THREE.SphereGeometry(0.075, 8, 6), new THREE.MeshBasicMaterial({ color:0x1E9FD8 }), FLOW_N);
+scene.add(flow);
+const pumpTag = label('PUMP <b>OFF</b>'); pumpTag.position.set(0, 1.5, 0); pump.add(pumpTag);
+
+/* ---------- risk light tower ---------- */
+const tower = new THREE.Group(); tower.position.set(2.6, 0, -0.6); scene.add(tower);
+const tPole = cyl(0.11, 0.16, 6.2, 0x3A3A3A, 10); tPole.position.y = 3.1; tower.add(tPole);
+const tBase = box(1, 0.3, 1, 0x555555); tBase.position.y = 0.15; tower.add(tBase);
+const beaconMat = new THREE.MeshStandardMaterial({ color:0xFF8A1F, emissive:0xFF8A1F, emissiveIntensity:1.2, roughness:0.4 });
+const beacon = mesh(new THREE.SphereGeometry(0.72, 28, 20), beaconMat, { hull:0.05 }); beacon.position.y = 7.0; tower.add(beacon);
+const cap = cyl(0.5, 0.75, 0.22, C.ink, 20); cap.position.y = 7.78; tower.add(cap);
+const collar = cyl(0.7, 0.45, 0.25, C.ink, 20); collar.position.y = 6.25; tower.add(collar);
+const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map:radialTex('rgba(255,255,255,.9)','rgba(255,255,255,0)'), color:0xFF8A1F, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending }));
+glow.position.y = 7.0; glow.scale.setScalar(4); tower.add(glow);
+const beaconLight = new THREE.PointLight(0xFF8A1F, 18, 16, 1.6); beaconLight.position.y = 7.0; tower.add(beaconLight);
+const towerTag = label('JOKHIM <b>--</b>'); towerTag.position.set(0, 8.6, 0); tower.add(towerTag);
+
+/* ---------- site box on a pole with OLED ---------- */
+const sbox = new THREE.Group(); sbox.position.set(5.4, 0, 5.2); sbox.rotation.y = -0.5; scene.add(sbox);
+const sPole = cyl(0.06, 0.06, 2.2, 0x666666, 8); sPole.position.y = 1.1; sbox.add(sPole);
+const sCase = box(0.75, 0.9, 0.32, 0x9AA0A6); sCase.position.y = 2.4; sbox.add(sCase);
+const ant = cyl(0.02, 0.02, 0.6, C.ink, 4); ant.position.set(0.28, 3.1, 0); sbox.add(ant);
+const sCanvas = document.createElement('canvas'); sCanvas.width = 256; sCanvas.height = 128;
+const sCtx = sCanvas.getContext('2d'); const sTex = new THREE.CanvasTexture(sCanvas); sTex.colorSpace = THREE.SRGBColorSpace;
+const screen = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.3), new THREE.MeshBasicMaterial({ map:sTex, toneMapped:false }));
+screen.position.set(0, 2.55, 0.165); sbox.add(screen);
+const sosBtn = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.05, 14), new THREE.MeshStandardMaterial({ color:C.red, emissive:C.red, emissiveIntensity:0.2 }));
+sosBtn.rotation.x = Math.PI/2; sosBtn.position.set(0.2, 2.15, 0.17); sbox.add(sosBtn);
+const ldr = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 6), new THREE.MeshBasicMaterial({ color:0xFFE38A })); ldr.position.set(-0.2, 2.15, 0.17); sbox.add(ldr);
+const sTag = label('SITE BOX · ESP32'); sTag.position.set(0, 3.5, 0); sbox.add(sTag);
+function drawScreen(lines) {
+  sCtx.fillStyle = '#05121a'; sCtx.fillRect(0, 0, 256, 128);
+  sCtx.fillStyle = '#7FE3FF'; sCtx.font = 'bold 22px monospace'; sCtx.textBaseline = 'top';
+  (lines || []).slice(0, 4).forEach((l, i) => sCtx.fillText(String(l).slice(0, 21), 8, 8 + i*29));
+  sTex.needsUpdate = true;
+}
+
+/* ---------- workers ---------- */
+const SHIRTS = [0xFF8A1F, 0x2D6CB5, 0xF4F0E6, 0xC0392B, 0x7A5BA6, 0x12805C];
+const WORK_SPOTS = [[-7.5, 2.6], [-3.6, 3.3], [0.2, 2.2], [-1.6, -0.4], [7.2, -5.6], [-12, -4.6]];
+const REST_SPOTS = [[-1.8, -0.2], [-0.9, -0.2], [0, -0.2], [0.9, -0.2], [1.8, -0.2], [-2.4, 1.0]].map(([x, z]) => [shed.position.x + x, shed.position.z + z]);
+const workers = SHIRTS.map((shirt, i) => {
+  const g = new THREE.Group();
+  const body = new THREE.Group(); g.add(body);
+  const legs = mesh(new THREE.CapsuleGeometry(0.2, 0.45, 4, 10), mat(0x3B3A44), { hull:0.07 }); legs.position.y = 0.43; body.add(legs);
+  const torso = mesh(new THREE.CapsuleGeometry(0.3, 0.45, 4, 12), mat(shirt), { hull:0.06 }); torso.position.y = 1.05; body.add(torso);
+  const head = mesh(new THREE.SphereGeometry(0.24, 16, 12), mat(C.skin), { hull:0.07 }); head.position.y = 1.72; body.add(head);
+  const hat = mesh(new THREE.SphereGeometry(0.27, 16, 8, 0, Math.PI*2, 0, Math.PI/2), mat(C.hat), { hull:0.05 }); hat.position.y = 1.8; body.add(hat);
+  const brim = cyl(0.36, 0.36, 0.04, C.hat, 16); brim.position.y = 1.8; body.add(brim);
+  if (i === 1 || i === 4) { const tasla = mesh(new THREE.CylinderGeometry(0.42, 0.22, 0.14, 16), mat(0x3A3A3A), { hull:0.04 }); tasla.position.y = 2.15; tasla.userData.tasla = true; body.add(tasla); g.userData.tasla = tasla; }
+  const [x, z] = WORK_SPOTS[i]; g.position.set(x, 0, z); g.rotation.y = Math.atan2(-z, -x) * 0.3;
+  g.userData = { ...g.userData, body, legs, torso, phase:i*1.3, sit:0, target:new THREE.Vector2(x, z), resting:false };
+  scene.add(g); return g;
+});
+/* SOS rings */
+const sosGroup = new THREE.Group(); sosGroup.visible = false; scene.add(sosGroup);
+const sosRings = [0, 1].map(k => { const r = new THREE.Mesh(new THREE.RingGeometry(0.75, 0.95, 40), new THREE.MeshBasicMaterial({ color:C.red, transparent:true, side:THREE.DoubleSide, depthWrite:false })); r.rotation.x = -Math.PI/2; r.position.y = 0.06; r.userData.k = k; sosGroup.add(r); return r; });
+const sosDisc = new THREE.Mesh(new THREE.CircleGeometry(0.75, 32), new THREE.MeshBasicMaterial({ color:C.red, transparent:true, opacity:0.35, depthWrite:false })); sosDisc.rotation.x = -Math.PI/2; sosDisc.position.y = 0.05; sosGroup.add(sosDisc);
+const sosTag = label('SOS · MADAD', 'alert'); sosTag.position.set(0, 2.25, 0); sosTag.visible = false; sosGroup.add(sosTag);
+
+/* ---------- state ---------- */
+const view = { tank:0.5, drain:10, light:0.7, levelIndex:2, color:new THREE.Color(0xFF8A1F) };
+let state = null;
+const $ = id => document.getElementById(id);
+
+function normalise(s) {
+  const r = s.readings || {};
+  const li = Math.max(0, Math.min(4, Number.isFinite(+s.level_index) ? +s.level_index : 2));
+  return { ...s, readings:{ temp_c:r.temp_c, rh:r.rh, globe_c:r.globe_c, light_pct:+r.light_pct || 0, tank_pct:Math.max(0, Math.min(100, +r.tank_pct || 0)), drain_cm:Math.max(0, +r.drain_cm || 0) },
+    level_index:li, color:s.color || LEVELS[li][2], level_label:s.level_label || LEVELS[li][1] };
+}
+
+function applyState(raw) {
+  state = normalise(raw);
+  const s = state, r = s.readings;
+  const name = s.site_name || (SITE_FALLBACK.includes('{{') ? 'Demo Site · Ramesh Tower' : SITE_FALLBACK) || 'Pehra Site';
+  $('site').textContent = name; document.title = name + ' · Pehra Twin';
+  $('box').textContent = (s.box_id ? s.box_id + ' · ' : '') + `${fmt(r.temp_c)}°C air · ${fmt(r.rh, 0)}% RH · globe ${fmt(r.globe_c)}°C`;
+  $('wbgt').textContent = fmt(s.wbgt_c);
+  $('limit').textContent = fmt(s.limit_c); $('fc').textContent = fmt(s.forecast_wbgt_c);
+  const lvl = $('lvl'); lvl.textContent = s.level_label; lvl.style.setProperty('--lvl', s.color); lvl.classList.toggle('dark', s.level_index === 1);
+  document.documentElement.style.setProperty('--lvl', s.color);
+  $('aaram').classList.toggle('on', !!(s.aaram_now || s.stop_now));
+  $('aaram').textContent = s.stop_now ? 'KAAM BAND' : 'AARAM ABHI';
+  $('rest').textContent = s.rest_minutes ?? '--';
+  $('tank').textContent = Math.round(r.tank_pct) + '%'; $('tankbar').style.width = r.tank_pct + '%';
+  $('drain').textContent = fmt(r.drain_cm, 0) + ' cm'; $('drainbar').style.width = Math.min(100, r.drain_cm/60*100) + '%';
+  $('drainbar').style.background = r.drain_cm > 30 ? 'var(--red)' : 'var(--water)';
+  pill('pfan', s.fan_on, 'Fan on', 'Fan off'); pill('ppump', s.pump_on, 'Pump on', 'Pump off'); pill('psos', s.sos_active, 'SOS active', 'SOS clear');
+  $('upd').textContent = s.updated_at ? new Date(s.updated_at).toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', second:'2-digit' }) : '--';
+  $('vignette').classList.toggle('on', !!s.sos_active); $('sosbar').classList.toggle('on', !!s.sos_active);
+  tankTag.element.innerHTML = `TANK <b>${Math.round(r.tank_pct)}%</b>`;
+  drainTag.element.innerHTML = `NAALI <b>${fmt(r.drain_cm, 0)} cm</b>${r.drain_cm > 30 ? ' · PAANI BHARA' : ''}`;
+  drainTag.element.className = 'tag ' + (r.drain_cm > 30 ? 'alert' : 'water');
+  fanTag.element.innerHTML = `MIST FAN <b>${s.fan_on ? 'ON' : 'OFF'}</b>`;
+  pumpTag.element.innerHTML = `PUMP <b>${s.pump_on ? 'ON' : 'OFF'}</b>`;
+  towerTag.element.innerHTML = `<b>${s.level_label}</b>`; towerTag.element.style.background = s.color; towerTag.element.style.color = s.level_index === 1 ? '#141414' : '#fff';
+  drawScreen(s.display && s.display.length ? s.display : [`WBGT ${fmt(s.wbgt_c)}C ${s.level_label}`.slice(0, 21), `${s.rest_minutes ?? 0} min aaram/ghanta`, s.aaram_now ? 'AARAM ABHI' : 'KAAM CHALU', `Tank ${Math.round(r.tank_pct)}% Naali ${fmt(r.drain_cm, 0)}cm`]);
+  pumpLed.material.color.set(s.pump_on ? 0x48FF7A : 0x444444);
+  const rest = !!(s.aaram_now || s.stop_now);
+  workers.forEach((w, i) => { const [x, z] = rest ? REST_SPOTS[i] : WORK_SPOTS[i]; w.userData.target.set(x, z); w.userData.resting = rest; });
+}
+const fmt = (v, d=1) => v === undefined || v === null || isNaN(v) ? '--' : (+v).toFixed(d);
+function pill(id, on, a, b) { const e = $(id); e.classList.toggle('on', !!on); e.textContent = on ? a : b; }
+
+/* ---------- data: live polling or demo ---------- */
+function setMode(kind) {
+  const m = $('mode'); m.className = 'mode' + (kind === 'demo' ? ' demo' : kind === 'off' ? ' off' : '');
+  $('modeText').textContent = kind === 'demo' ? 'DEMO' : kind === 'off' ? 'OFFLINE' : 'LIVE · AWS IoT Core';
+  $('conn').classList.toggle('on', kind === 'off');
+}
+async function poll() {
+  try {
+    const res = await fetch(STATE_URL, { cache:'no-store', headers:{ Accept:'application/json' } });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    applyState(await res.json()); setMode('live');
+  } catch (e) { setMode('off'); }
+  setTimeout(poll, 3000);
+}
+let demoStep = Math.max(0, parseInt(params.get('step'), 10) || 0), demoTank = 72;
+const DEMO_LEVELS = [0, 1, 1, 2, 2, 3, 3, 4, 4, 4, 3, 2, 1, 0];
+function demoState() {
+  const k = demoStep++, li = DEMO_LEVELS[k % DEMO_LEVELS.length];
+  const pumpOn = demoTank < 25 || (demoState.pump && demoTank < 90);
+  demoState.pump = pumpOn; demoTank = Math.max(4, Math.min(100, demoTank + (pumpOn ? 14 : -7)));
+  const drain = Math.max(2, 26 + 26*Math.sin(k/3.2));
+  const wbgt = [25.4, 27.6, 29.5, 31.3, 33.4][li] + Math.sin(k)*0.3;
+  const rest = [0, 15, 30, 45, 60][li], aaram = li >= 3, stop = li === 4;
+  const sos = k % DEMO_LEVELS.length >= 7 && k % DEMO_LEVELS.length <= 9;
+  const [lv, label, color] = LEVELS[li];
+  const alerts = [demoTank < 25 && 'Tank low', drain > 30 && 'Drain waterlogging', sos && 'SOS'].filter(Boolean);
+  return { box_id:'box-demo', site_name:'Demo Site · Ramesh Tower', updated_at:new Date().toISOString(),
+    readings:{ temp_c:33 + li*1.6, rh:58 + li*2, globe_c:40 + li*2.5, light_pct:45 + li*13, tank_pct:Math.round(demoTank), drain_cm:+drain.toFixed(1) },
+    wbgt_c:+wbgt.toFixed(1), forecast_wbgt_c:+(wbgt - 1.2).toFixed(1), limit_c:28.2, level:lv, level_index:li, level_label:label, color,
+    rest_minutes:rest, aaram_now:aaram, stop_now:stop, fan_on:li >= 2, pump_on:pumpOn, sos_active:sos, alerts,
+    display:[`WBGT ${wbgt.toFixed(1)}C ${label}`.slice(0, 21), `${rest} min aaram/ghanta`, stop ? 'KAAM BAND KARO' : aaram ? 'AARAM ABHI' : 'KAAM CHALU', `Tank ${Math.round(demoTank)}% Naali ${drain.toFixed(0)}cm`] };
+}
+if (DEMO) { setMode('demo'); const HOLD = params.get('hold') === '1'; const tick = () => { applyState(demoState()); if (HOLD) demoStep--; }; tick(); setInterval(tick, 3000); }
+else { setMode('live'); $('conn').classList.add('on'); applyState({ site_name:SITE_FALLBACK, readings:{ tank_pct:50, drain_cm:0, light_pct:60 }, level_index:0, level_label:'…', color:'#999999' }); poll(); }
+
+/* ---------- animation ---------- */
+const clock = new THREE.Clock();
+const tmpM = new THREE.Matrix4(), tmpV = new THREE.Vector3(), tmpC = new THREE.Color();
+function animate() {
+  const dt = Math.min(clock.getDelta(), 0.2), t = clock.elapsedTime;
+  const s = state, r = s ? s.readings : { tank_pct:50, drain_cm:0, light_pct:60 };
+  const ease = 1 - Math.exp(-dt * 2.2);
+  view.tank += (r.tank_pct/100 - view.tank) * ease;
+  view.drain += (Math.min(r.drain_cm, 70) - view.drain) * ease;
+  view.light += (r.light_pct/100 - view.light) * ease;
+  view.levelIndex += ((s ? s.level_index : 0) - view.levelIndex) * ease;
+  view.color.lerp(tmpC.set(s ? s.color : '#999999'), ease);
+
+  /* tank */
+  const wh = Math.max(0.02, view.tank * (TANK_H - 0.08));
+  tankWater.scale.y = wh; tankWater.position.y = STAND + 0.04 + wh/2;
+  /* drain + waterlogging */
+  const dl = Math.min(view.drain, 60) / 60;
+  const dh = Math.max(0.02, dl * (DRAIN_DEPTH + 0.06));
+  drainWater.scale.y = dh; drainWater.position.y = -DRAIN_DEPTH + 0.05 + dh/2 + (REDUCED ? 0 : Math.sin(t*2)*0.01);
+  const flood = Math.max(0, Math.min(1, (view.drain - 30) / 30));
+  puddles.children.forEach((p, i) => { const sc = Math.max(0.001, flood * (0.6 + 0.4*Math.sin(i*1.7 + 1))); p.scale.setScalar(sc); p.visible = flood > 0.01; });
+  /* sun: kept in the sky corner of the view so it reads at any orbit angle */
+  tmpV.set(innerWidth < 640 ? 0.62 : 0.8, innerWidth < 640 ? 0.8 : 0.76, 0.5).unproject(camera).sub(camera.position).normalize().multiplyScalar(60).add(camera.position);
+  sunGroup.position.copy(tmpV); sunGroup.quaternion.copy(camera.quaternion);
+  const L = 0.25 + view.light * 0.75;
+  sunGroup.scale.setScalar(0.17 + view.light * 0.17);
+  sunHalo.material.opacity = 0.35 + view.light * 0.65 + (REDUCED ? 0 : Math.sin(t*1.3)*0.05);
+  sunLight.intensity = 0.9 + L * 2.0; hemi.intensity = 0.75 + L * 0.5;
+  /* risk beacon */
+  const hz = 0.5 + view.levelIndex * 0.55;
+  const pulse = REDUCED ? 0.8 : 0.55 + 0.45 * Math.sin(t * Math.PI * 2 * hz);
+  beaconMat.color.copy(view.color); beaconMat.emissive.copy(view.color); beaconMat.emissiveIntensity = 0.6 + pulse * 1.6;
+  glow.material.color.copy(view.color); glow.scale.setScalar(3 + pulse * (1.5 + view.levelIndex*0.6));
+  beaconLight.color.copy(view.color); beaconLight.intensity = 6 + pulse * 22;
+  /* fan + mist */
+  const fanOn = !!(s && s.fan_on);
+  rotor.userData.v = (rotor.userData.v || 0) + ((fanOn ? 16 : 0) - (rotor.userData.v || 0)) * (1 - Math.exp(-dt * 1.5));
+  rotor.rotation.z -= rotor.userData.v * dt;
+  mist.visible = fanOn && !REDUCED;
+  if (mist.visible) for (let i = 0; i < MIST_N; i++) {
+    mistLife[i] += dt * (0.45 + (i % 7) * 0.05);
+    if (mistLife[i] > 1) mistLife[i] = 0;
+    const l = mistLife[i], a = i * 2.399;
+    mistPos[i*3] = Math.cos(a) * (0.15 + l*1.1); mistPos[i*3+1] = Math.sin(a) * (0.15 + l*0.7) - l*l*0.6; mistPos[i*3+2] = 0.2 + l * 4.8;
+  }
+  if (mist.visible) mistGeo.attributes.position.needsUpdate = true;
+  /* pump + flow */
+  const pumpOn = !!(s && s.pump_on);
+  impeller.userData.v = (impeller.userData.v || 0) + ((pumpOn ? 22 : 0) - (impeller.userData.v || 0)) * (1 - Math.exp(-dt * 2));
+  impeller.rotation.z -= impeller.userData.v * dt;
+  pumpBody.position.y = 0.4 + (pumpOn && !REDUCED ? Math.sin(t*60)*0.006 : 0);
+  flow.visible = pumpOn && !REDUCED;
+  if (flow.visible) { for (let i = 0; i < FLOW_N; i++) { pipeCurve.getPointAt(((t*0.35) + i/FLOW_N) % 1, tmpV); tmpM.makeTranslation(tmpV.x, tmpV.y, tmpV.z); flow.setMatrixAt(i, tmpM); } flow.instanceMatrix.needsUpdate = true; }
+  /* workers */
+  workers.forEach((w, i) => {
+    const u = w.userData, dx = u.target.x - w.position.x, dz = u.target.y - w.position.z, dist = Math.hypot(dx, dz);
+    const walking = dist > 0.06;
+    if (walking) {
+      const step = Math.min(dist, (REDUCED ? 6 : 3.2) * dt);
+      w.position.x += dx/dist*step; w.position.z += dz/dist*step;
+      const want = Math.atan2(dx, dz); let d = want - w.rotation.y; d = Math.atan2(Math.sin(d), Math.cos(d)); w.rotation.y += d * Math.min(1, dt*8);
+    } else if (u.resting) {
+      let d = 0 - w.rotation.y; d = Math.atan2(Math.sin(d), Math.cos(d)); w.rotation.y += d * Math.min(1, dt*4);
+    }
+    const sitTarget = u.resting && !walking && i < 5 ? 1 : 0;
+    u.sit += (sitTarget - u.sit) * Math.min(1, dt*4);
+    const bob = REDUCED ? 0 : walking ? Math.abs(Math.sin(t*9 + u.phase)) * 0.12 : u.resting ? Math.sin(t*1.5 + u.phase)*0.015 : Math.abs(Math.sin(t*3.2 + u.phase)) * 0.06;
+    u.body.position.y = bob - u.sit * 0.42 + u.sit*0.18;
+    u.legs.scale.y = 1 - u.sit * 0.55; u.legs.position.y = 0.43 - u.sit * 0.12;
+    u.torso.rotation.x = !walking && !u.resting && !REDUCED ? Math.max(0, Math.sin(t*3.2 + u.phase)) * 0.25 : 0;
+    if (u.tasla) u.tasla.visible = !u.resting;
+  });
+  /* SOS ring */
+  const sos = !!(s && s.sos_active);
+  sosGroup.visible = sos; sosTag.visible = sos;
+  if (sos) {
+    sosGroup.position.set(workers[0].position.x, 0, workers[0].position.z);
+    sosRings.forEach(rg => { const p = REDUCED ? 0.4 : ((t*0.8) + rg.userData.k*0.5) % 1; rg.scale.setScalar(1 + p*2.4); rg.material.opacity = 1 - p; });
+    sosDisc.material.opacity = REDUCED ? 0.35 : 0.25 + 0.2*Math.sin(t*6);
+  }
+  controls.update();
+  const camDist = camera.position.distanceTo(controls.target); scene.fog.near = camDist * 0.95; scene.fog.far = camDist * 2.4;
+  renderer.render(scene, camera);
+  labelRenderer.render(scene, camera);
+  requestAnimationFrame(animate);
+}
+
+function resize() {
+  const w = innerWidth, h = innerHeight, phone = w < 640;
+  renderer.setSize(w, h, false); labelRenderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.fov = phone ? Math.min(72, 42 + 30 * (h / w - 1)) : 42;
+  camera.updateProjectionMatrix();
+  /* shift the view so the HUD does not hide the site */
+  camera.setViewOffset(w, h, phone ? 0 : -Math.min(130, w*0.09), phone ? Math.min(h*0.12, 110) : 0, w, h);
+}
+addEventListener('resize', resize);
+window.__twin = { renderer, scene, camera, labelRenderer };
+camera.position.set(19, 16, 27).sub(controls.target).multiplyScalar(innerWidth < 640 ? 1.2 : 1).add(controls.target);
+resize();
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>
