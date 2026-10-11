@@ -55,10 +55,30 @@ def on_personal_today(t, owner: str) -> None:
     metric("PersonalForecastSent", source="on_demand")
 
 
+def on_personal_question(t, event: dict) -> None:
+    person = repo.get_person(t, event["owner"])
+    if not person:
+        return
+    text = event.get("text", "")
+    if event.get("file_id"):  # voice question from a family
+        chat_id = decrypt(person["chat_enc"], config.param("data-key"))
+        tr = transcribe_ogg(channels.client_for(chat_id).download_file(event["file_id"]))
+        if tr["confidence"] < MIN_VOICE_CONFIDENCE or not tr["text"]:
+            outbox.enqueue(person["chat_enc"], "text", text=texts.VOICE_UNCLEAR)
+            return
+        text = tr["text"]
+    reply = people.ask(person, text, config.BEDROCK_MODEL_QA, config.REGION)
+    outbox.enqueue(person["chat_enc"], "text", text=reply)
+    metric("PersonalQuestionAnswered")
+
+
 def handler(event, _ctx):
     t = repo.table()
     if event.get("kind") == "personal_today":
         on_personal_today(t, event["owner"])
+        return {"done": True}
+    if event.get("kind") == "personal_question":
+        on_personal_question(t, event)
         return {"done": True}
     site = repo.get_site(t, event["site_id"])
     if not site:

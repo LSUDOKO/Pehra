@@ -49,6 +49,29 @@ def today(person: dict, now_utc: datetime | None = None) -> dict:
     return {"text": text, "forecast": f, "conditions": cond, "call_text": call}
 
 
+def ask(person: dict, question: str, model_id: str, region: str, now_utc: datetime | None = None) -> str:
+    """Answer a family's free-text question with the agent; fall back to today's fixed message."""
+    from agent.agent import answer_personal
+    from agent.people_tools import PersonalToolBox
+
+    now_utc = now_utc or datetime.now(UTC)
+    now_local = now_utc.astimezone(IST).replace(tzinfo=None)
+    doc = locdata.get_doc(person["lat"], person["lon"], now_utc)
+    key, klat, klon, river = locdata.location_key(person["lat"], person["lon"])
+    issued = datetime.fromisoformat(doc["issued_at"]).astimezone(IST).replace(tzinfo=None)
+    margin, _ = planning_margin(issued, now_local)
+    try:
+        normals = locdata.get_normals(key, klat, klon, river)
+    except Exception:
+        normals = None
+    box = PersonalToolBox(person.get("place", ""), household(person), doc, margin,
+                          locdata.conditions(doc, normals, now_local.date().isoformat()), now_local)
+    r = answer_personal(question, box, model_id, region)
+    if r["text"]:
+        return r["text"]
+    return "Abhi AI jawab nahi de pa raha. Aaj ka tay plan:\n\n" + today(person, now_utc)["text"]
+
+
 # ---- water and shade finder -----------------------------------------------------------
 
 def _places_for(area: str) -> list[dict]:

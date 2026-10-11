@@ -71,3 +71,4 @@ DEVICE_ASK = ("Sensor jodiye:\n/device weather - taapmaan aur nami (DHT22)\n/dev
               "/device drain 100 - naali/sadak ka paani, sensor ki unchai cm mein")
 DEVICE_CREATED = ("Sensor jud gaya ({kind}).\nToken (kisi ko na batayein): {token}\n\n"
                   "Web simulator: {sim}\nAsli ya Wokwi ESP32 ke liye: devices/wokwi/sketch.ino mein yeh token daaliye.")
+VOICE_UNCLEAR = "Awaaz saaf nahi aayi. Kripya likh kar poochhiye."

@@ -218,6 +218,12 @@ def on_message(d, msg: dict) -> None:
         person = repo.get_person(d.t, owner)
         if person and cmd == "/delete_my_data":
             d.bot.send_text(chat_id, "Pakka sab data mitana hai?", [[("Haan, mitao", "del_yes")]])
+        elif person and msg.get("voice"):
+            assist({"kind": "personal_question", "owner": owner, "file_id": msg["voice"]["file_id"]})
+            d.bot.send_text(chat_id, texts.WORKING)
+        elif person and text and not text.startswith("/"):
+            assist({"kind": "personal_question", "owner": owner, "text": text[:1000]})
+            d.bot.send_text(chat_id, texts.WORKING)
         else:
             d.bot.send_text(chat_id, texts.PEOPLE_HELP if person else texts.NOT_REGISTERED)
         return
